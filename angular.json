@@ -43,7 +43,19 @@
             "allowedCommonJsDependencies": [
               "node-domexception",
               "fetch-blob",
-              "node-fetch"
+              "node-fetch",
+              "jspdf",
+              "qrcode",
+              "canvg",
+              "dijkstrajs",
+              "pngjs",
+              "rgbcolor",
+              "raf",
+              "debug",
+              "agent-base",
+              "core-js",
+              "web-streams-polyfill",
+              "leaflet"
             ]
           },
           "configurations": {

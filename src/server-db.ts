@@ -258,6 +258,8 @@ export interface ServiceOption {
   price: number;
 }
 
+export type ServiceCoverageScope = 'international' | 'national' | 'regional' | 'city' | 'street';
+
 export interface Service {
   id: string;
   name: string;
@@ -270,6 +272,16 @@ export interface Service {
   isActive: boolean;
   options: ServiceOption[];
   imageUrl?: string;
+  // Geographic Availability & Location
+  coverageScope?: ServiceCoverageScope; // 'international' | 'national' | 'regional' | 'city' | 'street'
+  countries?: string[]; // e.g. ['Maroc', 'France', 'Belgique', 'Canada']
+  regions?: string[]; // e.g. ['Casablanca-Settat', 'Rabat-Salé-Kénitra']
+  cities?: string[]; // e.g. ['Casablanca', 'Rabat', 'Marrakech', 'Tanger']
+  street?: string; // e.g. "14 Boulevard d'Anfa, Maarif"
+  postalCode?: string;
+  latitude?: number;
+  longitude?: number;
+  coverageNotes?: string;
 }
 
 export interface OrderFile {
@@ -1195,6 +1207,15 @@ function getSeededDatabase(): AppDatabase {
       unitPriceName: "Page",
       unitPrice: 2.00, // 2 DH per page
       isActive: true,
+      coverageScope: "international",
+      countries: ["Maroc", "France", "Belgique", "Canada", "Suisse", "Sénégal", "Côte d'Ivoire"],
+      regions: ["Casablanca-Settat", "Rabat-Salé-Kénitra", "Tanger-Tétouan-Al Hoceïma", "Marrakech-Safi", "Fès-Meknès", "Souss-Massa", "Oriental"],
+      cities: ["Casablanca", "Rabat", "Marrakech", "Tanger", "Fès", "Agadir", "Oujda", "Kénitra", "Paris", "Bruxelles", "Montréal"],
+      street: "14 Boulevard d'Anfa, Quartier Gauthier",
+      postalCode: "20000",
+      latitude: 33.589886,
+      longitude: -7.633756,
+      coverageNotes: "Disponible 100% en ligne à l'international et enlèvement physique possible.",
       options: [
         { id: "opt-1-1", name: "Correction de texte avancée (+0.5 DH/Page)", price: 0.50 },
         { id: "opt-1-2", name: "Mise en page professionnelle complexe (+0.5 DH/Page)", price: 0.50 },
@@ -1211,6 +1232,15 @@ function getSeededDatabase(): AppDatabase {
       unitPriceName: "Heure",
       unitPrice: 80.00, // 80 DH per hour
       isActive: true,
+      coverageScope: "national",
+      countries: ["Maroc"],
+      regions: ["Casablanca-Settat", "Rabat-Salé-Kénitra", "Tanger-Tétouan-Al Hoceïma", "Marrakech-Safi", "Fès-Meknès", "Souss-Massa", "Oriental", "Béni Mellal-Khénifra", "Drâa-Tafilalet", "Guelmim-Oued Noun", "Laâyoune-Sakia El Hamra", "Dakhla-Oued Ed-Dahab"],
+      cities: ["Casablanca", "Rabat", "Salé", "Témara", "Marrakech", "Tanger", "Fès", "Meknès", "Agadir", "Oujda", "Kénitra", "Mohammedia", "El Jadida"],
+      street: "Avenue Mohammed V, Centre d'Affaires",
+      postalCode: "10000",
+      latitude: 34.020882,
+      longitude: -6.841650,
+      coverageNotes: "Prise en charge partout sur le territoire national marocain.",
       options: [
         { id: "opt-2-1", name: "Formatage conditionnel & formules de calcul (+30 DH fixe)", price: 30.00 }
       ]
@@ -1225,6 +1255,15 @@ function getSeededDatabase(): AppDatabase {
       unitPriceName: "Page",
       unitPrice: 3.00,
       isActive: true,
+      coverageScope: "international",
+      countries: ["Maroc", "France", "Belgique", "Espagne", "Émirats Arabes Unis"],
+      regions: ["Casablanca-Settat", "Rabat-Salé-Kénitra", "Tanger-Tétouan-Al Hoceïma", "Marrakech-Safi"],
+      cities: ["Casablanca", "Rabat", "Tanger", "Marrakech", "Paris", "Lyon", "Marseille", "Dubaï"],
+      street: "Boulevard Zerktouni, Maarif",
+      postalCode: "20100",
+      latitude: 33.582312,
+      longitude: -7.632145,
+      coverageNotes: "Traitement à distance instantané avec restitution numérique haute fidélité.",
       options: [
         { id: "opt-3-1", name: "Conservation stricte de la mise en page d'origine (+1 DH/Page)", price: 1.00 }
       ]
@@ -1239,6 +1278,15 @@ function getSeededDatabase(): AppDatabase {
       unitPriceName: "Page",
       unitPrice: 1.50,
       isActive: true,
+      coverageScope: "regional",
+      countries: ["Maroc"],
+      regions: ["Casablanca-Settat", "Rabat-Salé-Kénitra"],
+      cities: ["Casablanca", "Mohammedia", "Rabat", "Salé", "Kénitra"],
+      street: "Quartier des Hôpitaux, Rue Abdelkrim El Khattabi",
+      postalCode: "20360",
+      latitude: 33.568452,
+      longitude: -7.620184,
+      coverageNotes: "Idéal pour étudiants, universitaires et chercheurs des pôles Casa-Rabat.",
       options: [
         { id: "opt-4-1", name: "Pagination et gestion des en-têtes (+15 DH fixe)", price: 15.00 },
         { id: "opt-4-2", name: "Génération de sommaire dynamique (+10 DH fixe)", price: 10.00 }
@@ -1254,6 +1302,15 @@ function getSeededDatabase(): AppDatabase {
       unitPriceName: "Mot",
       unitPrice: 0.05, // 0.05 DH per word
       isActive: true,
+      coverageScope: "international",
+      countries: ["Maroc", "France", "Belgique", "Suisse", "Canada", "Tunisie"],
+      regions: ["Toutes les régions"],
+      cities: ["Casablanca", "Rabat", "Paris", "Bruxelles", "Genève", "Tunis"],
+      street: "Boulevard Massira Al Khadra",
+      postalCode: "20100",
+      latitude: 33.585642,
+      longitude: -7.641258,
+      coverageNotes: "Relecture experte multi-langues (Français, Arabe, Anglais) sans restriction géographique.",
       options: []
     },
     {
@@ -1266,6 +1323,15 @@ function getSeededDatabase(): AppDatabase {
       unitPriceName: "Travail",
       unitPrice: 0,
       isActive: true,
+      coverageScope: "street",
+      countries: ["Maroc"],
+      regions: ["Casablanca-Settat"],
+      cities: ["Casablanca"],
+      street: "14 Boulevard d'Anfa, Étage 3, Bureau 12",
+      postalCode: "20000",
+      latitude: 33.593450,
+      longitude: -7.625890,
+      coverageNotes: "Atelier central d'ingénierie documentaire & numérisation sur place.",
       options: [
         { id: "opt-6-1", name: "Indexation et signets cliquables (+20 DH)", price: 20.00 }
       ]

@@ -296,6 +296,24 @@ export interface ServiceOption {
   price: number;
 }
 
+export type CoverageScopeType = 'international' | 'national' | 'regional' | 'city' | 'street' | 'hybrid';
+
+export interface CoverageLocationPoint {
+  id: string;
+  name: string;
+  type: 'hub' | 'agency' | 'relay_point' | 'express_zone' | 'city_coverage';
+  country: string;
+  region: string;
+  city: string;
+  streetAddress?: string;
+  lat: number;
+  lng: number;
+  radiusKm?: number;
+  deliveryDelay?: string;
+  phone?: string;
+  isOpen?: boolean;
+}
+
 export interface Service {
   id: string;
   name: string;
@@ -308,6 +326,19 @@ export interface Service {
   isActive: boolean;
   options: ServiceOption[];
   imageUrl?: string;
+
+  // Geographic Availability & Scope
+  coverageScope?: CoverageScopeType;
+  coverageCountries?: string[];
+  coverageRegions?: string[];
+  coverageCities?: string[];
+  coverageStreets?: string[];
+  coverageLocations?: CoverageLocationPoint[];
+  deliveryModes?: ('digital_download' | 'email' | 'express_courier' | 'agency_pickup' | 'postal_shipping' | 'international_express')[];
+  isAvailableNationwide?: boolean;
+  isAvailableInternationally?: boolean;
+  localExpressAvailable?: boolean;
+  estimatedDeliveryDelay?: string;
 }
 
 export interface OrderFile {
@@ -620,6 +651,229 @@ export interface DashboardStats {
   commissionTotal: number;
 }
 
+export const MOROCCAN_REGIONS = [
+  'Casablanca-Settat',
+  'Rabat-Salé-Kénitra',
+  'Marrakech-Safi',
+  'Tanger-Tétouan-Al Hoceïma',
+  'Fès-Meknès',
+  'Souss-Massa',
+  'Béni Mellal-Khénifra',
+  "L'Oriental",
+  'Drâa-Tafilalet',
+  'Guelmim-Oued Noun',
+  'Laâyoune-Sakia El Hamra',
+  'Dakhla-Oued Ed-Dahab'
+];
+
+export const COVERAGE_COUNTRIES = [
+  'Maroc',
+  'France',
+  'Belgique',
+  'Canada',
+  'Espagne',
+  'États-Unis',
+  'Émirats Arabes Unis',
+  'Suisse',
+  'Sénégal',
+  'Côte d\'Ivoire',
+  'International (Monde entier)'
+];
+
+export const MOROCCAN_MAJOR_CITIES = [
+  'Casablanca',
+  'Rabat',
+  'Salé',
+  'Marrakech',
+  'Tanger',
+  'Fès',
+  'Agadir',
+  'Meknès',
+  'Oujda',
+  'Kénitra',
+  'Tétouan',
+  'Mohammedia',
+  'El Jadida',
+  'Nador',
+  'Béni Mellal',
+  'Khouribga',
+  'Settat',
+  'Safi',
+  'Témara',
+  'Laâyoune',
+  'Dakhla',
+  'Ouarzazate',
+  'Essaouira'
+];
+
+export const DEFAULT_COVERAGE_LOCATIONS: CoverageLocationPoint[] = [
+  {
+    id: 'loc-casa-1',
+    name: 'Hub Central Casablanca Anfa',
+    type: 'hub',
+    country: 'Maroc',
+    region: 'Casablanca-Settat',
+    city: 'Casablanca',
+    streetAddress: "75 Boulevard d'Anfa, Quartier Gauthier / Maârif",
+    lat: 33.5892,
+    lng: -7.6186,
+    radiusKm: 35,
+    deliveryDelay: 'Express 2h / Dépôt immédiat',
+    phone: '+212 522-200000',
+    isOpen: true
+  },
+  {
+    id: 'loc-casa-2',
+    name: 'Agence Casablanca Technopark',
+    type: 'agency',
+    country: 'Maroc',
+    region: 'Casablanca-Settat',
+    city: 'Casablanca',
+    streetAddress: 'Route de Nouaceur, Sidi Maarouf & Technopark',
+    lat: 33.5415,
+    lng: -7.6492,
+    radiusKm: 25,
+    deliveryDelay: 'Express 2h',
+    phone: '+212 522-900000',
+    isOpen: true
+  },
+  {
+    id: 'loc-rabat-1',
+    name: 'Hub Rabat Agdal & Administratif',
+    type: 'hub',
+    country: 'Maroc',
+    region: 'Rabat-Salé-Kénitra',
+    city: 'Rabat',
+    streetAddress: 'Avenue Fal Ould Oumeir, Agdal, Rabat',
+    lat: 33.9982,
+    lng: -6.8524,
+    radiusKm: 30,
+    deliveryDelay: 'Express 2h / Dépôt immédiat',
+    phone: '+212 537-700000',
+    isOpen: true
+  },
+  {
+    id: 'loc-rabat-2',
+    name: 'Point Relais Rabat Centre-Ville',
+    type: 'relay_point',
+    country: 'Maroc',
+    region: 'Rabat-Salé-Kénitra',
+    city: 'Rabat',
+    streetAddress: 'Avenue Mohammed V, Centre-Ville, Rabat',
+    lat: 34.0195,
+    lng: -6.8361,
+    radiusKm: 15,
+    deliveryDelay: 'Dépôt & Retrait Express',
+    phone: '+212 537-200000',
+    isOpen: true
+  },
+  {
+    id: 'loc-marrakech-1',
+    name: 'Agence Marrakech Guéliz',
+    type: 'agency',
+    country: 'Maroc',
+    region: 'Marrakech-Safi',
+    city: 'Marrakech',
+    streetAddress: 'Boulevard Mohammed V, Guéliz, Marrakech',
+    lat: 31.6346,
+    lng: -8.0139,
+    radiusKm: 30,
+    deliveryDelay: 'Express 3h / Coursier à domicile',
+    phone: '+212 524-400000',
+    isOpen: true
+  },
+  {
+    id: 'loc-tanger-1',
+    name: 'Agence Tanger Malabata & Centre',
+    type: 'agency',
+    country: 'Maroc',
+    region: 'Tanger-Tétouan-Al Hoceïma',
+    city: 'Tanger',
+    streetAddress: 'Boulevard Pasteur & Malabata, Tanger',
+    lat: 35.7767,
+    lng: -5.8039,
+    radiusKm: 30,
+    deliveryDelay: 'Express 3h',
+    phone: '+212 539-300000',
+    isOpen: true
+  },
+  {
+    id: 'loc-fes-1',
+    name: 'Agence Fès Ville Nouvelle',
+    type: 'agency',
+    country: 'Maroc',
+    region: 'Fès-Meknès',
+    city: 'Fès',
+    streetAddress: 'Avenue Hassan II, Ville Nouvelle, Fès',
+    lat: 34.0331,
+    lng: -5.0003,
+    radiusKm: 25,
+    deliveryDelay: 'Express 3h',
+    phone: '+212 535-600000',
+    isOpen: true
+  },
+  {
+    id: 'loc-agadir-1',
+    name: 'Agence Agadir Centre',
+    type: 'agency',
+    country: 'Maroc',
+    region: 'Souss-Massa',
+    city: 'Agadir',
+    streetAddress: 'Avenue du Général Kettani, Talborjt, Agadir',
+    lat: 30.4278,
+    lng: -9.5981,
+    radiusKm: 25,
+    deliveryDelay: 'Express 3h',
+    phone: '+212 528-800000',
+    isOpen: true
+  },
+  {
+    id: 'loc-oujda-1',
+    name: 'Point Relais Oujda Oriental',
+    type: 'relay_point',
+    country: 'Maroc',
+    region: "L'Oriental",
+    city: 'Oujda',
+    streetAddress: 'Boulevard Mohammed V, Centre-Ville, Oujda',
+    lat: 34.6814,
+    lng: -1.9086,
+    radiusKm: 20,
+    deliveryDelay: 'Express 4h / Livraison 24h',
+    phone: '+212 536-600000',
+    isOpen: true
+  },
+  {
+    id: 'loc-paris-1',
+    name: 'Hub International Europe - Paris',
+    type: 'hub',
+    country: 'France',
+    region: 'Île-de-France',
+    city: 'Paris',
+    streetAddress: "12 Avenue de l'Opéra, 75001 Paris",
+    lat: 48.8566,
+    lng: 2.3522,
+    radiusKm: 100,
+    deliveryDelay: '100% Digital / DHL Express 24h',
+    phone: '+33 1 40 00 00 00',
+    isOpen: true
+  },
+  {
+    id: 'loc-montreal-1',
+    name: 'Hub International Amériques - Montréal',
+    type: 'hub',
+    country: 'Canada',
+    region: 'Québec',
+    city: 'Montréal',
+    streetAddress: '1000 Rue de la Gauchetière, Montréal, QC',
+    lat: 45.5017,
+    lng: -73.5673,
+    radiusKm: 100,
+    deliveryDelay: '100% Digital / Courrier Express',
+    phone: '+1 514 555 0199',
+    isOpen: true
+  }
+];
+
 export const DEFAULT_SERVICES: Service[] = [
   {
     id: "srv-1",
@@ -631,6 +885,17 @@ export const DEFAULT_SERVICES: Service[] = [
     unitPriceName: "Page",
     unitPrice: 2.00,
     isActive: true,
+    coverageScope: "international",
+    isAvailableInternationally: true,
+    isAvailableNationwide: true,
+    localExpressAvailable: true,
+    coverageCountries: ["Maroc", "France", "Belgique", "Canada", "Espagne", "International (Monde entier)"],
+    coverageRegions: MOROCCAN_REGIONS,
+    coverageCities: ["Casablanca", "Rabat", "Marrakech", "Tanger", "Fès", "Agadir", "Oujda", "Meknès", "Kénitra"],
+    coverageStreets: ["Boulevard d'Anfa", "Avenue Fal Ould Oumeir", "Boulevard Mohammed V", "Avenue Hassan II"],
+    coverageLocations: DEFAULT_COVERAGE_LOCATIONS,
+    deliveryModes: ["digital_download", "email", "express_courier", "agency_pickup", "postal_shipping"],
+    estimatedDeliveryDelay: "Digital 24h - 48h / Dépôt physique en agence",
     options: [
       { id: "opt-1-1", name: "Correction de texte avancée (+0.5 DH/Page)", price: 0.50 },
       { id: "opt-1-2", name: "Mise en page professionnelle complexe (+0.5 DH/Page)", price: 0.50 },
@@ -647,6 +912,16 @@ export const DEFAULT_SERVICES: Service[] = [
     unitPriceName: "Heure",
     unitPrice: 80.00,
     isActive: true,
+    coverageScope: "international",
+    isAvailableInternationally: true,
+    isAvailableNationwide: true,
+    localExpressAvailable: true,
+    coverageCountries: ["Maroc", "France", "Belgique", "Canada", "Suisse"],
+    coverageRegions: MOROCCAN_REGIONS,
+    coverageCities: MOROCCAN_MAJOR_CITIES,
+    coverageLocations: DEFAULT_COVERAGE_LOCATIONS,
+    deliveryModes: ["digital_download", "email"],
+    estimatedDeliveryDelay: "Traitement 100% en ligne (24h)",
     options: [
       { id: "opt-2-1", name: "Formatage conditionnel & formules de calcul (+30 DH fixe)", price: 30.00 }
     ]
@@ -661,6 +936,16 @@ export const DEFAULT_SERVICES: Service[] = [
     unitPriceName: "Page",
     unitPrice: 3.00,
     isActive: true,
+    coverageScope: "international",
+    isAvailableInternationally: true,
+    isAvailableNationwide: true,
+    localExpressAvailable: true,
+    coverageCountries: ["Maroc", "France", "Belgique", "Canada", "Espagne", "International (Monde entier)"],
+    coverageRegions: MOROCCAN_REGIONS,
+    coverageCities: MOROCCAN_MAJOR_CITIES,
+    coverageLocations: DEFAULT_COVERAGE_LOCATIONS,
+    deliveryModes: ["digital_download", "email"],
+    estimatedDeliveryDelay: "Livraison numérique instantanée ou sous 12h",
     options: [
       { id: "opt-3-1", name: "Conservation stricte de la mise en page d'origine (+1 DH/Page)", price: 1.00 }
     ]
@@ -675,6 +960,16 @@ export const DEFAULT_SERVICES: Service[] = [
     unitPriceName: "Page",
     unitPrice: 1.50,
     isActive: true,
+    coverageScope: "national",
+    isAvailableInternationally: true,
+    isAvailableNationwide: true,
+    localExpressAvailable: true,
+    coverageCountries: ["Maroc", "France", "Canada", "Belgique"],
+    coverageRegions: MOROCCAN_REGIONS,
+    coverageCities: MOROCCAN_MAJOR_CITIES,
+    coverageLocations: DEFAULT_COVERAGE_LOCATIONS,
+    deliveryModes: ["digital_download", "email", "agency_pickup"],
+    estimatedDeliveryDelay: "Numérique 48h-72h",
     options: [
       { id: "opt-4-1", name: "Pagination et gestion des en-têtes (+15 DH fixe)", price: 15.00 },
       { id: "opt-4-2", name: "Génération de sommaire dynamique (+10 DH fixe)", price: 10.00 }
@@ -690,6 +985,16 @@ export const DEFAULT_SERVICES: Service[] = [
     unitPriceName: "Mot",
     unitPrice: 0.05,
     isActive: true,
+    coverageScope: "international",
+    isAvailableInternationally: true,
+    isAvailableNationwide: true,
+    localExpressAvailable: true,
+    coverageCountries: ["Maroc", "France", "Belgique", "Canada", "Suisse", "International (Monde entier)"],
+    coverageRegions: MOROCCAN_REGIONS,
+    coverageCities: MOROCCAN_MAJOR_CITIES,
+    coverageLocations: DEFAULT_COVERAGE_LOCATIONS,
+    deliveryModes: ["digital_download", "email"],
+    estimatedDeliveryDelay: "Traitement numérique 24h-48h",
     options: []
   },
   {
@@ -702,6 +1007,17 @@ export const DEFAULT_SERVICES: Service[] = [
     unitPriceName: "Travail",
     unitPrice: 0,
     isActive: true,
+    coverageScope: "regional",
+    isAvailableInternationally: false,
+    isAvailableNationwide: false,
+    localExpressAvailable: true,
+    coverageCountries: ["Maroc"],
+    coverageRegions: ["Casablanca-Settat", "Rabat-Salé-Kénitra", "Marrakech-Safi", "Tanger-Tétouan-Al Hoceïma"],
+    coverageCities: ["Casablanca", "Rabat", "Marrakech", "Tanger", "Mohammedia", "Kénitra"],
+    coverageStreets: ["Boulevard d'Anfa", "Avenue Fal Ould Oumeir", "Boulevard Pasteur"],
+    coverageLocations: DEFAULT_COVERAGE_LOCATIONS.filter(l => l.city === 'Casablanca' || l.city === 'Rabat' || l.city === 'Marrakech' || l.city === 'Tanger'),
+    deliveryModes: ["digital_download", "express_courier", "agency_pickup"],
+    estimatedDeliveryDelay: "Express local 2h-4h / En ligne immédiat",
     options: [
       { id: "opt-6-1", name: "Indexation et signets cliquables (+20 DH)", price: 20.00 }
     ]
@@ -758,6 +1074,11 @@ export class Data {
   activeRole = signal<'public' | 'client' | 'partner' | 'operator' | 'qa' | 'admin' | 'assistant' | 'affiliate'>('public');
 
   services = signal<Service[]>(DEFAULT_SERVICES);
+  coverageLocations = signal<CoverageLocationPoint[]>(DEFAULT_COVERAGE_LOCATIONS);
+  selectedCoverageServiceId = signal<string | null>(null);
+  selectedCoverageRegion = signal<string>('all');
+  selectedCoverageCity = signal<string>('all');
+  selectedCoverageScope = signal<string>('all');
   orders = signal<Order[]>([]);
   payments = signal<Payment[]>([]);
   activeOrderDetails = signal<{
@@ -1909,6 +2230,106 @@ export class Data {
     });
     this.services.update(list => list.filter(s => s.id !== serviceId));
     this.successMessage.set('Service supprimé du catalogue avec succès.');
+  }
+
+  checkServiceCoverage(service: Service, country?: string, region?: string, city?: string, street?: string) {
+    const targetCountry = (country || 'Maroc').trim();
+    const targetRegion = (region || '').trim();
+    const targetCity = (city || '').trim();
+    const targetStreet = (street || '').trim().toLowerCase();
+
+    // 1. International scope check
+    if (service.coverageScope === 'international' || service.isAvailableInternationally) {
+      const countries = service.coverageCountries || COVERAGE_COUNTRIES;
+      const isCountryListed = countries.some(c => c.toLowerCase().includes('international') || c.toLowerCase().includes('monde') || c.toLowerCase() === targetCountry.toLowerCase());
+      
+      if (isCountryListed) {
+        return {
+          isEligible: true,
+          scope: 'International',
+          badgeClass: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+          title: `Disponible à l'International (${targetCountry})`,
+          details: `Ce service est ouvert pour ${targetCountry} avec traitement 100% digital et expédition sécurisée.`,
+          deliveryModes: service.deliveryModes || ['digital_download', 'email'],
+          estimatedDelay: service.estimatedDeliveryDelay || '24h - 48h (En ligne / Express)'
+        };
+      }
+    }
+
+    // 2. National Maroc scope check
+    if (targetCountry.toLowerCase() === 'maroc' || targetCountry.toLowerCase() === 'morocco') {
+      if (service.coverageScope === 'national' || service.isAvailableNationwide) {
+        return {
+          isEligible: true,
+          scope: 'National (Tout le Maroc)',
+          badgeClass: 'bg-blue-50 text-blue-700 border-blue-200',
+          title: `Disponible sur tout le territoire marocain`,
+          details: targetCity ? `Service pleinement disponible à ${targetCity} (livraison coursier & numérique).` : 'Disponible dans les 12 régions du Royaume.',
+          deliveryModes: service.deliveryModes || ['digital_download', 'email', 'express_courier'],
+          estimatedDelay: service.estimatedDeliveryDelay || '24h à domicile / Immédiat en ligne'
+        };
+      }
+
+      // 3. Regional check
+      if (service.coverageScope === 'regional' && targetRegion) {
+        const regions = service.coverageRegions || [];
+        const isRegionEligible = regions.some(r => r.toLowerCase() === targetRegion.toLowerCase());
+        if (isRegionEligible) {
+          return {
+            isEligible: true,
+            scope: `Régional (${targetRegion})`,
+            badgeClass: 'bg-indigo-50 text-indigo-700 border-indigo-200',
+            title: `Disponible dans la région ${targetRegion}`,
+            details: `Couverture active pour tous les usagers de la région ${targetRegion}.`,
+            deliveryModes: service.deliveryModes || ['digital_download', 'express_courier', 'agency_pickup'],
+            estimatedDelay: service.estimatedDeliveryDelay || 'Express 2h-4h'
+          };
+        }
+      }
+
+      // 4. City check
+      if (targetCity) {
+        const cities = service.coverageCities || [];
+        const isCityEligible = cities.some(c => c.toLowerCase() === targetCity.toLowerCase());
+        if (isCityEligible) {
+          return {
+            isEligible: true,
+            scope: `Ville (${targetCity})`,
+            badgeClass: 'bg-teal-50 text-teal-700 border-teal-200',
+            title: `Disponible à ${targetCity}`,
+            details: `Coursier express et agences de collecte ouverts à ${targetCity}.`,
+            deliveryModes: service.deliveryModes || ['digital_download', 'express_courier', 'agency_pickup'],
+            estimatedDelay: service.estimatedDeliveryDelay || 'Livraison locale 2h'
+          };
+        }
+      }
+
+      // 5. Street / Local address check
+      if (targetStreet && service.coverageStreets && service.coverageStreets.length > 0) {
+        const isStreetEligible = service.coverageStreets.some(s => targetStreet.includes(s.toLowerCase()) || s.toLowerCase().includes(targetStreet));
+        if (isStreetEligible) {
+          return {
+            isEligible: true,
+            scope: `Point / Rue Locale`,
+            badgeClass: 'bg-purple-50 text-purple-700 border-purple-200',
+            title: `Zone ultra-locale couverte`,
+            details: `Collecte et livraison express à domicile immédiate dans ce quartier / rue.`,
+            deliveryModes: service.deliveryModes || ['express_courier', 'agency_pickup'],
+            estimatedDelay: 'Coursier Express immédiat (< 2h)'
+          };
+        }
+      }
+    }
+
+    return {
+      isEligible: false,
+      scope: 'Zone non couverte',
+      badgeClass: 'bg-rose-50 text-rose-700 border-rose-200',
+      title: 'Disponibilité restreinte',
+      details: `Ce service n'est pas encore disponible directement dans cette zone géographique (${targetCity || targetRegion || targetCountry}). Contactez le support pour une commande sur-mesure.`,
+      deliveryModes: ['digital_download'],
+      estimatedDelay: 'Sur devis personnalisé'
+    };
   }
 
   async loadSettings(silent = false) {

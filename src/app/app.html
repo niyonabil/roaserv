@@ -1868,6 +1868,14 @@
               >
                 <span class="material-icons text-sm">history</span> Journal d'Audit
               </button>
+
+              <button 
+                type="button"
+                (click)="openSitemapModal()"
+                class="w-full text-left px-4 py-2.5 rounded-xl text-sm font-semibold text-purple-700 bg-purple-50/60 hover:bg-purple-100/80 flex items-center gap-2 border border-purple-200/60 transition-colors cursor-pointer"
+              >
+                <span class="material-icons text-sm text-purple-600">account_tree</span> Sitemap & SEO XML
+              </button>
             </div>
           }
         </div>
@@ -10631,6 +10639,205 @@
               Capturer la photo
             </button>
           </div>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- SITEMAP XML & SEO ROUTE GENERATOR MODAL -->
+  @if (showSitemapModal()) {
+    <div class="fixed inset-0 bg-slate-900/80 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+      <div class="bg-white rounded-2xl max-w-4xl w-full overflow-hidden shadow-2xl border border-slate-200 flex flex-col max-h-[92vh] animate-fadeIn">
+        <!-- Header -->
+        <div class="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-900 text-white">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-blue-600/30 border border-blue-400/30 flex items-center justify-center">
+              <span class="material-icons text-blue-400">account_tree</span>
+            </div>
+            <div>
+              <h3 class="font-black text-white text-base">Générateur de Sitemap XML & SEO</h3>
+              <p class="text-xs text-slate-300">Indexation des services, landing pages et profils d'affiliation pour Google & Bing</p>
+            </div>
+          </div>
+          <button type="button" (click)="closeSitemapModal()" class="text-slate-400 hover:text-white p-1 rounded-lg cursor-pointer">
+            <span class="material-icons text-xl">close</span>
+          </button>
+        </div>
+
+        <!-- Body -->
+        <div class="p-6 overflow-y-auto space-y-6 flex-1">
+          <!-- Summary Metrics Bento -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div class="bg-slate-50 border border-slate-200 rounded-xl p-3.5">
+              <span class="text-[10px] font-bold uppercase text-slate-400 tracking-wider">Total URL Indexées</span>
+              <p class="text-2xl font-black text-slate-900 mt-1">{{ sitemapStats().total }}</p>
+              <span class="text-[10px] text-blue-600 font-semibold">Toutes valides</span>
+            </div>
+            <div class="bg-slate-50 border border-slate-200 rounded-xl p-3.5">
+              <span class="text-[10px] font-bold uppercase text-slate-400 tracking-wider">Services Actifs</span>
+              <p class="text-2xl font-black text-purple-700 mt-1">{{ sitemapStats().services }}</p>
+              <span class="text-[10px] text-purple-600 font-semibold">Pages de devis</span>
+            </div>
+            <div class="bg-slate-50 border border-slate-200 rounded-xl p-3.5">
+              <span class="text-[10px] font-bold uppercase text-slate-400 tracking-wider">Affiliés / Parrains</span>
+              <p class="text-2xl font-black text-amber-700 mt-1">{{ sitemapStats().affiliates }}</p>
+              <span class="text-[10px] text-amber-600 font-semibold">Landing directes</span>
+            </div>
+            <div class="bg-slate-50 border border-slate-200 rounded-xl p-3.5">
+              <span class="text-[10px] font-bold uppercase text-slate-400 tracking-wider">Pages & Outils</span>
+              <p class="text-2xl font-black text-emerald-700 mt-1">{{ sitemapStats().core + sitemapStats().tools }}</p>
+              <span class="text-[10px] text-emerald-600 font-semibold">Sections vitrine</span>
+            </div>
+          </div>
+
+          <!-- Direct Actions Toolbar -->
+          <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 rounded-xl p-4 flex flex-wrap items-center justify-between gap-3">
+            <div class="space-y-0.5">
+              <h4 class="font-bold text-slate-900 text-xs flex items-center gap-1.5">
+                <span class="material-icons text-sm text-blue-600">verified</span>
+                Fichiers Sitemap & Robots en production
+              </h4>
+              <p class="text-[11px] text-slate-600">Accessibles directement à la racine de votre domaine : <code class="bg-white px-1.5 py-0.5 rounded border border-blue-200 text-blue-900 font-mono text-[10px]">/sitemap.xml</code> et <code class="bg-white px-1.5 py-0.5 rounded border border-blue-200 text-blue-900 font-mono text-[10px]">/robots.txt</code></p>
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+              <button 
+                type="button" 
+                (click)="copySitemapUrl()"
+                class="bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs px-3 py-2 rounded-lg border border-slate-200 flex items-center gap-1 shadow-xs cursor-pointer"
+              >
+                <span class="material-icons text-xs">link</span> Copier URL
+              </button>
+              <button 
+                type="button" 
+                (click)="copySitemapXml()"
+                class="bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs px-3 py-2 rounded-lg border border-slate-200 flex items-center gap-1 shadow-xs cursor-pointer"
+              >
+                <span class="material-icons text-xs">content_copy</span> Copier XML
+              </button>
+              <button 
+                type="button" 
+                (click)="downloadSitemapXml()"
+                class="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-3.5 py-2 rounded-lg flex items-center gap-1.5 shadow-sm cursor-pointer"
+              >
+                <span class="material-icons text-xs">download</span> Télécharger sitemap.xml
+              </button>
+              <button 
+                type="button" 
+                (click)="downloadRobotsTxt()"
+                class="bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs px-3 py-2 rounded-lg flex items-center gap-1 shadow-sm cursor-pointer"
+              >
+                <span class="material-icons text-xs">file_download</span> robots.txt
+              </button>
+            </div>
+          </div>
+
+          <!-- Filters and Search -->
+          <div class="flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div class="flex flex-wrap items-center gap-1.5 w-full sm:w-auto">
+              <button 
+                type="button" 
+                (click)="sitemapCategoryFilter.set('all')"
+                [class]="sitemapCategoryFilter() === 'all' ? 'bg-slate-900 text-white font-bold text-[11px] px-3 py-1.5 rounded-lg' : 'bg-slate-100 text-slate-600 hover:bg-slate-200 font-medium text-[11px] px-3 py-1.5 rounded-lg'"
+              >
+                Tous ({{ sitemapIndexedRoutes().length }})
+              </button>
+              <button 
+                type="button" 
+                (click)="sitemapCategoryFilter.set('core')"
+                [class]="sitemapCategoryFilter() === 'core' ? 'bg-blue-600 text-white font-bold text-[11px] px-3 py-1.5 rounded-lg' : 'bg-slate-100 text-slate-600 hover:bg-slate-200 font-medium text-[11px] px-3 py-1.5 rounded-lg'"
+              >
+                Vitrine & Core
+              </button>
+              <button 
+                type="button" 
+                (click)="sitemapCategoryFilter.set('service')"
+                [class]="sitemapCategoryFilter() === 'service' ? 'bg-purple-600 text-white font-bold text-[11px] px-3 py-1.5 rounded-lg' : 'bg-slate-100 text-slate-600 hover:bg-slate-200 font-medium text-[11px] px-3 py-1.5 rounded-lg'"
+              >
+                Services
+              </button>
+              <button 
+                type="button" 
+                (click)="sitemapCategoryFilter.set('affiliate')"
+                [class]="sitemapCategoryFilter() === 'affiliate' ? 'bg-amber-600 text-white font-bold text-[11px] px-3 py-1.5 rounded-lg' : 'bg-slate-100 text-slate-600 hover:bg-slate-200 font-medium text-[11px] px-3 py-1.5 rounded-lg'"
+              >
+                Parrains & Affiliés
+              </button>
+            </div>
+
+            <div class="w-full sm:w-64 relative">
+              <span class="material-icons absolute left-2.5 top-2 text-slate-400 text-base">search</span>
+              <input 
+                type="text" 
+                [value]="sitemapSearchQuery()"
+                (input)="sitemapSearchQuery.set($any($event.target).value)"
+                placeholder="Filtrer URL ou titre..."
+                class="w-full bg-slate-50 border border-slate-200 rounded-lg pl-8 pr-3 py-1.5 text-xs focus:outline-none focus:bg-white"
+              />
+            </div>
+          </div>
+
+          <!-- Table of URLs -->
+          <div class="border border-slate-200 rounded-xl overflow-hidden">
+            <div class="overflow-x-auto max-h-72">
+              <table class="w-full text-left text-xs border-collapse">
+                <thead class="bg-slate-50 sticky top-0 border-b border-slate-200 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
+                  <tr>
+                    <th class="py-2.5 px-3">Page / Titre</th>
+                    <th class="py-2.5 px-3">URL Complète</th>
+                    <th class="py-2.5 px-3 text-center">Priorité</th>
+                    <th class="py-2.5 px-3 text-center">Fréquence</th>
+                    <th class="py-2.5 px-3 text-right">Action</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                  @for (r of filteredSitemapRoutes(); track r.loc) {
+                    <tr class="hover:bg-slate-50/70 transition-colors">
+                      <td class="py-2 px-3 font-semibold text-slate-800">
+                        <div class="flex items-center gap-1.5">
+                          <span [class]="r.category === 'service' ? 'w-2 h-2 rounded-full bg-purple-500 shrink-0' : r.category === 'affiliate' ? 'w-2 h-2 rounded-full bg-amber-500 shrink-0' : 'w-2 h-2 rounded-full bg-blue-500 shrink-0'"></span>
+                          <span>{{ r.title || 'Page d\'accueil' }}</span>
+                        </div>
+                      </td>
+                      <td class="py-2 px-3 font-mono text-[11px] text-blue-700 max-w-xs truncate">
+                        {{ r.loc }}
+                      </td>
+                      <td class="py-2 px-3 text-center font-bold">
+                        <span [class]="(r.priority || 0) >= 0.9 ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 px-1.5 py-0.5 rounded text-[10px]' : 'bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded text-[10px]'">
+                          {{ r.priority || 0.70 }}
+                        </span>
+                      </td>
+                      <td class="py-2 px-3 text-center text-slate-500 text-[11px]">
+                        {{ r.changefreq }}
+                      </td>
+                      <td class="py-2 px-3 text-right">
+                        <button 
+                          type="button" 
+                          (click)="copyToClipboard(r.loc, 'URL')" 
+                          class="text-slate-400 hover:text-slate-700 p-1 rounded-md cursor-pointer"
+                          title="Copier URL"
+                        >
+                          <span class="material-icons text-sm">content_copy</span>
+                        </button>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Footer -->
+        <div class="p-4 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
+          <span class="text-xs text-slate-500 font-medium">Standard Sitemap Protocol 0.9 • Conforme Google Search Console</span>
+          <button 
+            type="button" 
+            (click)="closeSitemapModal()" 
+            class="bg-slate-900 hover:bg-slate-800 text-white font-bold px-5 py-2 rounded-xl text-xs cursor-pointer"
+          >
+            Fermer
+          </button>
         </div>
       </div>
     </div>

@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormGroup, FormControl, Validators } from '@angular/forms';
 import { DomSanitizer, SafeResourceUrl, Title, Meta } from '@angular/platform-browser';
 import { Data, Service, Order, PartnerCustomer, OrderFile, Quote, AppNotification, User, UserPrivileges, getDefaultPrivileges, PayrollRecord, LeaveRequest, SalaryAdvance, AffiliateCommission, Payment, SystemSettings, AffiliateWithStats } from './data';
+import { getAllIndexedRoutes, generateSitemapXml, generateRobotsTxt, SitemapUrlEntry } from './sitemap-generator';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 
@@ -634,26 +635,84 @@ export class App {
         }
       });
       
-      // Update page title and meta tags dynamically
+      // Comprehensive Dynamic SEO & OpenGraph Meta Tagging Effect
       effect(() => {
-        const title = this.data.settings()?.saasWorkspaceTitle || 'My Google AI Studio App';
-        this.titleService.setTitle(title);
-        
-        const description = this.data.settings()?.companyName || 'An application built with Google AI Studio.';
-        const customDesc = `Géré par ${title}. ${description}`;
-        
-        // Update standard meta tags
-        this.metaService.updateTag({ name: 'description', content: customDesc });
-        
-        // Update Open Graph (Facebook / LinkedIn) meta tags
-        this.metaService.updateTag({ property: 'og:title', content: title });
-        this.metaService.updateTag({ property: 'og:description', content: customDesc });
-        this.metaService.updateTag({ property: 'og:image', content: 'https://picsum.photos/seed/vibrant/1200/630' });
-        
-        // Update Twitter meta tags
-        this.metaService.updateTag({ name: 'twitter:title', content: title });
-        this.metaService.updateTag({ name: 'twitter:description', content: customDesc });
-        this.metaService.updateTag({ name: 'twitter:image', content: 'https://picsum.photos/seed/vibrant/1200/630' });
+        const settings = this.data.settings();
+        const baseTitle = settings?.saasWorkspaceTitle || 'DigiDocs Hub';
+        const companyName = settings?.companyName || 'ROA Services';
+        const isSponsorLanding = this.data.showSponsorLanding();
+        const sponsor = this.currentSponsor();
+        const activeTab = this.activeTab();
+        const role = this.data.activeRole();
+        const serviceId = this.estServiceId();
+        const currentService = this.data.services().find(s => s.id === serviceId);
+
+        let finalTitle = `${baseTitle} — Saisie de Documents, Transcription & Numérisation au Maroc`;
+        let finalDesc = `Plateforme professionnelle de gestion documentaire à distance au Maroc : saisie de manuscrits, transcription audio de réunions, numérisation OCR haute résolution, PAO, impression et livraison express.`;
+        let finalKeywords = `saisie de documents maroc, transcription audio réunion, numérisation archives casablanca, OCR reconnaissance texte, saisie manuscrits, mise en page mémoire thèse, impression reliure casablanca rabat, travaux numériques à distance, parrainage digidocs`;
+        let finalCanonical = typeof window !== 'undefined' ? `${window.location.origin}/` : 'https://digidocs.ma/';
+        let ogType = 'website';
+        let ogImage = 'https://images.unsplash.com/photo-1450133064473-71024230f91b?auto=format&fit=crop&w=1200&h=630&q=80';
+        let robotsSetting = 'index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1';
+
+        // 1. Private dashboards / internal logged-in areas -> Prevent search engine indexing of private data
+        if (role !== 'public' && activeTab !== 'landing') {
+          robotsSetting = 'noindex, nofollow';
+          finalTitle = `Espace ${role.toUpperCase()} | ${baseTitle} - ${companyName}`;
+          finalDesc = `Accès sécurisé à l'espace de gestion et de production documentaire ${baseTitle}.`;
+        } else if (isSponsorLanding && sponsor) {
+          // 2. Dedicated Sponsor / Parrain Affiliate Landing Page
+          const sponsorName = sponsor.name || 'Ambassadeur Officiel';
+          const sponsorCity = sponsor.city || 'Maroc';
+          const sponsorCode = sponsor.affiliateCode || this.data.activeAffiliateCode() || 'AFF-2026';
+          
+          finalTitle = `Parrainage ${sponsorName} (-10% Réduction) — ${baseTitle}`;
+          finalDesc = `Page officielle de recommandation par ${sponsorName} (${sponsorCity}). Bénéficiez de 10% de réduction immédiate avec le code privilège ${sponsorCode} sur tous vos travaux de saisie, OCR, transcription et impression.`;
+          finalKeywords = `parrainage ${sponsorName}, code promo ${sponsorCode}, réduction travaux documentaires maroc, saisie texte ${sponsorCity}, transcription ${sponsorName}, digidocs maroc`;
+          finalCanonical = typeof window !== 'undefined' ? `${window.location.origin}/?parrain=${encodeURIComponent(sponsorCode)}` : `https://digidocs.ma/?parrain=${encodeURIComponent(sponsorCode)}`;
+          ogType = 'profile';
+        } else if (activeTab === 'landing' && currentService && serviceId !== 'srv-1') {
+          // 3. Service-focused landing page
+          finalTitle = `${currentService.name} — Tarifs & Devis Instantané | ${baseTitle}`;
+          finalDesc = `${currentService.description} — Tarification transparente à partir de ${currentService.unitPrice} DH / ${currentService.unitPriceName}. Prise en charge rapide et livraison partout au Maroc.`;
+          finalKeywords = `${currentService.name.toLowerCase()}, tarif ${currentService.name.toLowerCase()} maroc, devis saisie en ligne, ${baseTitle}`;
+          finalCanonical = typeof window !== 'undefined' ? `${window.location.origin}/?service=${encodeURIComponent(currentService.id)}` : `https://digidocs.ma/?service=${encodeURIComponent(currentService.id)}`;
+        }
+
+        // Apply page title
+        this.titleService.setTitle(finalTitle);
+
+        // Apply primary search engine meta tags
+        this.metaService.updateTag({ name: 'description', content: finalDesc });
+        this.metaService.updateTag({ name: 'keywords', content: finalKeywords });
+        this.metaService.updateTag({ name: 'robots', content: robotsSetting });
+        this.metaService.updateTag({ name: 'googlebot', content: robotsSetting });
+        this.metaService.updateTag({ name: 'author', content: `${baseTitle} & ${companyName}` });
+
+        // Apply Open Graph (Facebook, LinkedIn, WhatsApp) meta tags
+        this.metaService.updateTag({ property: 'og:title', content: finalTitle });
+        this.metaService.updateTag({ property: 'og:description', content: finalDesc });
+        this.metaService.updateTag({ property: 'og:url', content: finalCanonical });
+        this.metaService.updateTag({ property: 'og:type', content: ogType });
+        this.metaService.updateTag({ property: 'og:image', content: ogImage });
+        this.metaService.updateTag({ property: 'og:site_name', content: `${baseTitle} Maroc` });
+
+        // Apply Twitter / X meta tags
+        this.metaService.updateTag({ name: 'twitter:card', content: 'summary_large_image' });
+        this.metaService.updateTag({ name: 'twitter:title', content: finalTitle });
+        this.metaService.updateTag({ name: 'twitter:description', content: finalDesc });
+        this.metaService.updateTag({ name: 'twitter:image', content: ogImage });
+
+        // Dynamically update Canonical URL in document head
+        if (typeof document !== 'undefined') {
+          let canonicalLink = document.querySelector('link[rel="canonical"]') as HTMLLinkElement;
+          if (!canonicalLink) {
+            canonicalLink = document.createElement('link');
+            canonicalLink.setAttribute('rel', 'canonical');
+            document.head.appendChild(canonicalLink);
+          }
+          canonicalLink.setAttribute('href', finalCanonical);
+        }
       });
     }
     
@@ -4567,6 +4626,102 @@ export class App {
     ctx.lineTo(x, y + radius);
     ctx.quadraticCurveTo(x, y, x + radius, y);
     ctx.closePath();
+  }
+
+  // --- SITEMAP XML & SEO ROUTE GENERATOR UTILITY ---
+  showSitemapModal = signal<boolean>(false);
+  sitemapSearchQuery = signal<string>('');
+  sitemapCategoryFilter = signal<'all' | 'core' | 'service' | 'affiliate' | 'tool' | 'legal'>('all');
+
+  sitemapIndexedRoutes = computed(() => {
+    const services = this.data.services();
+    const affiliates = this.data.allUsers().filter(u => u.role === 'affiliate' || Boolean(u.affiliateCode));
+    const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://digidocs.ma';
+    return getAllIndexedRoutes(services, affiliates, baseUrl);
+  });
+
+  filteredSitemapRoutes = computed(() => {
+    let list = this.sitemapIndexedRoutes();
+    const cat = this.sitemapCategoryFilter();
+    if (cat !== 'all') {
+      list = list.filter(r => r.category === cat);
+    }
+    const q = this.sitemapSearchQuery().toLowerCase().trim();
+    if (q) {
+      list = list.filter(r => 
+        r.loc.toLowerCase().includes(q) || 
+        (r.title && r.title.toLowerCase().includes(q))
+      );
+    }
+    return list;
+  });
+
+  sitemapStats = computed(() => {
+    const routes = this.sitemapIndexedRoutes();
+    return {
+      total: routes.length,
+      core: routes.filter(r => r.category === 'core').length,
+      services: routes.filter(r => r.category === 'service').length,
+      affiliates: routes.filter(r => r.category === 'affiliate').length,
+      tools: routes.filter(r => r.category === 'tool').length,
+    };
+  });
+
+  openSitemapModal() {
+    this.showSitemapModal.set(true);
+  }
+
+  closeSitemapModal() {
+    this.showSitemapModal.set(false);
+  }
+
+  downloadSitemapXml() {
+    const services = this.data.services();
+    const affiliates = this.data.allUsers().filter(u => u.role === 'affiliate' || Boolean(u.affiliateCode));
+    const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://digidocs.ma';
+    const xmlContent = generateSitemapXml(services, affiliates, baseUrl);
+
+    const blob = new Blob([xmlContent], { type: 'application/xml;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'sitemap.xml';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    this.data.showToast('Sitemap.xml Généré !', `${this.sitemapIndexedRoutes().length} URL indexables exportées avec succès.`);
+  }
+
+  copySitemapXml() {
+    const services = this.data.services();
+    const affiliates = this.data.allUsers().filter(u => u.role === 'affiliate' || Boolean(u.affiliateCode));
+    const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://digidocs.ma';
+    const xmlContent = generateSitemapXml(services, affiliates, baseUrl);
+    this.copyToClipboard(xmlContent, 'Code XML du Sitemap');
+  }
+
+  copySitemapUrl() {
+    const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://digidocs.ma';
+    this.copyToClipboard(`${baseUrl}/sitemap.xml`, 'URL du sitemap.xml');
+  }
+
+  downloadRobotsTxt() {
+    const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://digidocs.ma';
+    const txtContent = generateRobotsTxt(baseUrl);
+
+    const blob = new Blob([txtContent], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'robots.txt';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    this.data.showToast('Robots.txt Téléchargé !', 'Fichier de configuration SEO exporté.');
   }
 }
 

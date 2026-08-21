@@ -3395,6 +3395,128 @@ Rédige uniquement le message final suggéré. Le ton doit être professionnel, 
   }
 });
 
+// --- SEO SITEMAP & ROBOTS ENDPOINTS ---
+
+app.get('/robots.txt', (req, res) => {
+  const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'https';
+  const host = req.headers['x-forwarded-host'] || req.get('host') || 'digidocs.ma';
+  const baseUrl = `${protocol}://${host}`;
+
+  const robots = `# robots.txt for DigiDocs Hub / ROA Services
+User-agent: *
+Allow: /
+Allow: /?parrain=*
+Allow: /?ref=*
+Allow: /?service=*
+Disallow: /api/
+Disallow: /admin
+Disallow: /checkout/session
+Disallow: /internal/
+
+# Sitemap index
+Sitemap: ${baseUrl}/sitemap.xml
+`;
+  res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+  res.setHeader('Cache-Control', 'public, max-age=3600');
+  res.send(robots);
+});
+
+app.get('/sitemap.xml', async (req, res) => {
+  try {
+    const db = await loadDatabase();
+    const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'https';
+    const host = req.headers['x-forwarded-host'] || req.get('host') || 'digidocs.ma';
+    const baseUrl = `${protocol}://${host}`.replace(/\/+$/, '');
+    const today = new Date().toISOString().split('T')[0];
+
+    const escapeXml = (str: string) => str.replace(/[<>&'"]/g, (c) => {
+      switch (c) {
+        case '<': return '&lt;';
+        case '>': return '&gt;';
+        case '&': return '&amp;';
+        case '\'': return '&apos;';
+        case '"': return '&quot;';
+        default: return c;
+      }
+    });
+
+    const entries: { loc: string; lastmod: string; changefreq: string; priority: string }[] = [
+      { loc: `${baseUrl}/`, lastmod: today, changefreq: 'daily', priority: '1.00' },
+      { loc: `${baseUrl}/#services`, lastmod: today, changefreq: 'weekly', priority: '0.90' },
+      { loc: `${baseUrl}/#simulator`, lastmod: today, changefreq: 'weekly', priority: '0.85' },
+      { loc: `${baseUrl}/#workflow`, lastmod: today, changefreq: 'monthly', priority: '0.80' },
+      { loc: `${baseUrl}/#parrainage`, lastmod: today, changefreq: 'weekly', priority: '0.85' },
+      { loc: `${baseUrl}/#tarifs`, lastmod: today, changefreq: 'weekly', priority: '0.80' },
+      { loc: `${baseUrl}/#faq`, lastmod: today, changefreq: 'monthly', priority: '0.70' },
+      { loc: `${baseUrl}/#contact`, lastmod: today, changefreq: 'monthly', priority: '0.70' },
+    ];
+
+    // Add active database services
+    if (Array.isArray(db.services)) {
+      for (const srv of db.services) {
+        if (srv.isActive !== false) {
+          const slug = (srv.name || '')
+            .toLowerCase()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/(^-|-$)/g, '');
+          entries.push({
+            loc: `${baseUrl}/?service=${encodeURIComponent(srv.id)}&slug=${slug}`,
+            lastmod: today,
+            changefreq: 'weekly',
+            priority: '0.85'
+          });
+        }
+      }
+    }
+
+    // Add registered affiliates & sponsors
+    if (Array.isArray(db.users)) {
+      const seen = new Set<string>();
+      for (const u of db.users) {
+        if ((u.role === 'affiliate' || u.affiliateCode) && u.active !== false) {
+          const code = (u.affiliateCode || u.id || '').toUpperCase();
+          if (code && !seen.has(code)) {
+            seen.add(code);
+            entries.push({
+              loc: `${baseUrl}/?parrain=${encodeURIComponent(code)}`,
+              lastmod: today,
+              changefreq: 'weekly',
+              priority: '0.75'
+            });
+          }
+        }
+      }
+    }
+
+    let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
+    xml += `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"\n`;
+    xml += `        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"\n`;
+    xml += `        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"\n`;
+    xml += `        xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9\n`;
+    xml += `        http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">\n`;
+
+    for (const item of entries) {
+      xml += `  <url>\n`;
+      xml += `    <loc>${escapeXml(item.loc)}</loc>\n`;
+      xml += `    <lastmod>${item.lastmod}</lastmod>\n`;
+      xml += `    <changefreq>${item.changefreq}</changefreq>\n`;
+      xml += `    <priority>${item.priority}</priority>\n`;
+      xml += `  </url>\n`;
+    }
+
+    xml += `</urlset>\n`;
+
+    res.setHeader('Content-Type', 'application/xml; charset=utf-8');
+    res.setHeader('Cache-Control', 'public, max-age=3600');
+    res.send(xml);
+  } catch (err) {
+    console.error('Error generating sitemap.xml:', err);
+    res.status(500).send('Error generating sitemap');
+  }
+});
+
 // --- STATIC FILES & ROUTING ---
 
 /**
