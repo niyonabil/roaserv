@@ -501,10 +501,601 @@
 }
 
 <!-- ==========================================
-     LANDING PAGE (PUBLIC VIEW)
+     LANDING PAGE PARRAIN (DEDICATED SPONSOR / AFFILIATE LANDING PAGE)
      ========================================== -->
-@if (data.activeRole() === 'public') {
+@if (data.showSponsorLanding()) {
+  <div class="bg-slate-900 min-h-screen text-slate-100 selection:bg-purple-500 selection:text-white" id="sponsor-landing-page">
+    
+    <!-- Top Affiliate Referral Notification Bar -->
+    <div class="bg-gradient-to-r from-purple-700 via-indigo-700 to-blue-700 text-white px-4 py-2.5 shadow-md sticky top-0 z-40">
+      <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3 text-xs">
+        <div class="flex items-center gap-2">
+          <span class="material-icons text-amber-300 text-base animate-bounce">local_offer</span>
+          <span class="font-medium">
+            Page officielle parrainée par <strong class="text-amber-200 underline">{{ currentSponsor()?.name || 'Ambassadeur Agréé' }}</strong>
+            (Code : <code class="font-mono bg-black/30 px-1.5 py-0.5 rounded text-amber-300 font-bold">{{ getSponsorRefCode(currentSponsor()) }}</code>)
+          </span>
+          <span class="hidden md:inline-block bg-white/20 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider">
+            -10% de réduction immédiate
+          </span>
+        </div>
+        <div class="flex items-center gap-3">
+          <button 
+            type="button" 
+            (click)="copySponsorLink(currentSponsor())" 
+            class="hover:text-amber-200 text-[11px] font-bold flex items-center gap-1 cursor-pointer bg-white/10 hover:bg-white/20 px-2.5 py-1 rounded-lg transition-colors"
+          >
+            <span class="material-icons text-xs">link</span> Copier le lien
+          </button>
+          <button 
+            type="button" 
+            (click)="closeSponsorLandingView()" 
+            class="text-white/80 hover:text-white text-[11px] font-semibold flex items-center gap-1 cursor-pointer"
+            title="Revenir au portail standard"
+          >
+            <span class="material-icons text-xs">close</span> Revenir au site
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Header Navigation -->
+    <header class="bg-slate-900/90 backdrop-blur-md border-b border-slate-800 sticky top-10 z-30">
+      <div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-purple-600 to-blue-600 flex items-center justify-center text-white shadow-lg">
+            <span class="material-icons text-2xl">article</span>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="text-xl font-black text-white tracking-tight">{{ data.settings()?.saasWorkspaceTitle || 'DigiDocs Hub' }}</span>
+              <span class="bg-purple-500/20 text-purple-300 border border-purple-500/30 text-[10px] font-black uppercase px-2 py-0.5 rounded-full">
+                Parrainage Officiel
+              </span>
+            </div>
+            <p class="text-[10px] text-slate-400">Plateforme de Saisie, Numérisation & Gestion Documentaire</p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-3 md:gap-4">
+          <a href="#sponsor-services" class="hidden md:inline-block text-xs font-semibold text-slate-300 hover:text-white transition-colors">Services & Tarifs</a>
+          <a href="#sponsor-calculator" class="hidden md:inline-block text-xs font-semibold text-slate-300 hover:text-white transition-colors">Simulateur</a>
+          <a href="#sponsor-workflow" class="hidden md:inline-block text-xs font-semibold text-slate-300 hover:text-white transition-colors">Comment ça marche</a>
+          
+          <button 
+            type="button" 
+            (click)="openSponsorSocialKitModal(currentSponsor())" 
+            class="bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold px-3 py-2 rounded-xl transition-all shadow-md flex items-center gap-1.5 cursor-pointer"
+          >
+            <span class="material-icons text-sm">share</span> <span class="hidden sm:inline">Kit Réseaux Sociaux</span>
+          </button>
+
+          @if (!data.currentUser()) {
+            <button 
+              type="button" 
+              (click)="showAuthModal.set('login')" 
+              class="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold px-3.5 py-2 rounded-xl border border-slate-700 transition-colors cursor-pointer"
+            >
+              Se Connecter
+            </button>
+          } @else {
+            <button 
+              type="button" 
+              (click)="closeSponsorLandingView()" 
+              class="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold px-3.5 py-2 rounded-xl border border-slate-700 transition-colors cursor-pointer flex items-center gap-1"
+            >
+              <span class="material-icons text-sm">dashboard</span> Mon Espace
+            </button>
+          }
+        </div>
+      </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 py-8 space-y-16">
+      
+      <!-- HERO & SPONSOR IDENTITY PROFILE CARD -->
+      <section class="relative bg-gradient-to-br from-slate-850 via-slate-900 to-purple-950/70 border border-slate-800 rounded-3xl p-6 md:p-10 shadow-2xl overflow-hidden">
+        <!-- Background Ambient Glow -->
+        <div class="absolute -top-24 -right-24 w-96 h-96 bg-purple-600/15 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="absolute -bottom-24 -left-24 w-96 h-96 bg-blue-600/15 rounded-full blur-3xl pointer-events-none"></div>
+
+        <div class="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+          
+          <!-- Left Column: Sponsor Presentation & Pitch -->
+          <div class="lg:col-span-7 space-y-6">
+            <div class="inline-flex items-center gap-2 bg-gradient-to-r from-purple-500/20 to-indigo-500/20 border border-purple-400/30 text-purple-300 text-xs font-bold uppercase px-3.5 py-1.5 rounded-full">
+              <span class="material-icons text-sm text-amber-300">verified</span>
+              <span>Recommandé par votre Parrain Certifié</span>
+            </div>
+
+            <div>
+              <h1 class="text-3xl md:text-5xl font-black text-white tracking-tight leading-tight">
+                Tous vos travaux documentaires & numériques, <span class="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400">avec réduction parrain</span>.
+              </h1>
+              <p class="text-slate-300 text-sm md:text-base mt-4 leading-relaxed">
+                Profitez d'un accompagnement sur-mesure et d'un traitement haute fidélité pour vos saisies manuscrites, conversions OCR, PAO de mémoires/livres, impressions et livraisons partout au Maroc.
+              </p>
+            </div>
+
+            <!-- Sponsor Bio & Direct Contact Details -->
+            <div class="bg-slate-800/80 backdrop-blur-md rounded-2xl p-5 border border-slate-700/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div class="flex items-center gap-4">
+                <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-purple-600 to-indigo-600 text-white font-black text-xl flex items-center justify-center shadow-lg border border-purple-400/30 shrink-0">
+                  {{ (currentSponsor()?.name || 'Parrain').substring(0, 2).toUpperCase() }}
+                </div>
+                <div>
+                  <div class="flex items-center gap-2">
+                    <h3 class="text-base font-black text-white">{{ currentSponsor()?.name || 'Ambassadeur Officiel' }}</h3>
+                    <span class="bg-emerald-500/20 text-emerald-300 text-[10px] font-bold px-2 py-0.5 rounded-full border border-emerald-500/30 flex items-center gap-1">
+                      <span class="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-ping"></span> Actif
+                    </span>
+                  </div>
+                  <p class="text-xs text-purple-300 font-medium">
+                    📍 {{ currentSponsor()?.city || 'Casablanca, Maroc' }} • Ambassadeur & Référent Agréé
+                  </p>
+                  @if (currentSponsor()?.email) {
+                    <p class="text-[11px] text-slate-400 mt-0.5">📧 {{ currentSponsor()?.email }}</p>
+                  }
+                </div>
+              </div>
+
+              <!-- Quick direct WhatsApp or Phone contact with Sponsor -->
+              <div class="flex items-center gap-2 self-stretch sm:self-auto">
+                @if (currentSponsor()?.phone) {
+                  <a 
+                    [href]="'https://wa.me/' + currentSponsor()?.phone?.replace('+', '')?.replace(' ', '')" 
+                    target="_blank" 
+                    class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-3.5 py-2 rounded-xl flex items-center justify-center gap-1.5 shadow-md transition-transform active:scale-95 cursor-pointer flex-1 sm:flex-initial"
+                    title="Contacter le parrain sur WhatsApp"
+                  >
+                    <span class="material-icons text-sm">chat</span> Contacter Parrain
+                  </a>
+                }
+              </div>
+            </div>
+
+            <!-- Sponsor Coupon Privilege Box -->
+            <div class="bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent border border-amber-500/30 rounded-2xl p-5 space-y-3">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-black uppercase tracking-wider text-amber-300 flex items-center gap-1.5">
+                  <span class="material-icons text-sm text-amber-400">card_giftcard</span>
+                  Votre Code Privilège Parrain (-10% sur tout le catalogue)
+                </span>
+                <span class="bg-amber-400 text-amber-950 text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full">
+                  Validé & Actif
+                </span>
+              </div>
+              <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-slate-900/90 p-3 rounded-xl border border-amber-500/20">
+                <div class="flex items-center gap-2">
+                  <span class="font-mono text-xl md:text-2xl font-black text-amber-300 tracking-wider">
+                    {{ getSponsorRefCode(currentSponsor()) }}
+                  </span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <button 
+                    type="button" 
+                    (click)="copyToClipboard(getSponsorRefCode(currentSponsor()), 'Code Parrain')"
+                    class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs px-4 py-2 rounded-lg flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-sm flex-1 sm:flex-initial"
+                  >
+                    <span class="material-icons text-sm">content_copy</span> Copier le Code
+                  </button>
+                  <button 
+                    type="button" 
+                    (click)="openRegisterFromSponsorLanding(currentSponsor())"
+                    class="bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs px-4 py-2 rounded-lg flex items-center justify-center gap-1 transition-all cursor-pointer shadow-sm flex-1 sm:flex-initial"
+                  >
+                    Profiter de l'offre <span class="material-icons text-sm">arrow_forward</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Right Column: Social Media Publishing & Quick Share Center -->
+          <div class="lg:col-span-5 bg-slate-800/60 border border-slate-700/80 rounded-2xl p-6 space-y-5">
+            <div class="flex items-center justify-between border-b border-slate-700 pb-3">
+              <div>
+                <h3 class="text-sm font-black text-white uppercase tracking-wider flex items-center gap-2">
+                  <span class="material-icons text-purple-400 text-base">share</span>
+                  Partager sur les Réseaux Sociaux
+                </h3>
+                <p class="text-[11px] text-slate-400 mt-0.5">Publiez ou envoyez cette page avec votre code pré-inclus</p>
+              </div>
+            </div>
+
+            <!-- Social Media Buttons Grid -->
+            <div class="grid grid-cols-2 gap-3">
+              <!-- WhatsApp -->
+              <button 
+                type="button" 
+                (click)="shareSponsorWhatsApp(currentSponsor())"
+                class="bg-emerald-600 hover:bg-emerald-500 text-white p-3 rounded-xl font-bold text-xs flex items-center gap-2.5 transition-transform active:scale-95 cursor-pointer shadow-sm"
+              >
+                <div class="w-7 h-7 rounded-lg bg-black/20 flex items-center justify-center shrink-0">
+                  <span class="material-icons text-base">chat</span>
+                </div>
+                <span class="text-left">WhatsApp Direct</span>
+              </button>
+
+              <!-- Facebook -->
+              <button 
+                type="button" 
+                (click)="shareSponsorFacebook(currentSponsor())"
+                class="bg-blue-600 hover:bg-blue-500 text-white p-3 rounded-xl font-bold text-xs flex items-center gap-2.5 transition-transform active:scale-95 cursor-pointer shadow-sm"
+              >
+                <div class="w-7 h-7 rounded-lg bg-black/20 flex items-center justify-center shrink-0">
+                  <span class="material-icons text-base">public</span>
+                </div>
+                <span class="text-left">Facebook</span>
+              </button>
+
+              <!-- LinkedIn -->
+              <button 
+                type="button" 
+                (click)="shareSponsorLinkedIn(currentSponsor())"
+                class="bg-sky-700 hover:bg-sky-600 text-white p-3 rounded-xl font-bold text-xs flex items-center gap-2.5 transition-transform active:scale-95 cursor-pointer shadow-sm"
+              >
+                <div class="w-7 h-7 rounded-lg bg-black/20 flex items-center justify-center shrink-0">
+                  <span class="material-icons text-base">work</span>
+                </div>
+                <span class="text-left">LinkedIn</span>
+              </button>
+
+              <!-- X / Twitter -->
+              <button 
+                type="button" 
+                (click)="shareSponsorTwitter(currentSponsor())"
+                class="bg-slate-950 hover:bg-slate-900 border border-slate-700 text-white p-3 rounded-xl font-bold text-xs flex items-center gap-2.5 transition-transform active:scale-95 cursor-pointer shadow-sm"
+              >
+                <div class="w-7 h-7 rounded-lg bg-white/10 flex items-center justify-center shrink-0">
+                  <span class="material-icons text-base">send</span>
+                </div>
+                <span class="text-left">X / Twitter</span>
+              </button>
+
+              <!-- Telegram -->
+              <button 
+                type="button" 
+                (click)="shareSponsorTelegram(currentSponsor())"
+                class="bg-sky-600 hover:bg-sky-500 text-white p-3 rounded-xl font-bold text-xs flex items-center gap-2.5 transition-transform active:scale-95 cursor-pointer shadow-sm"
+              >
+                <div class="w-7 h-7 rounded-lg bg-black/20 flex items-center justify-center shrink-0">
+                  <span class="material-icons text-base">telegram</span>
+                </div>
+                <span class="text-left">Telegram</span>
+              </button>
+
+              <!-- Email / SMS -->
+              <button 
+                type="button" 
+                (click)="shareSponsorEmail(currentSponsor())"
+                class="bg-purple-700 hover:bg-purple-600 text-white p-3 rounded-xl font-bold text-xs flex items-center gap-2.5 transition-transform active:scale-95 cursor-pointer shadow-sm"
+              >
+                <div class="w-7 h-7 rounded-lg bg-black/20 flex items-center justify-center shrink-0">
+                  <span class="material-icons text-base">email</span>
+                </div>
+                <span class="text-left">E-mail / SMS</span>
+              </button>
+            </div>
+
+            <!-- Canvas High-Resolution Social Flyer Generator Card -->
+            <div class="bg-gradient-to-r from-purple-900/60 to-indigo-900/60 border border-purple-500/30 rounded-xl p-4 flex items-center justify-between gap-3">
+              <div>
+                <p class="text-xs font-bold text-purple-200">Affiche Réseaux Sociaux HD (1080x1080)</p>
+                <p class="text-[10px] text-slate-400">Générez en 1 clic un visuel personnalisé pour Instagram & Facebook Stories</p>
+              </div>
+              <button 
+                type="button" 
+                (click)="generateSponsorSocialBanner(currentSponsor())"
+                class="bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs px-3.5 py-2.5 rounded-xl shadow-md flex items-center gap-1.5 transition-transform active:scale-95 cursor-pointer shrink-0"
+              >
+                <span class="material-icons text-sm">download</span> Télécharger
+              </button>
+            </div>
+
+            <!-- Copyable Direct Referral Link Field -->
+            <div class="space-y-1.5">
+              <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Lien de la page parrain :</label>
+              <div class="flex items-center gap-2 bg-slate-900 p-2 rounded-xl border border-slate-700">
+                <input 
+                  type="text" 
+                  [value]="getSponsorLandingUrl(currentSponsor())" 
+                  readonly 
+                  class="bg-transparent text-xs text-purple-300 font-mono flex-1 outline-none select-all" 
+                />
+                <button 
+                  type="button" 
+                  (click)="copySponsorLink(currentSponsor())" 
+                  class="text-xs font-bold text-slate-300 hover:text-white bg-slate-800 px-2.5 py-1 rounded-lg border border-slate-700 cursor-pointer"
+                >
+                  Copier
+                </button>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+      </section>
+
+      <!-- SERVICES SHOWCASE & CATEGORY FILTERS -->
+      <section id="sponsor-services" class="space-y-8">
+        <div class="text-center max-w-2xl mx-auto space-y-3">
+          <span class="bg-purple-500/20 text-purple-300 text-[10px] font-black uppercase px-3 py-1 rounded-full border border-purple-500/30">
+            Solutions & Prestations de Saisie
+          </span>
+          <h2 class="text-3xl font-black text-white tracking-tight">Catalogue des Services Éligibles</h2>
+          <p class="text-xs md:text-sm text-slate-400">
+            Toutes les prestations ci-dessous bénéficient de la réduction parrain de 10% et d'une prise en charge prioritaire.
+          </p>
+
+          <!-- Category Pills Filter -->
+          <div class="flex flex-wrap items-center justify-center gap-2 pt-3">
+            <button 
+              type="button" 
+              (click)="sponsorLandingCategoryFilter.set('all')"
+              [class]="sponsorLandingCategoryFilter() === 'all' ? 'bg-purple-600 text-white font-bold text-xs px-4 py-2 rounded-xl shadow-md cursor-pointer' : 'bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs px-4 py-2 rounded-xl border border-slate-700 cursor-pointer'"
+            >
+              Tous les services ({{ data.services().length }})
+            </button>
+            <button 
+              type="button" 
+              (click)="sponsorLandingCategoryFilter.set('saisie')"
+              [class]="sponsorLandingCategoryFilter() === 'saisie' ? 'bg-purple-600 text-white font-bold text-xs px-4 py-2 rounded-xl shadow-md cursor-pointer' : 'bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs px-4 py-2 rounded-xl border border-slate-700 cursor-pointer'"
+            >
+              ✍️ Saisie & Transcription
+            </button>
+            <button 
+              type="button" 
+              (click)="sponsorLandingCategoryFilter.set('conversion')"
+              [class]="sponsorLandingCategoryFilter() === 'conversion' ? 'bg-purple-600 text-white font-bold text-xs px-4 py-2 rounded-xl shadow-md cursor-pointer' : 'bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs px-4 py-2 rounded-xl border border-slate-700 cursor-pointer'"
+            >
+              🔄 Conversion & OCR
+            </button>
+            <button 
+              type="button" 
+              (click)="sponsorLandingCategoryFilter.set('mise_en_forme')"
+              [class]="sponsorLandingCategoryFilter() === 'mise_en_forme' ? 'bg-purple-600 text-white font-bold text-xs px-4 py-2 rounded-xl shadow-md cursor-pointer' : 'bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs px-4 py-2 rounded-xl border border-slate-700 cursor-pointer'"
+            >
+              📐 Mise en page & PAO
+            </button>
+            <button 
+              type="button" 
+              (click)="sponsorLandingCategoryFilter.set('impression')"
+              [class]="sponsorLandingCategoryFilter() === 'impression' ? 'bg-purple-600 text-white font-bold text-xs px-4 py-2 rounded-xl shadow-md cursor-pointer' : 'bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs px-4 py-2 rounded-xl border border-slate-700 cursor-pointer'"
+            >
+              🖨️ Impression Professionnelle
+            </button>
+            <button 
+              type="button" 
+              (click)="sponsorLandingCategoryFilter.set('livraison')"
+              [class]="sponsorLandingCategoryFilter() === 'livraison' ? 'bg-purple-600 text-white font-bold text-xs px-4 py-2 rounded-xl shadow-md cursor-pointer' : 'bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs px-4 py-2 rounded-xl border border-slate-700 cursor-pointer'"
+            >
+              🚚 Livraison Express
+            </button>
+          </div>
+        </div>
+
+        <!-- Services Grid Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          @for (s of filteredSponsorServices(); track s.id) {
+            <div class="bg-slate-850 rounded-2xl border border-slate-800 shadow-xl overflow-hidden flex flex-col justify-between hover:border-purple-500/50 hover:shadow-2xl transition-all group">
+              
+              <!-- Card Cover & Badges -->
+              <div class="relative h-48 bg-slate-900 overflow-hidden">
+                @if (s.imageUrl) {
+                  <img 
+                    [src]="s.imageUrl" 
+                    [alt]="s.name" 
+                    class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    referrerpolicy="no-referrer"
+                  />
+                } @else {
+                  <div class="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-slate-900 via-purple-950/40 to-slate-900 text-purple-400">
+                    <span class="material-icons text-6xl">
+                      @if (s.category === 'saisie') { edit_note }
+                      @else if (s.category === 'conversion') { transform }
+                      @else if (s.category === 'mise_en_forme') { auto_fix_high }
+                      @else if (s.category === 'impression') { print }
+                      @else if (s.category === 'livraison') { local_shipping }
+                      @else { description }
+                    </span>
+                  </div>
+                }
+
+                <div class="absolute top-3 left-3">
+                  <span class="bg-slate-950/80 backdrop-blur-md text-white text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider border border-white/10">
+                    {{ s.category }}
+                  </span>
+                </div>
+
+                <div class="absolute bottom-3 right-3 flex items-center gap-1.5">
+                  <span class="bg-slate-900/90 line-through text-slate-400 text-[11px] font-semibold px-2 py-0.5 rounded-lg border border-slate-700">
+                    {{ s.unitPrice }} DH
+                  </span>
+                  <span class="bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-xs font-black px-2.5 py-1 rounded-lg shadow-lg border border-purple-400/30">
+                    {{ (s.unitPrice * 0.9) | number:'1.2-2' }} DH / {{ s.unitPriceName }}
+                  </span>
+                </div>
+              </div>
+
+              <!-- Card Body Info -->
+              <div class="p-6 flex-1 flex flex-col justify-between space-y-4">
+                <div>
+                  <h3 class="text-base font-bold text-white group-hover:text-purple-300 transition-colors">{{ s.name }}</h3>
+                  <p class="text-xs text-slate-300 leading-relaxed mt-2 line-clamp-3">{{ s.description }}</p>
+
+                  @if (s.options && s.options.length > 0) {
+                    <div class="mt-4 space-y-1.5">
+                      <p class="text-[10px] font-bold text-purple-300 uppercase tracking-wider">Finitions incluses / disponibles :</p>
+                      <div class="flex flex-wrap gap-1.5">
+                        @for (opt of s.options; track opt.id) {
+                          <span class="bg-slate-800 text-slate-300 text-[10px] px-2 py-0.5 rounded-md border border-slate-700 font-medium">
+                            ✓ {{ opt.name }} (+{{ opt.price }} DH)
+                          </span>
+                        }
+                      </div>
+                    </div>
+                  }
+                </div>
+
+                <!-- Card Actions -->
+                <div class="pt-4 border-t border-slate-800 flex items-center justify-between gap-2">
+                  <button 
+                    type="button" 
+                    (click)="openOrderFromSponsorLanding(s.id, currentSponsor())"
+                    class="bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs px-3.5 py-2 rounded-xl flex items-center gap-1.5 transition-all shadow-md active:scale-95 cursor-pointer flex-1 justify-center"
+                  >
+                    Commander ce service <span class="material-icons text-sm">arrow_forward</span>
+                  </button>
+
+                  <button 
+                    type="button" 
+                    (click)="shareSponsorWhatsApp(currentSponsor(), s)"
+                    class="bg-emerald-600 hover:bg-emerald-500 text-white p-2 rounded-xl transition-colors cursor-pointer shrink-0"
+                    title="Partager ce service sur WhatsApp"
+                  >
+                    <span class="material-icons text-sm">share</span>
+                  </button>
+                </div>
+
+              </div>
+
+            </div>
+          }
+        </div>
+      </section>
+
+      <!-- 5-STEPS PRODUCTION WORKFLOW -->
+      <section id="sponsor-workflow" class="bg-slate-850 rounded-3xl p-8 md:p-12 border border-slate-800 shadow-xl space-y-8">
+        <div class="text-center max-w-2xl mx-auto">
+          <span class="text-xs font-black uppercase text-purple-400 tracking-wider">Processus de Traitement</span>
+          <h2 class="text-2xl md:text-3xl font-black text-white mt-1">Comment se déroule votre commande ?</h2>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-6">
+          <div class="bg-slate-900/80 p-5 rounded-2xl border border-slate-800 text-center flex flex-col items-center">
+            <div class="w-12 h-12 rounded-2xl bg-purple-600/20 border border-purple-500/30 text-purple-300 flex items-center justify-center font-black text-base mb-3">1</div>
+            <h4 class="font-bold text-white text-sm mb-1">Dépôt</h4>
+            <p class="text-xs text-slate-400">Téléversez vos photos, manuscrits scannés ou fichiers PDF.</p>
+          </div>
+
+          <div class="bg-slate-900/80 p-5 rounded-2xl border border-slate-800 text-center flex flex-col items-center">
+            <div class="w-12 h-12 rounded-2xl bg-purple-600/20 border border-purple-500/30 text-purple-300 flex items-center justify-center font-black text-base mb-3">2</div>
+            <h4 class="font-bold text-white text-sm mb-1">Remise Parrain</h4>
+            <p class="text-xs text-slate-400">Votre réduction de -10% est appliquée immédiatement sur le devis.</p>
+          </div>
+
+          <div class="bg-slate-900/80 p-5 rounded-2xl border border-slate-800 text-center flex flex-col items-center">
+            <div class="w-12 h-12 rounded-2xl bg-purple-600/20 border border-purple-500/30 text-purple-300 flex items-center justify-center font-black text-base mb-3">3</div>
+            <h4 class="font-bold text-white text-sm mb-1">Acompte</h4>
+            <p class="text-xs text-slate-400">Réglez l'acompte obligatoire pour lancer la production en atelier.</p>
+          </div>
+
+          <div class="bg-slate-900/80 p-5 rounded-2xl border border-slate-800 text-center flex flex-col items-center">
+            <div class="w-12 h-12 rounded-2xl bg-purple-600/20 border border-purple-500/30 text-purple-300 flex items-center justify-center font-black text-base mb-3">4</div>
+            <h4 class="font-bold text-white text-sm mb-1">Saisie & QA</h4>
+            <p class="text-xs text-slate-400">Opérateurs qualifiés et double contrôle qualité rigoureux.</p>
+          </div>
+
+          <div class="bg-slate-900/80 p-5 rounded-2xl border border-slate-800 text-center flex flex-col items-center">
+            <div class="w-12 h-12 rounded-2xl bg-purple-600/20 border border-purple-500/30 text-purple-300 flex items-center justify-center font-black text-base mb-3">5</div>
+            <h4 class="font-bold text-white text-sm mb-1">Livraison</h4>
+            <p class="text-xs text-slate-400">Téléchargement instantané ou expédition papier chez vous.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- GUARANTEES & TRUST -->
+      <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="bg-slate-850 p-5 rounded-2xl border border-slate-800 flex items-start gap-3.5">
+          <span class="material-icons text-2xl text-emerald-400">verified_user</span>
+          <div>
+            <h4 class="font-bold text-white text-xs">100% Satisfait</h4>
+            <p class="text-[11px] text-slate-400 mt-0.5">Corrections illimitées jusqu'à conformité totale du document.</p>
+          </div>
+        </div>
+
+        <div class="bg-slate-850 p-5 rounded-2xl border border-slate-800 flex items-start gap-3.5">
+          <span class="material-icons text-2xl text-purple-400">lock</span>
+          <div>
+            <h4 class="font-bold text-white text-xs">Confidentialité Totale</h4>
+            <p class="text-[11px] text-slate-400 mt-0.5">Données chiffrées et clause de non-divulgation (NDA).</p>
+          </div>
+        </div>
+
+        <div class="bg-slate-850 p-5 rounded-2xl border border-slate-800 flex items-start gap-3.5">
+          <span class="material-icons text-2xl text-amber-400">bolt</span>
+          <div>
+            <h4 class="font-bold text-white text-xs">Délais Express 24/48h</h4>
+            <p class="text-[11px] text-slate-400 mt-0.5">Traitement ultra-rapide pour vos urgences et soutenances.</p>
+          </div>
+        </div>
+
+        <div class="bg-slate-850 p-5 rounded-2xl border border-slate-800 flex items-start gap-3.5">
+          <span class="material-icons text-2xl text-blue-400">payments</span>
+          <div>
+            <h4 class="font-bold text-white text-xs">Paiement Sécurisé</h4>
+            <p class="text-[11px] text-slate-400 mt-0.5">Espèces, virement bancaire ou paiement à la livraison COD.</p>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Sponsor Landing Page Footer -->
+    <footer class="bg-slate-950 border-t border-slate-800 text-slate-400 text-xs py-10 mt-16">
+      <div class="max-w-7xl mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-6">
+        <div>
+          <div class="flex items-center gap-2 text-white font-bold text-sm mb-1">
+            <span class="material-icons text-purple-500">article</span>
+            <span>{{ data.settings()?.saasWorkspaceTitle || 'DigiDocs Hub' }}</span>
+          </div>
+          <p class="text-[11px] text-slate-500">Page officielle du programme de parrainage et d'ambassadeurs certifiés.</p>
+        </div>
+
+        <div class="flex items-center gap-4">
+          <button (click)="openSponsorSocialKitModal(currentSponsor())" class="text-purple-400 hover:text-purple-300 font-bold flex items-center gap-1 cursor-pointer">
+            <span class="material-icons text-sm">share</span> Kit Réseaux Sociaux
+          </button>
+          <button (click)="closeSponsorLandingView()" class="text-slate-400 hover:text-white cursor-pointer">
+            Accès Portail Standard
+          </button>
+        </div>
+      </div>
+    </footer>
+
+  </div>
+}
+
+<!-- ==========================================
+     STANDARD LANDING PAGE (PUBLIC VIEW)
+     ========================================== -->
+@if (data.activeRole() === 'public' && !data.showSponsorLanding()) {
   <div class="bg-slate-50 min-h-screen text-slate-800">
+    
+    <!-- If visitor has a recognized sponsor/referral code, show notification banner -->
+    @if (data.publicSponsor() || data.activeAffiliateCode()) {
+      <div class="bg-gradient-to-r from-purple-700 to-indigo-700 text-white px-4 py-2.5 text-xs shadow-sm flex items-center justify-between">
+        <div class="max-w-7xl mx-auto flex items-center justify-between w-full">
+          <div class="flex items-center gap-2">
+            <span class="material-icons text-amber-300 text-sm">card_giftcard</span>
+            <span>
+              Offre Parrain Détectée : <strong>{{ data.publicSponsor()?.name || 'Ambassadeur DigiDocs' }}</strong> (Code : <code class="font-mono bg-black/20 px-1 py-0.5 rounded text-amber-300 font-bold">{{ data.activeAffiliateCode() }}</code>) - Bénéficiez de 10% de réduction.
+            </span>
+          </div>
+          <button 
+            type="button" 
+            (click)="openSponsorLandingView(data.publicSponsor())"
+            class="bg-amber-400 hover:bg-amber-300 text-slate-950 font-black px-3 py-1 rounded-lg transition-all text-[11px] shadow-xs cursor-pointer shrink-0"
+          >
+            Voir la Page Parrain
+          </button>
+        </div>
+      </div>
+    }
+
     <!-- Hero Banner Section -->
     <header class="bg-white border-b border-slate-200">
       <div class="max-w-7xl mx-auto px-4 py-6 flex items-center justify-between">
@@ -7245,11 +7836,27 @@
                             <td class="p-3.5 text-right space-x-1">
                               <button 
                                 type="button" 
-                                (click)="copyToClipboard(aff.affiliateLink || ('https://digidocs.ma/?ref=' + aff.affiliateCode), 'Lien affilié')"
-                                class="bg-purple-50 hover:bg-purple-100 text-purple-700 px-2.5 py-1 rounded-lg font-bold text-[11px] transition-colors cursor-pointer"
-                                title="Copier le lien d'affiliation"
+                                (click)="openSponsorLandingView(aff)"
+                                class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 px-2 py-1 rounded-lg font-bold text-[11px] transition-colors cursor-pointer border border-indigo-200"
+                                title="Prévisualiser la Landing Page du Parrain"
                               >
-                                Copier Lien
+                                <span class="material-icons text-[12px] align-middle">visibility</span> Page
+                              </button>
+                              <button 
+                                type="button" 
+                                (click)="openSponsorSocialKitModal(aff)"
+                                class="bg-purple-50 hover:bg-purple-100 text-purple-700 px-2 py-1 rounded-lg font-bold text-[11px] transition-colors cursor-pointer border border-purple-200"
+                                title="Kit réseaux sociaux & Affiche HD"
+                              >
+                                <span class="material-icons text-[12px] align-middle">campaign</span> Kit
+                              </button>
+                              <button 
+                                type="button" 
+                                (click)="copySponsorLink(aff)"
+                                class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-2 py-1 rounded-lg font-bold text-[11px] transition-colors cursor-pointer"
+                                title="Copier le lien public"
+                              >
+                                Lien
                               </button>
                               <button 
                                 type="button" 
@@ -7261,7 +7868,7 @@
                               <button 
                                 type="button" 
                                 (click)="deleteUserAccount(aff)"
-                                class="bg-rose-50 hover:bg-rose-100 text-rose-700 px-2.5 py-1 rounded-lg font-bold text-[11px] transition-colors cursor-pointer border border-rose-200"
+                                class="bg-rose-50 hover:bg-rose-100 text-rose-700 px-2 py-1 rounded-lg font-bold text-[11px] transition-colors cursor-pointer border border-rose-200"
                                 title="Supprimer cet affilié"
                               >
                                 Supprimer
@@ -7478,33 +8085,57 @@
                     </p>
                   </div>
 
-                  <div class="p-5 bg-indigo-50/50 rounded-2xl border border-indigo-200 space-y-3">
+                  <!-- LANDING PAGE PARRAIN & LIEN OFFICIEL -->
+                  <div class="p-5 bg-gradient-to-br from-purple-50 via-indigo-50 to-white rounded-2xl border-2 border-purple-300 space-y-4 shadow-xs">
                     <div class="flex items-center justify-between">
-                      <span class="text-xs font-bold uppercase text-indigo-900">Lien Affilié Direct</span>
-                      <span class="material-icons text-indigo-600">link</span>
-                    </div>
-                    <div class="bg-white p-3 rounded-xl border border-indigo-200 flex items-center justify-between gap-2">
-                      <span class="font-mono text-xs font-bold text-slate-800 truncate">
-                        {{ data.currentUser()?.affiliateLink || ('https://digidocs.ma/?ref=' + (data.currentUser()?.affiliateCode || 'AFF-DEMO')) }}
+                      <div class="flex items-center gap-2">
+                        <span class="material-icons text-purple-700 text-xl">web</span>
+                        <span class="text-xs font-black uppercase tracking-wider text-purple-950">Ma Landing Page Dédiée & Lien Réseaux Sociaux</span>
+                      </div>
+                      <span class="bg-purple-600 text-white text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full shadow-xs">
+                        Page Web Dédiée
                       </span>
+                    </div>
+
+                    <div class="bg-white p-3 rounded-xl border border-purple-200 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2">
+                      <span class="font-mono text-xs font-bold text-purple-900 truncate">
+                        {{ getSponsorLandingUrl(data.currentUser()) }}
+                      </span>
+                      <div class="flex items-center gap-1.5 shrink-0">
+                        <button 
+                          type="button" 
+                          (click)="copySponsorLink(data.currentUser())"
+                          class="bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1 cursor-pointer"
+                        >
+                          <span class="material-icons text-xs">content_copy</span> Copier
+                        </button>
+                        <button 
+                          type="button" 
+                          (click)="openSponsorLandingView(data.currentUser())"
+                          class="bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1 cursor-pointer"
+                        >
+                          <span class="material-icons text-xs">visibility</span> Prévisualiser
+                        </button>
+                      </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
                       <button 
                         type="button" 
-                        (click)="copyToClipboard(data.currentUser()?.affiliateLink || ('https://digidocs.ma/?ref=' + (data.currentUser()?.affiliateCode || 'AFF-DEMO')), 'Lien affilié')"
-                        class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1 cursor-pointer shrink-0"
+                        (click)="openSponsorSocialKitModal(data.currentUser())"
+                        class="bg-purple-700 hover:bg-purple-800 text-white text-xs font-bold p-3 rounded-xl flex items-center justify-center gap-2 cursor-pointer shadow-sm transition-all"
                       >
-                        <span class="material-icons text-xs">content_copy</span> Copier Lien
+                        <span class="material-icons text-sm">campaign</span> Ouvrir le Kit Réseaux Sociaux
+                      </button>
+
+                      <button 
+                        type="button" 
+                        (click)="generateSponsorSocialBanner(data.currentUser())"
+                        class="bg-amber-400 hover:bg-amber-300 text-slate-950 text-xs font-black p-3 rounded-xl flex items-center justify-center gap-2 cursor-pointer shadow-sm transition-all"
+                      >
+                        <span class="material-icons text-sm">download</span> Télécharger l'Affiche HD (1080x1080)
                       </button>
                     </div>
-                    <p class="text-[11px] text-indigo-700">
-                      En cliquant sur ce lien, l'identifiant affilié est sauvegardé automatiquement dans le navigateur du client.
-                    </p>
-                    <a 
-                      [href]="'https://wa.me/?text=' + encodeURI('Bonjour ! Découvrez DigiDocs : ' + (data.currentUser()?.affiliateLink || ('https://digidocs.ma/?ref=' + (data.currentUser()?.affiliateCode || 'AFF-DEMO'))))"
-                      target="_blank"
-                      class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-4 py-2 rounded-xl flex items-center justify-center gap-2 cursor-pointer transition-all"
-                    >
-                      <span class="material-icons text-sm">share</span> Partager sur WhatsApp
-                    </a>
                   </div>
                 </div>
 
@@ -9711,6 +10342,193 @@
           <button 
             type="button" 
             (click)="showPaymentDetailsModal.set(false)" 
+            class="bg-slate-800 hover:bg-slate-900 text-white font-bold px-5 py-2 rounded-xl text-xs cursor-pointer"
+          >
+            Fermer
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- SPONSOR SOCIAL MEDIA PROMOTION KIT MODAL -->
+  @if (showSponsorSocialKitModal()) {
+    <div class="fixed inset-0 bg-slate-900/80 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+      <div class="bg-white rounded-2xl max-w-2xl w-full overflow-hidden shadow-2xl border border-slate-200 flex flex-col max-h-[90vh]">
+        <!-- Header -->
+        <div class="p-5 border-b border-slate-100 flex items-center justify-between bg-gradient-to-r from-purple-700 via-indigo-700 to-blue-700 text-white">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center">
+              <span class="material-icons text-xl text-amber-300">campaign</span>
+            </div>
+            <div>
+              <h3 class="font-black text-white text-base">Kit Réseaux Sociaux & Promotion Parrain</h3>
+              <p class="text-xs text-purple-200">
+                Textes prêts à publier & visuels pour <strong>{{ currentSponsor()?.name || 'Ambassadeur' }}</strong> (Code : <code class="font-mono bg-black/30 px-1 py-0.5 rounded text-amber-300">{{ getSponsorRefCode(currentSponsor()) }}</code>)
+              </p>
+            </div>
+          </div>
+          <button type="button" (click)="showSponsorSocialKitModal.set(false)" class="text-white/80 hover:text-white p-1 cursor-pointer">
+            <span class="material-icons text-xl">close</span>
+          </button>
+        </div>
+
+        <!-- Body -->
+        <div class="p-6 overflow-y-auto space-y-6">
+          
+          <!-- Social Platform Switcher Tabs -->
+          <div class="flex flex-wrap gap-2 border-b border-slate-200 pb-3">
+            <button 
+              type="button" 
+              (click)="sponsorSocialTab.set('whatsapp')"
+              [class]="sponsorSocialTab() === 'whatsapp' ? 'bg-emerald-600 text-white font-bold text-xs px-3.5 py-2 rounded-xl flex items-center gap-1.5 shadow-sm' : 'bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs px-3.5 py-2 rounded-xl flex items-center gap-1.5 cursor-pointer'"
+            >
+              <span class="material-icons text-sm">chat</span> WhatsApp
+            </button>
+            <button 
+              type="button" 
+              (click)="sponsorSocialTab.set('facebook')"
+              [class]="sponsorSocialTab() === 'facebook' ? 'bg-blue-600 text-white font-bold text-xs px-3.5 py-2 rounded-xl flex items-center gap-1.5 shadow-sm' : 'bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs px-3.5 py-2 rounded-xl flex items-center gap-1.5 cursor-pointer'"
+            >
+              <span class="material-icons text-sm">public</span> Facebook
+            </button>
+            <button 
+              type="button" 
+              (click)="sponsorSocialTab.set('linkedin')"
+              [class]="sponsorSocialTab() === 'linkedin' ? 'bg-sky-700 text-white font-bold text-xs px-3.5 py-2 rounded-xl flex items-center gap-1.5 shadow-sm' : 'bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs px-3.5 py-2 rounded-xl flex items-center gap-1.5 cursor-pointer'"
+            >
+              <span class="material-icons text-sm">work</span> LinkedIn
+            </button>
+            <button 
+              type="button" 
+              (click)="sponsorSocialTab.set('instagram')"
+              [class]="sponsorSocialTab() === 'instagram' ? 'bg-gradient-to-r from-pink-600 to-purple-600 text-white font-bold text-xs px-3.5 py-2 rounded-xl flex items-center gap-1.5 shadow-sm' : 'bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs px-3.5 py-2 rounded-xl flex items-center gap-1.5 cursor-pointer'"
+            >
+              <span class="material-icons text-sm">photo_camera</span> Instagram / TikTok
+            </button>
+            <button 
+              type="button" 
+              (click)="sponsorSocialTab.set('telegram')"
+              [class]="sponsorSocialTab() === 'telegram' ? 'bg-sky-500 text-white font-bold text-xs px-3.5 py-2 rounded-xl flex items-center gap-1.5 shadow-sm' : 'bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs px-3.5 py-2 rounded-xl flex items-center gap-1.5 cursor-pointer'"
+            >
+              <span class="material-icons text-sm">send</span> Telegram
+            </button>
+          </div>
+
+          <!-- Active Platform Message Display -->
+          <div class="space-y-3">
+            <div class="flex items-center justify-between">
+              <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                Message recommandé prêt à copier :
+              </label>
+              <span class="text-[11px] text-slate-500">Optimisé pour la conversion</span>
+            </div>
+
+            <div class="relative bg-slate-50 rounded-xl p-4 border border-slate-200 font-mono text-xs text-slate-800 whitespace-pre-wrap leading-relaxed">
+              {{ getSponsorSocialMessage(sponsorSocialTab(), currentSponsor()) }}
+            </div>
+
+            <!-- Action Buttons for the Message -->
+            <div class="flex flex-wrap items-center gap-3">
+              <button 
+                type="button" 
+                (click)="copyToClipboard(getSponsorSocialMessage(sponsorSocialTab(), currentSponsor()), 'Message ' + sponsorSocialTab())"
+                class="bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs px-4 py-2.5 rounded-xl flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
+              >
+                <span class="material-icons text-sm">content_copy</span> Copier le Message
+              </button>
+
+              @if (sponsorSocialTab() === 'whatsapp') {
+                <button 
+                  type="button" 
+                  (click)="shareSponsorWhatsApp(currentSponsor())"
+                  class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-4 py-2.5 rounded-xl flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
+                >
+                  <span class="material-icons text-sm">chat</span> Ouvrir WhatsApp
+                </button>
+              } @else if (sponsorSocialTab() === 'facebook') {
+                <button 
+                  type="button" 
+                  (click)="shareSponsorFacebook(currentSponsor())"
+                  class="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-4 py-2.5 rounded-xl flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
+                >
+                  <span class="material-icons text-sm">public</span> Partager sur Facebook
+                </button>
+              } @else if (sponsorSocialTab() === 'linkedin') {
+                <button 
+                  type="button" 
+                  (click)="shareSponsorLinkedIn(currentSponsor())"
+                  class="bg-sky-700 hover:bg-sky-800 text-white font-bold text-xs px-4 py-2.5 rounded-xl flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
+                >
+                  <span class="material-icons text-sm">work</span> Publier sur LinkedIn
+                </button>
+              } @else if (sponsorSocialTab() === 'telegram') {
+                <button 
+                  type="button" 
+                  (click)="shareSponsorTelegram(currentSponsor())"
+                  class="bg-sky-500 hover:bg-sky-600 text-white font-bold text-xs px-4 py-2.5 rounded-xl flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
+                >
+                  <span class="material-icons text-sm">send</span> Ouvrir Telegram
+                </button>
+              }
+            </div>
+          </div>
+
+          <!-- Direct Link Section -->
+          <div class="bg-purple-50 rounded-xl p-4 border border-purple-200 space-y-2">
+            <label class="block text-[11px] font-bold text-purple-900 uppercase">Votre lien direct vers la page parrain :</label>
+            <div class="flex items-center gap-2">
+              <input 
+                type="text" 
+                [value]="getSponsorLandingUrl(currentSponsor())" 
+                readonly 
+                class="bg-white text-xs font-mono text-slate-800 px-3 py-2 rounded-lg border border-purple-200 flex-1 outline-none select-all"
+              />
+              <button 
+                type="button" 
+                (click)="copySponsorLink(currentSponsor())"
+                class="bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs px-3.5 py-2 rounded-lg cursor-pointer shrink-0"
+              >
+                Copier Lien
+              </button>
+            </div>
+          </div>
+
+          <!-- Visual HD Flyer Generator -->
+          <div class="bg-gradient-to-br from-slate-900 to-indigo-950 rounded-2xl p-5 border border-slate-800 text-white flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-3.5">
+              <div class="w-12 h-12 rounded-xl bg-purple-600/30 border border-purple-400/30 flex items-center justify-center shrink-0">
+                <span class="material-icons text-2xl text-amber-300">image</span>
+              </div>
+              <div>
+                <h4 class="font-bold text-white text-sm">Affiche Publicitaire HD (Format Carré 1080x1080)</h4>
+                <p class="text-xs text-slate-300">Générez un flyer professionnel haute résolution intégrant votre nom, ville et code parrain.</p>
+              </div>
+            </div>
+            <button 
+              type="button" 
+              (click)="generateSponsorSocialBanner(currentSponsor())"
+              class="bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs px-4 py-3 rounded-xl shadow-lg flex items-center gap-1.5 transition-transform active:scale-95 cursor-pointer shrink-0"
+            >
+              <span class="material-icons text-base">download</span> Télécharger l'Affiche HD
+            </button>
+          </div>
+
+        </div>
+
+        <!-- Footer -->
+        <div class="p-4 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
+          <button 
+            type="button" 
+            (click)="openSponsorLandingView(currentSponsor())"
+            class="text-purple-700 hover:text-purple-900 font-bold text-xs flex items-center gap-1 cursor-pointer"
+          >
+            <span class="material-icons text-sm">visibility</span> Voir ma Landing Page en direct
+          </button>
+
+          <button 
+            type="button" 
+            (click)="showSponsorSocialKitModal.set(false)" 
             class="bg-slate-800 hover:bg-slate-900 text-white font-bold px-5 py-2 rounded-xl text-xs cursor-pointer"
           >
             Fermer

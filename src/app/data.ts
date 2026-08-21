@@ -805,6 +805,8 @@ export class Data {
   affiliates = signal<AffiliateWithStats[]>([]);
   affiliateCommissions = signal<AffiliateCommission[]>([]);
   activeAffiliateCode = signal<string | null>(null);
+  publicSponsor = signal<AffiliateWithStats | User | null>(null);
+  showSponsorLanding = signal<boolean>(false);
 
   operatorCount = computed(() => this.allUsers().filter(u => u.role === 'operator').length);
   qaCount = computed(() => this.allUsers().filter(u => u.role === 'qa').length);
@@ -877,14 +879,28 @@ export class Data {
 
   private initFromLocalStorage() {
     if (typeof window !== 'undefined') {
-      // Check URL parameters for referral code (?ref=... or ?aff=...)
+      // Check URL parameters for referral/parrain code (?ref=... or ?parrain=... or ?aff=...)
       try {
         const params = new URLSearchParams(window.location.search);
-        const ref = params.get('ref') || params.get('aff') || params.get('affiliate') || params.get('code');
+        const hash = window.location.hash || '';
+        let ref = params.get('parrain') || params.get('ref') || params.get('aff') || params.get('affiliate') || params.get('sponsor') || params.get('code') || params.get('p');
+        
+        // Also check hash like #parrain-AFF-NAB24 or #ref-AFF-NAB24
+        if (!ref && hash.startsWith('#parrain-')) {
+          ref = hash.replace('#parrain-', '');
+        } else if (!ref && hash.startsWith('#ref-')) {
+          ref = hash.replace('#ref-', '');
+        }
+
         if (ref) {
           const cleanCode = ref.trim().toUpperCase();
           localStorage.setItem('digidocs_ref_code', cleanCode);
           this.activeAffiliateCode.set(cleanCode);
+          this.showSponsorLanding.set(true);
+          // Fetch sponsor profile info
+          setTimeout(() => {
+            this.loadPublicSponsorByCode(cleanCode);
+          }, 50);
         } else {
           const savedRef = localStorage.getItem('digidocs_ref_code');
           if (savedRef) {
@@ -1350,6 +1366,54 @@ export class Data {
       this.errorMessage.set((err as Error).message);
       throw err;
     }
+  }
+
+  async loadPublicSponsorByCode(code: string): Promise<AffiliateWithStats | User | null> {
+    try {
+      const cleanCode = (code || '').trim().toUpperCase();
+      if (!cleanCode) return null;
+      const sponsor = await this.apiCall<AffiliateWithStats | User>(`/api/affiliates/public/${encodeURIComponent(cleanCode)}`, undefined, true);
+      if (sponsor) {
+        this.publicSponsor.set(sponsor);
+        this.activeAffiliateCode.set(sponsor.affiliateCode || cleanCode);
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('digidocs_ref_code', sponsor.affiliateCode || cleanCode);
+        }
+        return sponsor;
+      }
+    } catch (err) {
+      console.warn('Could not load public sponsor info for code:', code, err);
+      // Create a fallback sponsor object with the code so the user can still proceed with discount
+      const fallbackSponsor: Partial<User> = {
+        id: 'usr-parrain-ref',
+        name: `Parrain Partenaire (${code.toUpperCase()})`,
+        username: code.toLowerCase(),
+        email: 'contact@digidocs.ma',
+        phone: '+212 600-000000',
+        city: 'Casablanca',
+        affiliateCode: code.toUpperCase(),
+        affiliateLink: `?ref=${code.toUpperCase()}`,
+        role: 'affiliate',
+        active: true
+      };
+      this.publicSponsor.set(fallbackSponsor as User);
+    }
+    return null;
+  }
+
+  openSponsorLanding(sponsorOrCode: string | AffiliateWithStats | User) {
+    if (typeof sponsorOrCode === 'string') {
+      this.loadPublicSponsorByCode(sponsorOrCode);
+    } else if (sponsorOrCode) {
+      this.publicSponsor.set(sponsorOrCode);
+      if (sponsorOrCode.affiliateCode) {
+        this.activeAffiliateCode.set(sponsorOrCode.affiliateCode);
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('digidocs_ref_code', sponsorOrCode.affiliateCode);
+        }
+      }
+    }
+    this.showSponsorLanding.set(true);
   }
 
   async loadTeamUsers(silent = false) {

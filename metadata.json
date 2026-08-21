@@ -1,6 +1,6 @@
 {
   "name": "Remix Remix Remix Gestion de Travaux Numériques à Distance",
-  "description": "Plateforme professionnelle B2B/B2C de gestion de commandes, devis, paiements d\u0027acomptes et suivi de production pour travaux documentaires.",
+  "description": "Plateforme professionnelle B2B/B2C de gestion de commandes, devis, paiements d'acomptes, landing pages publiques pour parrains & affiliés, et suivi de production documentaire.",
   "requestFramePermissions": [
     "camera"
   ],

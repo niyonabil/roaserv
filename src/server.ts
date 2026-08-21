@@ -2517,6 +2517,50 @@ app.put('/api/orders/:id/payment-terms', async (req, res) => {
 
 // --- AFFILIATION & REVENTE DE SERVICES API ENDPOINTS ---
 
+// Public Affiliate / Sponsor Info endpoint for the landing page (no auth required)
+app.get('/api/affiliates/public/:code', async (req, res) => {
+  try {
+    const { code } = req.params;
+    const db = await loadDatabase();
+    const search = (code || '').trim().toUpperCase();
+    
+    // Find user by affiliateCode or id or username
+    const aff = db.users.find(u => 
+      (u.affiliateCode && u.affiliateCode.toUpperCase() === search) ||
+      u.id.toUpperCase() === search ||
+      (u.username && u.username.toUpperCase() === search)
+    );
+
+    if (!aff) {
+      res.status(404).json({ error: 'Code parrain introuvable' });
+      return;
+    }
+
+    const affCode = aff.affiliateCode || `AFF-${aff.id.substring(0, 5).toUpperCase()}`;
+    const ordersAttributed = db.orders.filter(o => o.affiliateCode && o.affiliateCode.toUpperCase() === affCode.toUpperCase()).length;
+
+    res.json({
+      id: aff.id,
+      name: aff.name,
+      username: aff.username || aff.name.toLowerCase().replace(/\s+/g, '.'),
+      email: aff.email,
+      phone: aff.phone || '+212 600-000000',
+      city: aff.city || 'Casablanca / Maroc',
+      affiliateCode: affCode,
+      affiliateLink: `?ref=${affCode}`,
+      role: aff.role,
+      active: aff.active !== false,
+      affiliateStatus: aff.affiliateStatus || 'active',
+      commissionRate: aff.commissionRate ?? 10,
+      totalOrdersCompleted: ordersAttributed,
+      bio: aff.notes || `Ambassadeur Partenaire officiel DigiDocs. Je vous recommande nos services de saisie, conversion OCR, mise en page et traitement documentaire. Profitez d'une remise exclusive avec mon code parrain !`,
+      specialDiscountPercentage: 10
+    });
+  } catch (err) {
+    res.status(500).json({ error: (err as Error).message });
+  }
+});
+
 // List all affiliates with computed performance stats
 app.get('/api/affiliates', async (req, res) => {
   try {

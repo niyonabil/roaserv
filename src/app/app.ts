@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, inject, signal, computed, effect } 
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormGroup, FormControl, Validators } from '@angular/forms';
 import { DomSanitizer, SafeResourceUrl, Title, Meta } from '@angular/platform-browser';
-import { Data, Service, Order, PartnerCustomer, OrderFile, Quote, AppNotification, User, UserPrivileges, getDefaultPrivileges, PayrollRecord, LeaveRequest, SalaryAdvance, AffiliateCommission, Payment, SystemSettings } from './data';
+import { Data, Service, Order, PartnerCustomer, OrderFile, Quote, AppNotification, User, UserPrivileges, getDefaultPrivileges, PayrollRecord, LeaveRequest, SalaryAdvance, AffiliateCommission, Payment, SystemSettings, AffiliateWithStats } from './data';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 
@@ -4229,6 +4229,344 @@ export class App {
     } else {
       navigator.clipboard.writeText(window.location.href);
     }
+  }
+
+  // --- SPONSOR / PARRAIN LANDING PAGE & SOCIAL MEDIA SHARING STATE ---
+  sponsorLandingCategoryFilter = signal<string>('all');
+  showSponsorSocialKitModal = signal<boolean>(false);
+  sponsorSocialTab = signal<'whatsapp' | 'facebook' | 'linkedin' | 'instagram' | 'telegram' | 'tiktok'>('whatsapp');
+  selectedSponsorForSocialModal = signal<User | AffiliateWithStats | null>(null);
+
+  currentSponsor = computed(() => {
+    return this.data.publicSponsor() || (this.data.activeRole() === 'affiliate' ? this.data.currentUser() : null) || this.data.affiliates()[0] || null;
+  });
+
+  filteredSponsorServices = computed(() => {
+    const cat = this.sponsorLandingCategoryFilter();
+    const list = this.data.services().filter(s => s.isActive);
+    if (cat === 'all') return list;
+    return list.filter(s => s.category === cat);
+  });
+
+  getSponsorRefCode(sponsor?: User | AffiliateWithStats | null): string {
+    const s = sponsor || this.currentSponsor();
+    return s?.affiliateCode || this.data.activeAffiliateCode() || 'AFF-2026';
+  }
+
+  getSponsorLandingUrl(sponsor?: User | AffiliateWithStats | null): string {
+    const code = this.getSponsorRefCode(sponsor);
+    if (typeof window !== 'undefined') {
+      const origin = window.location.origin;
+      const pathname = window.location.pathname;
+      return `${origin}${pathname}?parrain=${encodeURIComponent(code)}`;
+    }
+    return `https://digidocs.ma/?parrain=${encodeURIComponent(code)}`;
+  }
+
+  copySponsorLink(sponsor?: User | AffiliateWithStats | null) {
+    const url = this.getSponsorLandingUrl(sponsor);
+    this.copyToClipboard(url, 'Lien de parrainage');
+  }
+
+  getSponsorSocialMessage(platform: 'whatsapp' | 'facebook' | 'linkedin' | 'instagram' | 'telegram' | 'tiktok', sponsor?: User | AffiliateWithStats | null, service?: Service | null): string {
+    const s = sponsor || this.currentSponsor();
+    const name = s?.name || 'Ambassadeur DigiDocs';
+    const code = this.getSponsorRefCode(s);
+    const link = this.getSponsorLandingUrl(s);
+
+    if (platform === 'whatsapp') {
+      if (service) {
+        return `👋 Bonjour ! Je vous recommande DigiDocs pour votre besoin de *${service.name}* (${service.unitPrice} DH / ${service.unitPriceName}).\n\n🎁 *Profitez d'une réduction spéciale avec mon code parrain : ${code}*\n\n👉 Commandez directement en 1 clic ici : ${link}`;
+      }
+      return `👋 Bonjour ! Je vous recommande *DigiDocs* pour tous vos besoins documentaires et numériques (Saisie de manuscrits, OCR & Conversion PDF/Excel, Mise en page de mémoires/livres, Retouche, Impression & Livraison partout au Maroc).\n\n✨ *Bénéficiez d'une réduction exclusive avec mon code parrain : ${code}*\n\n👉 Accédez à ma page dédiée et découvrez nos services ici : ${link}`;
+    }
+
+    if (platform === 'linkedin') {
+      return `🚀 Besoin de numériser, transcrire ou mettre en page vos documents professionnels ?\n\nEn tant qu'ambassadeur officiel DigiDocs, je vous invite à découvrir notre plateforme de traitement documentaire haute fidélité (Saisie Word/Excel, OCR de haute précision, PAO et livraison express).\n\nProfitez de conditions préférentielles sur vos projets avec mon code parrain : [ ${code} ]\n\nDécouvrez nos prestations et simulez votre devis en temps réel 👇\n${link}\n\n#TransformationNumerique #GestionDocumentaire #Productivite #B2B #ServicesNumeriques`;
+    }
+
+    if (platform === 'facebook') {
+      return `📄 Simplifiez la gestion de vos documents avec DigiDocs ! Saisie de manuscrits, conversion OCR, mise en page et impression livrée chez vous.\n\nProfitez d'une réduction immédiate sur votre 1ère commande avec mon code parrain : ${code} 🎉\n\nCliquez sur le lien pour commander ou faire une estimation gratuite : ${link}`;
+    }
+
+    if (platform === 'telegram') {
+      return `⚡ Recommandation DigiDocs : Numérisation, saisie rapide et mise en page pro de vos documents avec livraison.\n\nCode promo parrain : ${code}\nLien direct : ${link}`;
+    }
+
+    if (platform === 'instagram' || platform === 'tiktok') {
+      return `Transformez vos documents avec DigiDocs 🚀 (Saisie, OCR, Mise en page, Impression). Utilisez mon code promo exclusif: ${code} sur le lien en bio ! 🔗 ${link}`;
+    }
+
+    return `🔥 DigiDocs - Votre partenaire de confiance pour tous vos travaux de saisie, conversion OCR, PAO et impression. Profitez de mon code promo : ${code} sur ${link} !`;
+  }
+
+  shareSponsorWhatsApp(sponsor?: User | AffiliateWithStats | null, service?: Service | null) {
+    const text = this.getSponsorSocialMessage('whatsapp', sponsor, service);
+    const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
+    if (typeof window !== 'undefined') {
+      window.open(url, '_blank');
+    }
+  }
+
+  shareSponsorFacebook(sponsor?: User | AffiliateWithStats | null) {
+    const link = this.getSponsorLandingUrl(sponsor);
+    const url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(link)}`;
+    if (typeof window !== 'undefined') {
+      window.open(url, '_blank', 'width=600,height=500');
+    }
+  }
+
+  shareSponsorLinkedIn(sponsor?: User | AffiliateWithStats | null) {
+    const link = this.getSponsorLandingUrl(sponsor);
+    const url = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(link)}`;
+    if (typeof window !== 'undefined') {
+      window.open(url, '_blank', 'width=600,height=600');
+    }
+  }
+
+  shareSponsorTwitter(sponsor?: User | AffiliateWithStats | null) {
+    const s = sponsor || this.currentSponsor();
+    const code = this.getSponsorRefCode(s);
+    const link = this.getSponsorLandingUrl(s);
+    const tweetText = `📄 Traitement documentaire, saisie et conversion OCR haute précision avec DigiDocs. Profitez de -10% avec mon code parrain ${code} :`;
+    const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}&url=${encodeURIComponent(link)}&hashtags=DigiDocs,Productivite`;
+    if (typeof window !== 'undefined') {
+      window.open(url, '_blank', 'width=600,height=400');
+    }
+  }
+
+  shareSponsorTelegram(sponsor?: User | AffiliateWithStats | null) {
+    const link = this.getSponsorLandingUrl(sponsor);
+    const text = this.getSponsorSocialMessage('telegram', sponsor);
+    const url = `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(text)}`;
+    if (typeof window !== 'undefined') {
+      window.open(url, '_blank');
+    }
+  }
+
+  shareSponsorEmail(sponsor?: User | AffiliateWithStats | null) {
+    const s = sponsor || this.currentSponsor();
+    const code = this.getSponsorRefCode(s);
+    const link = this.getSponsorLandingUrl(s);
+    const subject = `Recommandation DigiDocs - Vos travaux de saisie et numérisation (Code Parrain: ${code})`;
+    const body = `Bonjour,\n\nJe vous recommande la plateforme DigiDocs pour la réalisation de vos travaux documentaires (saisie de textes, conversion OCR, mise en page, impression et livraison).\n\nVous bénéficiez d'une réduction spéciale avec mon code parrain : ${code}\n\nAccédez directement aux services et au simulateur de devis sur ce lien :\n${link}\n\nBien cordialement,\n${s?.name || 'Votre Parrain'}`;
+    const url = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    if (typeof window !== 'undefined') {
+      window.location.href = url;
+    }
+  }
+
+  openOrderFromSponsorLanding(serviceId: string, sponsor?: User | AffiliateWithStats | null) {
+    const code = this.getSponsorRefCode(sponsor);
+    this.estServiceId.set(serviceId);
+    this.orderForm.patchValue({
+      serviceId,
+      affiliateCode: code
+    });
+    if (this.data.currentUser()) {
+      this.activeTab.set('new_order');
+      this.data.showSponsorLanding.set(false);
+    } else {
+      this.showAuthModal.set('register');
+      this.authForm.patchValue({
+        affiliateCode: code,
+        role: 'client'
+      });
+    }
+  }
+
+  openRegisterFromSponsorLanding(sponsor?: User | AffiliateWithStats | null) {
+    const code = this.getSponsorRefCode(sponsor);
+    this.showAuthModal.set('register');
+    this.authForm.patchValue({
+      affiliateCode: code,
+      role: 'client'
+    });
+  }
+
+  openSponsorLandingView(sponsor?: User | AffiliateWithStats | null) {
+    if (sponsor) {
+      this.data.publicSponsor.set(sponsor);
+      if (sponsor.affiliateCode) {
+        this.data.activeAffiliateCode.set(sponsor.affiliateCode);
+      }
+    }
+    this.data.showSponsorLanding.set(true);
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }
+
+  closeSponsorLandingView() {
+    this.data.showSponsorLanding.set(false);
+  }
+
+  openSponsorSocialKitModal(sponsor?: User | AffiliateWithStats | null) {
+    this.selectedSponsorForSocialModal.set(sponsor || this.currentSponsor());
+    this.showSponsorSocialKitModal.set(true);
+  }
+
+  generateSponsorSocialBanner(sponsor?: User | AffiliateWithStats | null) {
+    if (typeof document === 'undefined') return;
+    const s = sponsor || this.currentSponsor();
+    const sponsorName = s?.name || 'Ambassadeur DigiDocs';
+    const sponsorCode = this.getSponsorRefCode(s);
+    const sponsorCity = s?.city || 'Maroc';
+
+    const canvas = document.createElement('canvas');
+    canvas.width = 1080;
+    canvas.height = 1080;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    // Background Dark Modern Gradient
+    const bgGradient = ctx.createLinearGradient(0, 0, 1080, 1080);
+    bgGradient.addColorStop(0, '#0f172a');
+    bgGradient.addColorStop(0.5, '#1e293b');
+    bgGradient.addColorStop(1, '#0f172a');
+    ctx.fillStyle = bgGradient;
+    ctx.fillRect(0, 0, 1080, 1080);
+
+    // Decorative Accent Circles
+    ctx.fillStyle = 'rgba(37, 99, 235, 0.15)';
+    ctx.beginPath();
+    ctx.arc(950, 150, 300, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = 'rgba(59, 130, 246, 0.08)';
+    ctx.beginPath();
+    ctx.arc(100, 950, 250, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Top Header Badge
+    ctx.fillStyle = '#2563eb';
+    this.drawRoundedRect(ctx, 80, 80, 460, 50, 25);
+    ctx.fill();
+
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 22px system-ui, -apple-system, sans-serif';
+    ctx.fillText('PARTENAIRE AMBASSADEUR OFFICIEL', 105, 113);
+
+    // Main Logo & Title
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '900 64px system-ui, -apple-system, sans-serif';
+    ctx.fillText('DigiDocs Hub', 80, 210);
+
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '400 28px system-ui, -apple-system, sans-serif';
+    ctx.fillText('Plateforme Professionnelle de Traitement & Numérisation', 80, 260);
+
+    // Divider
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(80, 300);
+    ctx.lineTo(1000, 300);
+    ctx.stroke();
+
+    // Sponsor Presentation Card
+    ctx.fillStyle = '#1e293b';
+    this.drawRoundedRect(ctx, 80, 340, 920, 200, 24);
+    ctx.fill();
+    ctx.strokeStyle = '#3b82f6';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+
+    // Sponsor Avatar circle
+    ctx.fillStyle = '#2563eb';
+    ctx.beginPath();
+    ctx.arc(160, 440, 50, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 40px system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText((sponsorName.charAt(0) || 'P').toUpperCase(), 160, 455);
+    ctx.textAlign = 'left';
+
+    // Sponsor Details
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 36px system-ui, sans-serif';
+    ctx.fillText(sponsorName, 240, 415);
+
+    ctx.fillStyle = '#38bdf8';
+    ctx.font = '600 24px system-ui, sans-serif';
+    ctx.fillText(`📍 Ambassadeur Référent • ${sponsorCity}`, 240, 455);
+
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '500 22px system-ui, sans-serif';
+    ctx.fillText(`Garantie de qualité 100% & Accompagnement dédié`, 240, 495);
+
+    // Services Highlights Box
+    ctx.fillStyle = '#0f172a';
+    this.drawRoundedRect(ctx, 80, 570, 920, 250, 24);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+    ctx.stroke();
+
+    ctx.fillStyle = '#f8fafc';
+    ctx.font = 'bold 26px system-ui, sans-serif';
+    ctx.fillText('SERVICES DISPONIBLES EN LIGNE 24/7 :', 110, 620);
+
+    const servicesList = [
+      '✓ Saisie de Manuscrits vers Word & Excel',
+      '✓ Conversion PDF/Image avec OCR Avancé',
+      '✓ Mise en Page de Mémoires, Livres & Rapports',
+      '✓ Retouche, PAO, Impression & Livraison Maroc'
+    ];
+
+    ctx.font = '500 24px system-ui, sans-serif';
+    ctx.fillStyle = '#cbd5e1';
+    servicesList.forEach((text, i) => {
+      const col = i < 2 ? 110 : 540;
+      const row = 675 + (i % 2) * 55;
+      ctx.fillText(text, col, row);
+    });
+
+    // Bottom Coupon Voucher Bar
+    ctx.fillStyle = '#f59e0b';
+    this.drawRoundedRect(ctx, 80, 850, 920, 150, 24);
+    ctx.fill();
+
+    ctx.fillStyle = '#78350f';
+    ctx.font = 'bold 24px system-ui, sans-serif';
+    ctx.fillText('CODE PARRAIN PRIVILÈGE (-10% DE RÉDUCTION) :', 120, 895);
+
+    ctx.fillStyle = '#0f172a';
+    ctx.font = '900 52px monospace, monospace';
+    ctx.fillText(sponsorCode, 120, 960);
+
+    ctx.fillStyle = '#1e293b';
+    ctx.font = 'bold 22px system-ui, sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText('Scannez ou commandez sur :', 960, 915);
+    ctx.fillStyle = '#0f172a';
+    ctx.font = '900 26px system-ui, sans-serif';
+    ctx.fillText('digidocs.ma', 960, 955);
+    ctx.textAlign = 'left';
+
+    // Export Canvas to Image and Trigger Download
+    const dataUrl = canvas.toDataURL('image/png');
+    const a = document.createElement('a');
+    a.href = dataUrl;
+    a.download = `Affiche_Parrain_${sponsorCode}.png`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    this.data.showToast('Visuel Téléchargé !', `L'affiche promo pour ${sponsorName} a été générée et téléchargée.`);
+  }
+
+  private drawRoundedRect(ctx: CanvasRenderingContext2D, x: number, y: number, width: number, height: number, radius: number) {
+    ctx.beginPath();
+    ctx.moveTo(x + radius, y);
+    ctx.lineTo(x + width - radius, y);
+    ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+    ctx.lineTo(x + width, y + height - radius);
+    ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+    ctx.lineTo(x + radius, y + height);
+    ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+    ctx.lineTo(x, y + radius);
+    ctx.quadraticCurveTo(x, y, x + radius, y);
+    ctx.closePath();
   }
 }
 
