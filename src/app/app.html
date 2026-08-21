@@ -1693,187 +1693,192 @@
     <!-- Main Workspace Area -->
     <div class="max-w-7xl mx-auto w-full px-4 py-8 flex-1 flex flex-col lg:flex-row gap-8">
       <!-- Sidebar Navigation Menu -->
-      <aside class="w-full lg:w-64 shrink-0 space-y-2">
-        <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs space-y-1">
-          <!-- Common Stats/Main Dashboard link -->
-          @if (data.activeRole() !== 'operator' && data.activeRole() !== 'qa') {
-            <button 
-              (click)="activeTab.set('dashboard'); selectedOrderId.set(null)"
-              [class]="activeTab() === 'dashboard' ? 'w-full text-left px-4 py-2.5 rounded-xl text-sm font-bold bg-blue-50 text-blue-700 flex items-center gap-2 border border-blue-100' : 'w-full text-left px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100 flex items-center gap-2'"
-            >
-              <span class="material-icons text-sm">dashboard</span> Dashboard
-            </button>
-          }
+      <aside class="w-full lg:w-64 shrink-0 space-y-4">
+        <div class="bg-white rounded-2xl p-3 border border-slate-200 shadow-xs space-y-4">
 
-          <!-- Direct orders tab -->
-          <button 
-            (click)="activeTab.set('orders'); selectedOrderId.set(null)"
-            [class]="activeTab() === 'orders' ? 'w-full text-left px-4 py-2.5 rounded-xl text-sm font-bold bg-blue-50 text-blue-700 flex items-center gap-2 border border-blue-100' : 'w-full text-left px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100 flex items-center gap-2'"
-          >
-            <span class="material-icons text-sm">receipt_long</span> 
-            @if (data.activeRole() === 'operator' || data.activeRole() === 'qa') { Tâches & Travaux } @else { Suivi Commandes }
-            @if (data.orders().length > 0) {
-              <span class="ml-auto bg-slate-200 text-slate-800 text-[10px] px-2 py-0.5 rounded-full font-black">{{ data.orders().length }}</span>
+          <!-- GROUP 1: OPÉRATIONS & TRAVAUX -->
+          <div class="space-y-1">
+            <p class="text-[10px] font-black uppercase tracking-wider text-slate-400 px-3 py-1">📊 Opérations & Travaux</p>
+            
+            @if (data.activeRole() !== 'operator' && data.activeRole() !== 'qa') {
+              <button 
+                (click)="activeTab.set('dashboard'); selectedOrderId.set(null)"
+                [class]="activeTab() === 'dashboard' ? 'w-full text-left px-3.5 py-2 rounded-xl text-xs font-bold bg-blue-50 text-blue-700 flex items-center gap-2 border border-blue-100' : 'w-full text-left px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 flex items-center gap-2'"
+              >
+                <span class="material-icons text-sm">dashboard</span> Dashboard Principal
+              </button>
             }
-          </button>
 
-          <!-- Nouvelle commande (Client, Partner, Admin, Assistant) -->
-          @if (data.activeRole() === 'client' || data.activeRole() === 'partner' || data.activeRole() === 'admin' || data.activeRole() === 'assistant') {
             <button 
-              (click)="activeTab.set('new_order')"
-              [class]="activeTab() === 'new_order' ? 'w-full text-left px-4 py-2.5 rounded-xl text-sm font-bold bg-blue-50 text-blue-700 flex items-center gap-2 border border-blue-100' : 'w-full text-left px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100 flex items-center gap-2'"
+              (click)="activeTab.set('orders'); selectedOrderId.set(null)"
+              [class]="activeTab() === 'orders' ? 'w-full text-left px-3.5 py-2 rounded-xl text-xs font-bold bg-blue-50 text-blue-700 flex items-center gap-2 border border-blue-100' : 'w-full text-left px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 flex items-center gap-2'"
             >
-              <span class="material-icons text-sm">add_circle</span> Nouvelle Commande
-            </button>
-          }
-
-          <!-- B2B Partner Customers management (Partner, Admin, Assistant, Client) -->
-          @if (data.activeRole() === 'partner' || data.activeRole() === 'admin' || data.activeRole() === 'assistant' || data.activeRole() === 'client') {
-            <button 
-              (click)="activeTab.set('clients')"
-              [class]="activeTab() === 'clients' ? 'w-full text-left px-4 py-2.5 rounded-xl text-sm font-bold bg-blue-50 text-blue-700 flex items-center gap-2 border border-blue-100' : 'w-full text-left px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100 flex items-center gap-2'"
-            >
-              <span class="material-icons text-sm">people_outline</span> @if (data.activeRole() === 'admin' || data.activeRole() === 'assistant') { Tous les Clients } @else { Mes Clients }
-              @if (data.partnerCustomers().length > 0) {
-                <span class="ml-auto bg-slate-200 text-slate-800 text-[10px] px-2 py-0.5 rounded-full font-black">{{ data.partnerCustomers().length }}</span>
+              <span class="material-icons text-sm">receipt_long</span> 
+              @if (data.activeRole() === 'operator' || data.activeRole() === 'qa') { Tâches & Travaux } @else { Suivi Commandes }
+              @if (data.orders().length > 0) {
+                <span class="ml-auto bg-slate-200 text-slate-800 text-[10px] px-2 py-0.5 rounded-full font-black">{{ data.orders().length }}</span>
               }
             </button>
-          }
 
-          <!-- Team Management (Client, Partner, Admin, Assistant only) -->
-          @if (data.activeRole() === 'client' || data.activeRole() === 'partner' || data.activeRole() === 'admin' || data.activeRole() === 'assistant') {
-            <button 
-              (click)="activeTab.set('team'); selectedOrderId.set(null)"
-              [class]="activeTab() === 'team' ? 'w-full text-left px-4 py-2.5 rounded-xl text-sm font-bold bg-blue-50 text-blue-700 flex items-center gap-2 border border-blue-100' : 'w-full text-left px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100 flex items-center gap-2'"
-            >
-              <span class="material-icons text-sm">badge</span> Gérer l'Équipe
-              @if (data.teamUsers().length > 0) {
-                <span class="ml-auto bg-slate-200 text-slate-800 text-[10px] px-2 py-0.5 rounded-full font-black">{{ data.teamUsers().length }}</span>
-              }
-            </button>
-          }
-
-          <!-- RH & PAIE (Admin, Assistant, Opérateur, Contrôleur QA) -->
-          @if (data.activeRole() === 'admin' || data.activeRole() === 'assistant' || data.activeRole() === 'operator' || data.activeRole() === 'qa') {
-            <button 
-              (click)="openHrTab()"
-              [class]="activeTab() === 'hr_payroll' ? 'w-full text-left px-4 py-2.5 rounded-xl text-sm font-bold bg-emerald-50 text-emerald-800 flex items-center gap-2 border border-emerald-200 shadow-xs' : 'w-full text-left px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100 flex items-center gap-2'"
-              id="sidebar-hr-payroll-btn"
-            >
-              <span class="material-icons text-sm text-emerald-600">payments</span>
-              <span>RH & Paie</span>
-              @if (data.pendingLeaveRequestsCount() > 0 && (data.activeRole() === 'admin' || data.activeRole() === 'assistant')) {
-                <span class="ml-auto bg-amber-500 text-white text-[10px] px-2 py-0.5 rounded-full font-black animate-pulse" title="Demandes de congés en attente">
-                  {{ data.pendingLeaveRequestsCount() }}
-                </span>
-              }
-            </button>
-          }
-
-          <!-- GESTION DES UTILISATEURS & CLIENTS (Admin & Assistant) -->
-          @if (data.activeRole() === 'admin' || data.activeRole() === 'assistant') {
-            <button 
-              (click)="openUsersTab()"
-              [class]="activeTab() === 'users_management' ? 'w-full text-left px-4 py-2.5 rounded-xl text-sm font-bold bg-blue-50 text-blue-700 flex items-center gap-2 border border-blue-100 shadow-xs' : 'w-full text-left px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100 flex items-center gap-2'"
-              id="sidebar-users-management-btn"
-            >
-              <span class="material-icons text-sm text-blue-600">manage_accounts</span>
-              <span>Utilisateurs & Clients</span>
-              @if (data.allUsers().length > 0) {
-                <span class="ml-auto bg-slate-200 text-slate-800 text-[10px] px-2 py-0.5 rounded-full font-black">{{ data.allUsers().length }}</span>
-              }
-            </button>
-          }
-
-          <!-- AFFILIATION & REVENTE DE SERVICES (Admin, Assistant, Affilié) -->
-          @if (data.activeRole() === 'admin' || data.activeRole() === 'assistant' || data.activeRole() === 'affiliate') {
-            <button 
-              (click)="openAffiliationTab()"
-              [class]="activeTab() === 'affiliation' ? 'w-full text-left px-4 py-2.5 rounded-xl text-sm font-bold bg-purple-50 text-purple-800 flex items-center gap-2 border border-purple-200 shadow-xs' : 'w-full text-left px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100 flex items-center gap-2'"
-              id="sidebar-affiliation-btn"
-            >
-              <span class="material-icons text-sm text-purple-600">storefront</span>
-              <span>Affiliation & Revente</span>
-              @if (data.affiliateCount() > 0) {
-                <span class="ml-auto bg-purple-100 text-purple-800 text-[10px] px-2 py-0.5 rounded-full font-black">{{ data.affiliateCount() }}</span>
-              }
-            </button>
-          }
-
-          <!-- Notifications tab button -->
-          <button 
-            (click)="activeTab.set('notifications'); selectedOrderId.set(null)"
-            [class]="activeTab() === 'notifications' ? 'w-full text-left px-4 py-2.5 rounded-xl text-sm font-bold bg-blue-50 text-blue-700 flex items-center gap-2 border border-blue-100' : 'w-full text-left px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100 flex items-center gap-2'"
-            id="sidebar-notifications-btn"
-          >
-            <span class="material-icons text-sm">notifications</span> Notifications
-            @if (data.unreadNotificationsCount() > 0) {
-              <span class="ml-auto bg-red-600 text-white text-[10px] px-2 py-0.5 rounded-full font-black animate-pulse">{{ data.unreadNotificationsCount() }}</span>
+            @if (data.activeRole() === 'client' || data.activeRole() === 'partner' || data.activeRole() === 'admin' || data.activeRole() === 'assistant') {
+              <button 
+                (click)="activeTab.set('new_order')"
+                [class]="activeTab() === 'new_order' ? 'w-full text-left px-3.5 py-2 rounded-xl text-xs font-bold bg-emerald-50 text-emerald-700 flex items-center gap-2 border border-emerald-100' : 'w-full text-left px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 flex items-center gap-2'"
+              >
+                <span class="material-icons text-sm text-emerald-600">add_circle</span> Nouvelle Commande
+              </button>
             }
-          </button>
 
-          <!-- Situation Client & Solde (Admin, Partner, Client, Assistant) -->
-          @if (data.activeRole() === 'admin' || data.activeRole() === 'partner' || data.activeRole() === 'client' || data.activeRole() === 'assistant') {
-            <button 
-              (click)="activeTab.set('client_statement'); selectedOrderId.set(null)"
-              [class]="activeTab() === 'client_statement' ? 'w-full text-left px-4 py-2.5 rounded-xl text-sm font-bold bg-amber-50 text-amber-800 flex items-center gap-2 border border-amber-200 shadow-xs' : 'w-full text-left px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100 flex items-center gap-2'"
-              id="sidebar-client-statement-btn"
-            >
-              <span class="material-icons text-sm text-amber-600">account_balance</span> Situation Client & Solde
-            </button>
-          }
+            @if (data.activeRole() === 'admin' || data.activeRole() === 'assistant' || data.activeRole() === 'operator' || data.activeRole() === 'qa') {
+              <button 
+                (click)="activeTab.set('tools'); selectedOrderId.set(null)"
+                [class]="activeTab() === 'tools' ? 'w-full text-left px-3.5 py-2 rounded-xl text-xs font-bold bg-indigo-50 text-indigo-700 flex items-center gap-2 border border-indigo-100 shadow-xs' : 'w-full text-left px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 flex items-center gap-2'"
+                id="sidebar-tools-btn"
+              >
+                <span class="material-icons text-sm text-indigo-600">construction</span> Espace Outils & Traitement
+              </button>
+            }
+          </div>
 
-          <!-- Espace Outils (Admin, Assistant, Operator, QA) -->
-          @if (data.activeRole() === 'admin' || data.activeRole() === 'assistant' || data.activeRole() === 'operator' || data.activeRole() === 'qa') {
-            <button 
-              (click)="activeTab.set('tools'); selectedOrderId.set(null)"
-              [class]="activeTab() === 'tools' ? 'w-full text-left px-4 py-2.5 rounded-xl text-sm font-bold bg-indigo-50 text-indigo-700 flex items-center gap-2 border border-indigo-100 shadow-xs' : 'w-full text-left px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100 flex items-center gap-2'"
-              id="sidebar-tools-btn"
-            >
-              <span class="material-icons text-sm text-indigo-600">construction</span> Espace Outils
-            </button>
-          }
+          <!-- GROUP 2: COMMERCIAL, SERVICES & CLIENTS -->
+          <div class="space-y-1 border-t border-slate-100 pt-2">
+            <p class="text-[10px] font-black uppercase tracking-wider text-slate-400 px-3 py-1">💼 Services, Carte & Clients</p>
 
-          <!-- Carte & Couverture Géographique -->
-          <button 
-            (click)="activeTab.set('coverage'); selectedOrderId.set(null)"
-            [class]="activeTab() === 'coverage' ? 'w-full text-left px-4 py-2.5 rounded-xl text-sm font-bold bg-blue-50 text-blue-700 flex items-center gap-2 border border-blue-100 shadow-xs' : 'w-full text-left px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100 flex items-center gap-2'"
-            id="sidebar-coverage-btn"
-          >
-            <span class="material-icons text-sm text-blue-600">map</span> Carte & Couverture
-          </button>
-
-          <!-- Mon Profil & Sécurité tab button (Tous les utilisateurs connectés) -->
-          <button 
-            (click)="openProfileTab()"
-            [class]="activeTab() === 'profile' ? 'w-full text-left px-4 py-2.5 rounded-xl text-sm font-bold bg-blue-50 text-blue-700 flex items-center gap-2 border border-blue-100' : 'w-full text-left px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100 flex items-center gap-2'"
-            id="sidebar-profile-btn"
-          >
-            <span class="material-icons text-sm">manage_accounts</span> Mon Profil & Sécurité
-          </button>
-
-          <!-- Admin exclusive options -->
-          @if (data.activeRole() === 'admin') {
-            <div class="border-t border-slate-100 my-2 pt-2">
-              <p class="text-[10px] font-black uppercase tracking-wider text-slate-400 px-4 mb-2">Administration</p>
-              
+            @if (data.activeRole() === 'admin' || data.activeRole() === 'assistant') {
               <button 
                 (click)="activeTab.set('services')"
-                [class]="activeTab() === 'services' ? 'w-full text-left px-4 py-2.5 rounded-xl text-sm font-bold bg-blue-50 text-blue-700 flex items-center gap-2 border border-blue-100' : 'w-full text-left px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100 flex items-center gap-2'"
+                [class]="activeTab() === 'services' ? 'w-full text-left px-3.5 py-2 rounded-xl text-xs font-bold bg-blue-50 text-blue-700 flex items-center gap-2 border border-blue-100' : 'w-full text-left px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 flex items-center gap-2'"
               >
-                <span class="material-icons text-sm">list_alt</span> Catalogue Services
+                <span class="material-icons text-sm text-blue-600">list_alt</span> Catalogue Services & Tarifs
               </button>
+            }
 
+            <button 
+              (click)="activeTab.set('coverage'); selectedOrderId.set(null)"
+              [class]="activeTab() === 'coverage' ? 'w-full text-left px-3.5 py-2 rounded-xl text-xs font-bold bg-blue-50 text-blue-700 flex items-center gap-2 border border-blue-100 shadow-xs' : 'w-full text-left px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 flex items-center gap-2'"
+              id="sidebar-coverage-btn"
+            >
+              <span class="material-icons text-sm text-emerald-600">map</span> Carte & Zones Disponibles
+            </button>
+
+            @if (data.activeRole() === 'partner' || data.activeRole() === 'admin' || data.activeRole() === 'assistant' || data.activeRole() === 'client') {
+              <button 
+                (click)="activeTab.set('clients')"
+                [class]="activeTab() === 'clients' ? 'w-full text-left px-3.5 py-2 rounded-xl text-xs font-bold bg-blue-50 text-blue-700 flex items-center gap-2 border border-blue-100' : 'w-full text-left px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 flex items-center gap-2'"
+              >
+                <span class="material-icons text-sm">people_outline</span> @if (data.activeRole() === 'admin' || data.activeRole() === 'assistant') { Tous les Clients } @else { Mes Clients }
+                @if (data.partnerCustomers().length > 0) {
+                  <span class="ml-auto bg-slate-200 text-slate-800 text-[10px] px-2 py-0.5 rounded-full font-black">{{ data.partnerCustomers().length }}</span>
+                }
+              </button>
+            }
+
+            @if (data.activeRole() === 'admin' || data.activeRole() === 'assistant') {
+              <button 
+                (click)="openUsersTab()"
+                [class]="activeTab() === 'users_management' ? 'w-full text-left px-3.5 py-2 rounded-xl text-xs font-bold bg-blue-50 text-blue-700 flex items-center gap-2 border border-blue-100 shadow-xs' : 'w-full text-left px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 flex items-center gap-2'"
+                id="sidebar-users-management-btn"
+              >
+                <span class="material-icons text-sm text-blue-600">manage_accounts</span>
+                <span>Utilisateurs & Comptes</span>
+                @if (data.allUsers().length > 0) {
+                  <span class="ml-auto bg-slate-200 text-slate-800 text-[10px] px-2 py-0.5 rounded-full font-black">{{ data.allUsers().length }}</span>
+                }
+              </button>
+            }
+
+            @if (data.activeRole() === 'admin' || data.activeRole() === 'partner' || data.activeRole() === 'client' || data.activeRole() === 'assistant') {
+              <button 
+                (click)="activeTab.set('client_statement'); selectedOrderId.set(null)"
+                [class]="activeTab() === 'client_statement' ? 'w-full text-left px-3.5 py-2 rounded-xl text-xs font-bold bg-amber-50 text-amber-800 flex items-center gap-2 border border-amber-200 shadow-xs' : 'w-full text-left px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 flex items-center gap-2'"
+                id="sidebar-client-statement-btn"
+              >
+                <span class="material-icons text-sm text-amber-600">account_balance</span> Situation Client & Solde
+              </button>
+            }
+
+            @if (data.activeRole() === 'admin' || data.activeRole() === 'assistant' || data.activeRole() === 'affiliate') {
+              <button 
+                (click)="openAffiliationTab()"
+                [class]="activeTab() === 'affiliation' ? 'w-full text-left px-3.5 py-2 rounded-xl text-xs font-bold bg-purple-50 text-purple-800 flex items-center gap-2 border border-purple-200 shadow-xs' : 'w-full text-left px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 flex items-center gap-2'"
+                id="sidebar-affiliation-btn"
+              >
+                <span class="material-icons text-sm text-purple-600">storefront</span>
+                <span>Affiliation & Revente</span>
+                @if (data.affiliateCount() > 0) {
+                  <span class="ml-auto bg-purple-100 text-purple-800 text-[10px] px-2 py-0.5 rounded-full font-black">{{ data.affiliateCount() }}</span>
+                }
+              </button>
+            }
+          </div>
+
+          <!-- GROUP 3: RH, ÉQUIPE & NOTIFICATIONS -->
+          <div class="space-y-1 border-t border-slate-100 pt-2">
+            <p class="text-[10px] font-black uppercase tracking-wider text-slate-400 px-3 py-1">👥 Équipe & Notifications</p>
+
+            @if (data.activeRole() === 'client' || data.activeRole() === 'partner' || data.activeRole() === 'admin' || data.activeRole() === 'assistant') {
+              <button 
+                (click)="activeTab.set('team'); selectedOrderId.set(null)"
+                [class]="activeTab() === 'team' ? 'w-full text-left px-3.5 py-2 rounded-xl text-xs font-bold bg-blue-50 text-blue-700 flex items-center gap-2 border border-blue-100' : 'w-full text-left px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 flex items-center gap-2'"
+              >
+                <span class="material-icons text-sm">badge</span> Gérer l'Équipe
+                @if (data.teamUsers().length > 0) {
+                  <span class="ml-auto bg-slate-200 text-slate-800 text-[10px] px-2 py-0.5 rounded-full font-black">{{ data.teamUsers().length }}</span>
+                }
+              </button>
+            }
+
+            @if (data.activeRole() === 'admin' || data.activeRole() === 'assistant' || data.activeRole() === 'operator' || data.activeRole() === 'qa') {
+              <button 
+                (click)="openHrTab()"
+                [class]="activeTab() === 'hr_payroll' ? 'w-full text-left px-3.5 py-2 rounded-xl text-xs font-bold bg-emerald-50 text-emerald-800 flex items-center gap-2 border border-emerald-200 shadow-xs' : 'w-full text-left px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 flex items-center gap-2'"
+                id="sidebar-hr-payroll-btn"
+              >
+                <span class="material-icons text-sm text-emerald-600">payments</span>
+                <span>RH & Paie</span>
+                @if (data.pendingLeaveRequestsCount() > 0 && (data.activeRole() === 'admin' || data.activeRole() === 'assistant')) {
+                  <span class="ml-auto bg-amber-500 text-white text-[10px] px-2 py-0.5 rounded-full font-black animate-pulse" title="Demandes de congés en attente">
+                    {{ data.pendingLeaveRequestsCount() }}
+                  </span>
+                }
+              </button>
+            }
+
+            <button 
+              (click)="activeTab.set('notifications'); selectedOrderId.set(null)"
+              [class]="activeTab() === 'notifications' ? 'w-full text-left px-3.5 py-2 rounded-xl text-xs font-bold bg-blue-50 text-blue-700 flex items-center gap-2 border border-blue-100' : 'w-full text-left px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 flex items-center gap-2'"
+              id="sidebar-notifications-btn"
+            >
+              <span class="material-icons text-sm">notifications</span> Notifications
+              @if (data.unreadNotificationsCount() > 0) {
+                <span class="ml-auto bg-red-600 text-white text-[10px] px-2 py-0.5 rounded-full font-black animate-pulse">{{ data.unreadNotificationsCount() }}</span>
+              }
+            </button>
+          </div>
+
+          <!-- GROUP 4: PARAMÈTRES & SYSTÈME -->
+          <div class="space-y-1 border-t border-slate-100 pt-2">
+            <p class="text-[10px] font-black uppercase tracking-wider text-slate-400 px-3 py-1">⚙️ Paramètres & Système</p>
+
+            <button 
+              (click)="openProfileTab()"
+              [class]="activeTab() === 'profile' ? 'w-full text-left px-3.5 py-2 rounded-xl text-xs font-bold bg-blue-50 text-blue-700 flex items-center gap-2 border border-blue-100' : 'w-full text-left px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 flex items-center gap-2'"
+              id="sidebar-profile-btn"
+            >
+              <span class="material-icons text-sm">manage_accounts</span> Mon Profil & Sécurité
+            </button>
+
+            @if (data.activeRole() === 'admin') {
               <button 
                 (click)="activeTab.set('settings')"
-                [class]="activeTab() === 'settings' ? 'w-full text-left px-4 py-2.5 rounded-xl text-sm font-bold bg-blue-50 text-blue-700 flex items-center gap-2 border border-blue-100' : 'w-full text-left px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100 flex items-center gap-2'"
+                [class]="activeTab() === 'settings' ? 'w-full text-left px-3.5 py-2 rounded-xl text-xs font-bold bg-blue-50 text-blue-700 flex items-center gap-2 border border-blue-100' : 'w-full text-left px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 flex items-center gap-2'"
               >
-                <span class="material-icons text-sm">settings</span> Configuration
+                <span class="material-icons text-sm">settings</span> Configuration & Siège
               </button>
 
               <button 
                 (click)="activeTab.set('audit_logs')"
-                [class]="activeTab() === 'audit_logs' ? 'w-full text-left px-4 py-2.5 rounded-xl text-sm font-bold bg-blue-50 text-blue-700 flex items-center gap-2 border border-blue-100' : 'w-full text-left px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100 flex items-center gap-2'"
+                [class]="activeTab() === 'audit_logs' ? 'w-full text-left px-3.5 py-2 rounded-xl text-xs font-bold bg-blue-50 text-blue-700 flex items-center gap-2 border border-blue-100' : 'w-full text-left px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 flex items-center gap-2'"
               >
                 <span class="material-icons text-sm">history</span> Journal d'Audit
               </button>
@@ -1881,12 +1886,13 @@
               <button 
                 type="button"
                 (click)="openSitemapModal()"
-                class="w-full text-left px-4 py-2.5 rounded-xl text-sm font-semibold text-purple-700 bg-purple-50/60 hover:bg-purple-100/80 flex items-center gap-2 border border-purple-200/60 transition-colors cursor-pointer"
+                class="w-full text-left px-3.5 py-2 rounded-xl text-xs font-semibold text-purple-700 bg-purple-50/60 hover:bg-purple-100/80 flex items-center gap-2 border border-purple-200/60 transition-colors cursor-pointer"
               >
                 <span class="material-icons text-sm text-purple-600">account_tree</span> Sitemap & SEO XML
               </button>
-            </div>
-          }
+            }
+          </div>
+
         </div>
 
         <!-- Demonstration Database control card -->
@@ -8598,6 +8604,181 @@
                   </button>
                 </div>
               </div>
+            </div>
+
+            <!-- SECTION 5: LOCALISATION, PÉRIMÈTRE & ZONES DE DISPONIBILITÉ GÉOGRAPHIQUE -->
+            <div class="bg-emerald-50/50 p-4 rounded-xl border border-emerald-200 space-y-4">
+              <div class="flex items-center justify-between">
+                <div>
+                  <label class="block font-bold text-emerald-900 uppercase tracking-wider text-[11px] flex items-center gap-1">
+                    <span class="material-icons text-sm text-emerald-600">location_on</span>
+                    Disponibilité Géographique & Périmètre d'Action
+                  </label>
+                  <p class="text-[11px] text-slate-500 mt-0.5">
+                    Spécifiez le rayon d'action (ex: 35 km autour du centre Fès), les villes desservies (ex: Marrakech, Casablanca) ou basculez en couverture nationale.
+                  </p>
+                </div>
+                <span class="bg-emerald-100 text-emerald-800 font-bold text-[10px] px-2 py-0.5 rounded-md border border-emerald-200">
+                  Zone & Rayon
+                </span>
+              </div>
+
+              <!-- Scope selector & Options -->
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label class="block font-bold text-slate-700 mb-1">Portée globale du service</label>
+                  <select 
+                    [value]="coverageScope()" 
+                    (change)="coverageScope.set($any($event.target).value)" 
+                    class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                  >
+                    <option value="national">🇲🇦 Couverture Nationale (Tout le Maroc)</option>
+                    <option value="regional">📍 Couverture Régionale / Villes ciblées</option>
+                    <option value="radius">⭕ Rayon autour du Siège (ex: 35 km du centre)</option>
+                    <option value="international">🌍 Couverture Internationale & En Ligne</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label class="block font-bold text-slate-700 mb-1">Délai moyen de réalisation / livraison</label>
+                  <input 
+                    type="text" 
+                    [value]="estimatedDeliveryDelay()" 
+                    (input)="estimatedDeliveryDelay.set($any($event.target).value)" 
+                    placeholder="Ex: 24h à 48h, Immédiat, 3 jours" 
+                    class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              <!-- Availability Toggles -->
+              <div class="flex flex-wrap gap-4 pt-1 border-t border-emerald-100">
+                <label class="flex items-center gap-2 cursor-pointer">
+                  <input 
+                    type="checkbox" 
+                    [checked]="isAvailableNationwide()" 
+                    (change)="isAvailableNationwide.set($any($event.target).checked)" 
+                    class="accent-emerald-600 h-4 w-4"
+                  />
+                  <span class="font-bold text-slate-700 text-xs">Disponible sur tout le territoire national</span>
+                </label>
+
+                <label class="flex items-center gap-2 cursor-pointer">
+                  <input 
+                    type="checkbox" 
+                    [checked]="isAvailableInternationally()" 
+                    (change)="isAvailableInternationally.set($any($event.target).checked)" 
+                    class="accent-emerald-600 h-4 w-4"
+                  />
+                  <span class="font-bold text-slate-700 text-xs">Disponible à l'international / En ligne</span>
+                </label>
+              </div>
+
+              <!-- Coverage Location Points (Rayon & Centres Opérationnels) -->
+              <div class="space-y-3 pt-2 border-t border-emerald-100">
+                <div class="flex items-center justify-between">
+                  <span class="font-bold text-slate-800 text-xs">Points d'Attache & Rayons de Couverture Spécifiques</span>
+                  <span class="text-[10px] text-slate-400">Si aucun point n'est ajouté, le centre principal (Fès + 35km) s'applique par défaut.</span>
+                </div>
+
+                <!-- Existing Location Points List -->
+                @if (coverageLocationsList().length > 0) {
+                  <div class="space-y-2">
+                    @for (loc of coverageLocationsList(); track loc.id) {
+                      <div class="flex items-center justify-between bg-white p-2.5 rounded-xl border border-slate-200 shadow-xs">
+                        <div class="flex items-center gap-2.5">
+                          <span class="material-icons text-emerald-600 text-base">near_me</span>
+                          <div>
+                            <p class="font-bold text-slate-900">{{ loc.name }} ({{ loc.city }})</p>
+                            <p class="text-[10px] text-slate-500">
+                              Rayon d'action : <span class="font-bold text-emerald-700">{{ loc.radiusKm }} km</span> • {{ loc.region }} • Délai: {{ loc.deliveryDelay }}
+                            </p>
+                          </div>
+                        </div>
+                        <button 
+                          type="button" 
+                          (click)="removeCoverageLocationPoint(loc.id)" 
+                          class="text-red-500 hover:text-red-700 p-1 cursor-pointer"
+                          title="Supprimer ce point"
+                        >
+                          <span class="material-icons text-sm">delete</span>
+                        </button>
+                      </div>
+                    }
+                  </div>
+                } @else {
+                  <p class="text-slate-400 italic text-[11px] bg-white p-3 rounded-xl border border-slate-200">
+                    Aucune localisation spécifique enregistrée pour ce service. La localisation centrale globale s'appliquera lors de la création ou vous pourrez la modifier à tout moment.
+                  </p>
+                }
+
+                <!-- Add Location Point Form -->
+                <div class="bg-white p-3 rounded-xl border border-slate-200 space-y-3">
+                  <p class="font-bold text-slate-700 text-xs">Ajouter une localisation / Ville d'action :</p>
+                  <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    <input 
+                      type="text" 
+                      [value]="newLocationName()" 
+                      (input)="newLocationName.set($any($event.target).value)" 
+                      placeholder="Nom (ex: Centre Fès, Agence Marrakech)" 
+                      class="bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-medium focus:bg-white focus:outline-none"
+                    />
+                    <input 
+                      type="text" 
+                      [value]="newLocationCity()" 
+                      (input)="newLocationCity.set($any($event.target).value)" 
+                      placeholder="Ville (ex: Fès, Marrakech, Rabat)" 
+                      class="bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-bold focus:bg-white focus:outline-none"
+                    />
+                    <div class="flex items-center gap-1">
+                      <input 
+                        type="number" 
+                        min="1" 
+                        max="1000" 
+                        [value]="newLocationRadiusKm()" 
+                        (input)="newLocationRadiusKm.set(+$any($event.target).value || 35)" 
+                        placeholder="Rayon (km)" 
+                        class="w-full bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-bold text-right focus:bg-white focus:outline-none"
+                      />
+                      <span class="text-slate-500 font-bold text-[10px] shrink-0">km</span>
+                      <button 
+                        type="button" 
+                        (click)="addCoverageLocationPoint()" 
+                        class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3 py-1.5 rounded-lg text-xs flex items-center gap-1 shrink-0 cursor-pointer shadow-xs ml-1"
+                      >
+                        <span class="material-icons text-xs">add_location</span> Ajouter
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Covered Cities Tags -->
+              <div class="space-y-2 pt-2 border-t border-emerald-100">
+                <span class="font-bold text-slate-800 text-xs">Villes Spécifiques Couvertes :</span>
+                <div class="flex flex-wrap items-center gap-1.5">
+                  @for (c of coverageCitiesList(); track c) {
+                    <span class="bg-emerald-100 text-emerald-800 font-bold text-[11px] px-2.5 py-1 rounded-full flex items-center gap-1 border border-emerald-200">
+                      {{ c }}
+                      <button (click)="removeCoverageCity(c)" type="button" class="text-emerald-900 hover:text-red-600 cursor-pointer">×</button>
+                    </span>
+                  }
+                </div>
+                <div class="flex items-center gap-2 max-w-xs pt-1">
+                  <input 
+                    type="text" 
+                    [value]="newCityInput()" 
+                    (input)="newCityInput.set($any($event.target).value)" 
+                    (keyup.enter)="addCoverageCity()"
+                    placeholder="Ajouter une ville (ex: Tanger)" 
+                    class="bg-white border border-slate-200 rounded-lg px-2.5 py-1 text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none flex-1"
+                  />
+                  <button (click)="addCoverageCity()" type="button" class="bg-slate-700 hover:bg-slate-800 text-white font-bold text-xs px-2.5 py-1 rounded-lg cursor-pointer">
+                    +
+                  </button>
+                </div>
+              </div>
+
             </div>
 
           </form>

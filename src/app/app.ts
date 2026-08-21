@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, inject, signal, computed, effect } 
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormGroup, FormControl, Validators } from '@angular/forms';
 import { DomSanitizer, SafeResourceUrl, Title, Meta } from '@angular/platform-browser';
-import { Data, Service, Order, PartnerCustomer, OrderFile, Quote, AppNotification, User, UserPrivileges, getDefaultPrivileges, PayrollRecord, LeaveRequest, SalaryAdvance, AffiliateCommission, Payment, SystemSettings, AffiliateWithStats } from './data';
+import { Data, Service, Order, PartnerCustomer, OrderFile, Quote, AppNotification, User, UserPrivileges, getDefaultPrivileges, PayrollRecord, LeaveRequest, SalaryAdvance, AffiliateCommission, Payment, SystemSettings, AffiliateWithStats, CoverageScopeType, CoverageLocationPoint } from './data';
 import { getAllIndexedRoutes, generateSitemapXml, generateRobotsTxt, SitemapUrlEntry } from './sitemap-generator';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
@@ -414,6 +414,27 @@ export class App {
   serviceOptionsList = signal<{ id: string; name: string; price: number }[]>([]);
   newOptionName = signal<string>('');
   newOptionPrice = signal<number>(0);
+
+  // Geographic Availability & Location State
+  coverageScope = signal<CoverageScopeType>('national');
+  coverageLocationsList = signal<CoverageLocationPoint[]>([]);
+  coverageCitiesList = signal<string[]>([]);
+  coverageRegionsList = signal<string[]>([]);
+  coverageCountriesList = signal<string[]>(['Maroc']);
+  isAvailableNationwide = signal<boolean>(true);
+  isAvailableInternationally = signal<boolean>(true);
+  estimatedDeliveryDelay = signal<string>('24h');
+
+  // New location point form signals
+  newLocationName = signal<string>('');
+  newLocationType = signal<'hub' | 'agency' | 'relay_point' | 'express_zone' | 'city_coverage'>('city_coverage');
+  newLocationCountry = signal<string>('Maroc');
+  newLocationRegion = signal<string>('');
+  newLocationCity = signal<string>('');
+  newLocationStreetAddress = signal<string>('');
+  newLocationRadiusKm = signal<number>(35);
+  newLocationDeliveryDelay = signal<string>('24h');
+  newCityInput = signal<string>('');
 
   // --- LOCAL COMPONENT STATES ---
   activeCategoryFilter = signal<string>('all');
@@ -2472,6 +2493,23 @@ export class App {
     this.serviceOptionsList.set([]);
     this.newOptionName.set('');
     this.newOptionPrice.set(0);
+
+    // Reset location & coverage fields
+    this.coverageScope.set('national');
+    this.coverageLocationsList.set([]);
+    this.coverageCitiesList.set([]);
+    this.coverageRegionsList.set([]);
+    this.coverageCountriesList.set(['Maroc']);
+    this.isAvailableNationwide.set(true);
+    this.isAvailableInternationally.set(true);
+    this.estimatedDeliveryDelay.set('24h');
+    this.newLocationName.set('');
+    this.newLocationCity.set('');
+    this.newLocationRegion.set('');
+    this.newLocationStreetAddress.set('');
+    this.newLocationRadiusKm.set(35);
+    this.newCityInput.set('');
+
     this.serviceForm.reset({
       name: '',
       category: 'saisie',
@@ -2492,6 +2530,23 @@ export class App {
     this.serviceOptionsList.set(service.options ? [...service.options] : []);
     this.newOptionName.set('');
     this.newOptionPrice.set(0);
+
+    // Populate location & coverage fields
+    this.coverageScope.set(service.coverageScope || 'national');
+    this.coverageLocationsList.set(service.coverageLocations ? [...service.coverageLocations] : []);
+    this.coverageCitiesList.set(service.coverageCities ? [...service.coverageCities] : []);
+    this.coverageRegionsList.set(service.coverageRegions ? [...service.coverageRegions] : []);
+    this.coverageCountriesList.set(service.coverageCountries ? [...service.coverageCountries] : ['Maroc']);
+    this.isAvailableNationwide.set(service.isAvailableNationwide !== false);
+    this.isAvailableInternationally.set(service.isAvailableInternationally !== false);
+    this.estimatedDeliveryDelay.set(service.estimatedDeliveryDelay || '24h');
+    this.newLocationName.set('');
+    this.newLocationCity.set('');
+    this.newLocationRegion.set('');
+    this.newLocationStreetAddress.set('');
+    this.newLocationRadiusKm.set(35);
+    this.newCityInput.set('');
+
     this.serviceForm.patchValue({
       name: service.name,
       category: service.category,
@@ -2546,6 +2601,59 @@ export class App {
     this.serviceOptionsList.update(list => list.filter(o => o.id !== optId));
   }
 
+  // --- LOCATION & COVERAGE POINT MANAGEMENT ---
+  addCoverageLocationPoint() {
+    const city = this.newLocationCity().trim();
+    if (!city) {
+      this.data.errorMessage.set('Veuillez renseigner au moins la ville pour la zone de couverture.');
+      return;
+    }
+    const name = this.newLocationName().trim() || `Zone ${city}`;
+    const newPoint: CoverageLocationPoint = {
+      id: 'loc-' + Math.random().toString(36).substring(2, 9),
+      name,
+      type: this.newLocationType(),
+      country: this.newLocationCountry().trim() || 'Maroc',
+      region: this.newLocationRegion().trim() || 'Région ' + city,
+      city,
+      streetAddress: this.newLocationStreetAddress().trim() || undefined,
+      lat: 33.9716,
+      lng: -6.8498,
+      radiusKm: Number(this.newLocationRadiusKm()) || 35,
+      deliveryDelay: this.newLocationDeliveryDelay().trim() || '24h',
+      isOpen: true
+    };
+
+    this.coverageLocationsList.update(list => [...list, newPoint]);
+
+    // Also include in coverageCitiesList if absent
+    if (!this.coverageCitiesList().includes(city)) {
+      this.coverageCitiesList.update(cities => [...cities, city]);
+    }
+
+    // Clear form fields
+    this.newLocationName.set('');
+    this.newLocationCity.set('');
+    this.newLocationRegion.set('');
+    this.newLocationStreetAddress.set('');
+  }
+
+  removeCoverageLocationPoint(id: string) {
+    this.coverageLocationsList.update(list => list.filter(p => p.id !== id));
+  }
+
+  addCoverageCity() {
+    const c = this.newCityInput().trim();
+    if (c && !this.coverageCitiesList().includes(c)) {
+      this.coverageCitiesList.update(list => [...list, c]);
+      this.newCityInput.set('');
+    }
+  }
+
+  removeCoverageCity(cityName: string) {
+    this.coverageCitiesList.update(list => list.filter(c => c !== cityName));
+  }
+
   async handleSaveService() {
     if (this.serviceForm.invalid) {
       this.data.errorMessage.set('Veuillez renseigner le nom, la catégorie et les tarifs du service.');
@@ -2564,7 +2672,17 @@ export class App {
       unitPrice: Number(val.unitPrice) || 0,
       isActive: val.isActive !== false,
       imageUrl: this.serviceImageBase64() || val.imageUrl || undefined,
-      options: this.serviceOptionsList()
+      options: this.serviceOptionsList(),
+
+      // Geographic Availability & Location
+      coverageScope: this.coverageScope(),
+      coverageLocations: this.coverageLocationsList(),
+      coverageCities: this.coverageCitiesList(),
+      coverageRegions: this.coverageRegionsList(),
+      coverageCountries: this.coverageCountriesList(),
+      isAvailableNationwide: this.isAvailableNationwide(),
+      isAvailableInternationally: this.isAvailableInternationally(),
+      estimatedDeliveryDelay: this.estimatedDeliveryDelay()
     };
 
     try {
