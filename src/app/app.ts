@@ -8,11 +8,12 @@ import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 
 import { DashboardChart } from './dashboard-chart';
+import { CoverageMap } from './coverage-map';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-root',
-  imports: [CommonModule, ReactiveFormsModule, DashboardChart],
+  imports: [CommonModule, ReactiveFormsModule, DashboardChart, CoverageMap],
   templateUrl: './app.html',
   styleUrl: './app.css',
 })
@@ -276,6 +277,13 @@ export class App {
     if (!this.payrollForm) return null;
     return this.data.computeMoroccanPayroll(this.payrollForm.getRawValue());
   });
+
+  onCoverageSelectService(serviceId: string) {
+    if (this.orderForm) {
+      this.orderForm.patchValue({ serviceId });
+    }
+    this.activeTab.set('new_order');
+  }
 
   getClientOverviewForUser(userId: string, email?: string) {
     return this.data.clientsOverview().find(c => 

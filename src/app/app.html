@@ -1834,6 +1834,15 @@
             </button>
           }
 
+          <!-- Carte & Couverture Géographique -->
+          <button 
+            (click)="activeTab.set('coverage'); selectedOrderId.set(null)"
+            [class]="activeTab() === 'coverage' ? 'w-full text-left px-4 py-2.5 rounded-xl text-sm font-bold bg-blue-50 text-blue-700 flex items-center gap-2 border border-blue-100 shadow-xs' : 'w-full text-left px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100 flex items-center gap-2'"
+            id="sidebar-coverage-btn"
+          >
+            <span class="material-icons text-sm text-blue-600">map</span> Carte & Couverture
+          </button>
+
           <!-- Mon Profil & Sécurité tab button (Tous les utilisateurs connectés) -->
           <button 
             (click)="openProfileTab()"
@@ -5043,6 +5052,13 @@
                 }
               }
             </div>
+          </div>
+        }
+
+        <!-- I. CARTE DES SERVICES & COUVERTURE GÉOGRAPHIQUE VIEW -->
+        @if (activeTab() === 'coverage') {
+          <div class="space-y-6 animate-fadeIn" id="coverage-map-view">
+            <app-coverage-map (selectService)="onCoverageSelectService($event)"></app-coverage-map>
           </div>
         }
 
