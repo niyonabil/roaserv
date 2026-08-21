@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { initializeFirestore, doc, getDoc, getDocs, setDoc, collection, deleteDoc } from 'firebase/firestore';
+import defaultFirebaseAppletConfig from '../firebase-applet-config.json';
 
 // --- HELPER TO CLEAN UNDEFINED VALUES FOR FIRESTORE ---
 export function cleanFirestoreData<T>(data: T): T {
@@ -596,7 +597,7 @@ export interface AppDatabase {
 
 // --- FIREBASE INITIALIZATION ---
 
-let firebaseConfig: Record<string, string>;
+let firebaseConfig: Record<string, string> = { ...(defaultFirebaseAppletConfig as unknown as Record<string, string>) };
 
 try {
   const configPath = join(process.cwd(), 'firebase-applet-config.json');
@@ -604,39 +605,15 @@ try {
     firebaseConfig = JSON.parse(readFileSync(configPath, 'utf-8'));
   } else if (process.env['FIREBASE_CONFIG']) {
     firebaseConfig = JSON.parse(process.env['FIREBASE_CONFIG']!);
-  } else {
-    firebaseConfig = {
-      projectId: "reflecting-pattern-d79b0",
-      appId: "1:893983542054:web:324dcf1b928b8dfe3f0fe7",
-      apiKey: "AIzaSyDouXst_SDb_C6dy9oHGp14osC9knBMjAo",
-      authDomain: "reflecting-pattern-d79b0.firebaseapp.com",
-      firestoreDatabaseId: "ai-studio-remixgestiondetr-a8f577d6-5c9e-4145-aab5-07d8f9ac7af4",
-      storageBucket: "reflecting-pattern-d79b0.firebasestorage.app",
-      messagingSenderId: "893983542054",
-      measurementId: "",
-      oAuthClientId: "893983542054-mpcrs32ohq38rfi85dt7iotlcrisi186.apps.googleusercontent.com",
-      recaptchaSiteKey: ""
-    };
   }
 } catch {
-  firebaseConfig = {
-    projectId: "reflecting-pattern-d79b0",
-    appId: "1:893983542054:web:324dcf1b928b8dfe3f0fe7",
-    apiKey: "AIzaSyDouXst_SDb_C6dy9oHGp14osC9knBMjAo",
-    authDomain: "reflecting-pattern-d79b0.firebaseapp.com",
-    firestoreDatabaseId: "ai-studio-remixgestiondetr-a8f577d6-5c9e-4145-aab5-07d8f9ac7af4",
-    storageBucket: "reflecting-pattern-d79b0.firebasestorage.app",
-    messagingSenderId: "893983542054",
-    measurementId: "",
-    oAuthClientId: "893983542054-mpcrs32ohq38rfi85dt7iotlcrisi186.apps.googleusercontent.com",
-    recaptchaSiteKey: ""
-  };
+  // Use imported defaultFirebaseAppletConfig
 }
 
 const firebaseApp = initializeApp(firebaseConfig);
 export const db = initializeFirestore(firebaseApp, {
   experimentalForceLongPolling: true
-}, firebaseConfig['firestoreDatabaseId'] || 'ai-studio-remixgestiondetr-a8f577d6-5c9e-4145-aab5-07d8f9ac7af4');
+}, firebaseConfig['firestoreDatabaseId'] || 'ai-studio-remixremixremixg-5dd68bc5-2fd2-4525-a2d2-2968ffd39e5e');
 export const auth = getAuth(firebaseApp);
 
 async function ensureAuthenticated() {

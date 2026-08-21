@@ -3119,6 +3119,84 @@ app.post('/api/settings/firebase-config', async (req, res) => {
   }
 });
 
+// --- SETUP ENDPOINTS ---
+app.get('/api/setup/status', async (req, res) => {
+  try {
+    const db = await loadDatabase();
+    const isSetupCompleted = db.settings?.isSetupCompleted !== undefined ? db.settings.isSetupCompleted : true;
+    res.json({
+      isSetupCompleted,
+      settings: db.settings
+    });
+  } catch (err) {
+    res.status(500).json({ error: (err as Error).message });
+  }
+});
+
+app.post('/api/setup/submit', async (req, res) => {
+  try {
+    const { dbConfig, adminUser } = req.body;
+    const db = await loadDatabase();
+    if (!db.settings) {
+      db.settings = {
+        companyName: 'DigiDocs Services SARL',
+        address: "14 Boulevard d'Anfa, Étage 3, Casablanca, Maroc",
+        phone: '+212 522-123456',
+        email: 'contact@digidocs.ma',
+        currency: 'DH',
+        taxRate: 20,
+        depositRules: { normal: 50, fast: 60, urgent: 70, very_urgent: 80 },
+        urgencySurcharges: { normal: 0, fast: 30, urgent: 60, very_urgent: 100 }
+      };
+    }
+
+    if (dbConfig) {
+      db.settings.databaseType = dbConfig.databaseType || 'firebase';
+      db.settings.dbConfig = {
+        host: dbConfig.host || '',
+        port: dbConfig.port ? Number(dbConfig.port) : 3306,
+        databaseName: dbConfig.databaseName || '',
+        username: dbConfig.username || '',
+        password: dbConfig.password ? '********' : '',
+        connected: true,
+        lastTestedAt: new Date().toISOString()
+      };
+    }
+
+    if (adminUser && adminUser.email) {
+      const existingAdmin = db.users.find(u => u.role === 'admin' || u.email.toLowerCase() === adminUser.email.toLowerCase());
+      if (existingAdmin) {
+        if (adminUser.name) existingAdmin.name = adminUser.name;
+        if (adminUser.username) existingAdmin.username = adminUser.username;
+        if (adminUser.email) existingAdmin.email = adminUser.email;
+        if (adminUser.password) existingAdmin.password = adminUser.password;
+      } else {
+        db.users.push({
+          id: 'usr-admin-' + Math.random().toString(36).substring(2, 9),
+          name: adminUser.name || 'Administrateur',
+          username: adminUser.username || 'ADMIN',
+          email: adminUser.email,
+          password: adminUser.password || 'Roa5555556666',
+          role: 'admin',
+          active: true,
+          createdAt: new Date().toISOString()
+        });
+      }
+    }
+
+    db.settings.isSetupCompleted = true;
+    await saveDatabase(db);
+    await logAction('system', 'Système', 'Configuration Initiale', 'Configuration initiale enregistrée avec succès.');
+
+    res.json({
+      success: true,
+      message: 'Configuration enregistrée avec succès.'
+    });
+  } catch (err) {
+    res.status(500).json({ error: (err as Error).message });
+  }
+});
+
 // Test DB Connection & Setup Endpoint
 app.post('/api/database/test-connection', async (req, res) => {
   try {
@@ -3529,6 +3607,13 @@ app.use(
     redirect: false,
   }),
 );
+
+/**
+ * API 404 Catch-All Handler (returns JSON and prevents falling through to Angular SSR)
+ */
+app.use('/api', (req, res) => {
+  res.status(404).json({ error: `Route API introuvable: ${req.method} ${req.originalUrl}` });
+});
 
 /**
  * Handle all other requests by rendering the Angular application.
