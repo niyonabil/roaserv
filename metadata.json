@@ -1,0 +1,10 @@
+{
+  "name": "Remix Remix Remix Gestion de Travaux Numériques à Distance",
+  "description": "Plateforme professionnelle B2B/B2C de gestion de commandes, devis, paiements d\u0027acomptes et suivi de production pour travaux documentaires.",
+  "requestFramePermissions": [
+    "camera"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

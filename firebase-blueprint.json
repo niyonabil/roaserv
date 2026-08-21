@@ -1,0 +1,344 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "Represents an internal user or registered partner/client in the workspace.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "The unique user ID matching their authenticated UID." },
+        "name": { "type": "string", "maxLength": 100 },
+        "email": { "type": "string", "format": "email" },
+        "role": { "type": "string", "enum": ["admin", "partner", "operator", "qa", "client"] },
+        "company": { "type": "string", "maxLength": 100 },
+        "ice": { "type": "string", "maxLength": 30 },
+        "phone": { "type": "string", "maxLength": 30 },
+        "address": { "type": "string", "maxLength": 250 },
+        "city": { "type": "string", "maxLength": 50 },
+        "active": { "type": "boolean" }
+      },
+      "required": ["id", "name", "email", "role", "active"]
+    },
+    "PartnerCustomer": {
+      "title": "PartnerCustomer",
+      "description": "A B2C client managed and registered by a partner.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "partnerId": { "type": "string" },
+        "name": { "type": "string", "maxLength": 100 },
+        "email": { "type": "string", "format": "email" },
+        "phone": { "type": "string", "maxLength": 30 },
+        "company": { "type": "string", "maxLength": 100 },
+        "city": { "type": "string", "maxLength": 50 },
+        "address": { "type": "string", "maxLength": 250 },
+        "notes": { "type": "string", "maxLength": 1000 },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "partnerId", "name", "email", "phone", "city", "createdAt"]
+    },
+    "Service": {
+      "title": "Service",
+      "description": "An administrative documentary service catalog item.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string", "maxLength": 150 },
+        "category": { "type": "string", "enum": ["saisie", "conversion", "mise_en_forme", "traitement", "impression", "livraison"] },
+        "description": { "type": "string", "maxLength": 1000 },
+        "priceMethod": { "type": "string", "enum": ["fixed", "per_page", "per_word", "per_hour", "hybrid"] },
+        "basePrice": { "type": "number" },
+        "unitPriceName": { "type": "string" },
+        "unitPrice": { "type": "number" },
+        "isActive": { "type": "boolean" },
+        "options": {
+          "type": "array",
+          "description": "Service finishing options."
+        }
+      },
+      "required": ["id", "name", "category", "priceMethod", "basePrice", "unitPriceName", "unitPrice", "isActive"]
+    },
+    "Order": {
+      "title": "Order",
+      "description": "A work order created by a client or on behalf of a B2C client by a partner.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "reference": { "type": "string" },
+        "customerType": { "type": "string", "enum": ["particular", "company", "partner"] },
+        "customerDetails": {
+          "type": "object",
+          "properties": {
+            "name": { "type": "string", "maxLength": 100 },
+            "email": { "type": "string", "format": "email" },
+            "phone": { "type": "string", "maxLength": 30 },
+            "company": { "type": "string", "maxLength": 100 },
+            "city": { "type": "string", "maxLength": 50 },
+            "address": { "type": "string", "maxLength": 250 },
+            "remarks": { "type": "string", "maxLength": 500 }
+          },
+          "required": ["name", "email", "phone", "city"]
+        },
+        "partnerId": { "type": "string" },
+        "serviceId": { "type": "string" },
+        "serviceName": { "type": "string" },
+        "serviceCategory": { "type": "string" },
+        "description": { "type": "string", "maxLength": 5000 },
+        "quantity": { "type": "number" },
+        "urgency": { "type": "string", "enum": ["normal", "fast", "urgent", "very_urgent"] },
+        "status": { "type": "string" },
+        "files": { "type": "array" },
+        "messages": { "type": "array" },
+        "tasks": { "type": "array" },
+        "quoteId": { "type": "string" },
+        "delivery": { "type": "object" },
+        "qualityChecklist": { "type": "object" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" },
+        "deadline": { "type": "string" }
+      },
+      "required": ["id", "reference", "customerType", "customerDetails", "serviceId", "serviceName", "serviceCategory", "description", "quantity", "urgency", "status", "files", "messages", "tasks", "createdAt", "updatedAt"]
+    },
+    "Quote": {
+      "title": "Quote",
+      "description": "Financial quote for a documentary work order.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "reference": { "type": "string" },
+        "orderId": { "type": "string" },
+        "basePrice": { "type": "number" },
+        "optionsPrice": { "type": "number" },
+        "urgencySurcharge": { "type": "number" },
+        "printingPrice": { "type": "number" },
+        "deliveryPrice": { "type": "number" },
+        "totalAmount": { "type": "number" },
+        "depositPercent": { "type": "number" },
+        "depositAmount": { "type": "number" },
+        "balanceAmount": { "type": "number" },
+        "status": { "type": "string", "enum": ["draft", "sent", "accepted", "refused"] },
+        "validityDate": { "type": "string" },
+        "items": { "type": "array" }
+      },
+      "required": ["id", "reference", "orderId", "basePrice", "optionsPrice", "urgencySurcharge", "printingPrice", "deliveryPrice", "totalAmount", "depositPercent", "depositAmount", "balanceAmount", "status", "validityDate", "items"]
+    },
+    "Invoice": {
+      "title": "Invoice",
+      "description": "Invoice generated for an order (deposit, balance, or full).",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "reference": { "type": "string" },
+        "orderId": { "type": "string" },
+        "quoteId": { "type": "string" },
+        "amount": { "type": "number" },
+        "type": { "type": "string", "enum": ["deposit", "balance", "full"] },
+        "status": { "type": "string", "enum": ["unpaid", "paid"] },
+        "date": { "type": "string" }
+      },
+      "required": ["id", "reference", "orderId", "quoteId", "amount", "type", "status", "date"]
+    },
+    "Payment": {
+      "title": "Payment",
+      "description": "Payment proof submitted for verification.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "reference": { "type": "string" },
+        "orderId": { "type": "string" },
+        "amount": { "type": "number" },
+        "type": { "type": "string", "enum": ["deposit", "balance"] },
+        "method": { "type": "string", "enum": ["cash", "transfer", "online", "manual"] },
+        "status": { "type": "string", "enum": ["pending", "verified", "rejected"] },
+        "proofFileName": { "type": "string" },
+        "proofFileBase64": { "type": "string" },
+        "date": { "type": "string" },
+        "notes": { "type": "string" }
+      },
+      "required": ["id", "reference", "orderId", "amount", "type", "method", "status", "date"]
+    },
+    "AuditLog": {
+      "title": "AuditLog",
+      "description": "System action log for accountability.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "timestamp": { "type": "string" },
+        "userId": { "type": "string" },
+        "userName": { "type": "string" },
+        "action": { "type": "string" },
+        "details": { "type": "string" }
+      },
+      "required": ["id", "timestamp", "userId", "userName", "action", "details"]
+    },
+    "SystemSettings": {
+      "title": "SystemSettings",
+      "description": "Platform global parameters.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "companyName": { "type": "string" },
+        "logoUrl": { "type": "string" },
+        "address": { "type": "string" },
+        "phone": { "type": "string" },
+        "email": { "type": "string" },
+        "currency": { "type": "string" },
+        "taxRate": { "type": "number" },
+        "depositRules": { "type": "object" },
+        "urgencySurcharges": { "type": "object" }
+      },
+      "required": ["id", "companyName", "address", "phone", "email", "currency", "taxRate", "depositRules", "urgencySurcharges"]
+    },
+    "AppNotification": {
+      "title": "AppNotification",
+      "description": "In-app system notifications for users.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "orderId": { "type": "string" },
+        "orderReference": { "type": "string" },
+        "title": { "type": "string", "maxLength": 150 },
+        "message": { "type": "string", "maxLength": 1000 },
+        "read": { "type": "boolean" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "userId", "orderId", "orderReference", "title", "message", "read", "createdAt"]
+    },
+    "PayrollRecord": {
+      "title": "PayrollRecord",
+      "description": "Monthly payroll slip record for employees and operators.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "reference": { "type": "string" },
+        "employeeId": { "type": "string" },
+        "employeeName": { "type": "string" },
+        "employeeCode": { "type": "string" },
+        "jobTitle": { "type": "string" },
+        "department": { "type": "string" },
+        "periodMonth": { "type": "string" },
+        "periodLabel": { "type": "string" },
+        "contractType": { "type": "string" },
+        "workedDays": { "type": "number" },
+        "absentDays": { "type": "number" },
+        "overtimeHours": { "type": "number" },
+        "overtimeAmount": { "type": "number" },
+        "baseSalary": { "type": "number" },
+        "productionBonus": { "type": "number" },
+        "attendanceBonus": { "type": "number" },
+        "seniorityBonus": { "type": "number" },
+        "customBonus": { "type": "number" },
+        "grossSalary": { "type": "number" },
+        "cnssDeduction": { "type": "number" },
+        "amoDeduction": { "type": "number" },
+        "advanceDeduction": { "type": "number" },
+        "absenceDeduction": { "type": "number" },
+        "otherDeduction": { "type": "number" },
+        "totalDeductions": { "type": "number" },
+        "netSalary": { "type": "number" },
+        "netSalaryInWords": { "type": "string" },
+        "paymentMethod": { "type": "string", "enum": ["transfer", "cash", "cheque"] },
+        "paymentReference": { "type": "string" },
+        "status": { "type": "string", "enum": ["draft", "validated", "paid"] },
+        "paidAt": { "type": "string" },
+        "notes": { "type": "string" },
+        "generatedBy": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "reference", "employeeId", "employeeName", "periodMonth", "baseSalary", "grossSalary", "netSalary", "status", "createdAt"]
+    },
+    "LeaveRequest": {
+      "title": "LeaveRequest",
+      "description": "Employee leave and absence request.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "employeeId": { "type": "string" },
+        "employeeName": { "type": "string" },
+        "type": { "type": "string", "enum": ["paid_leave", "sick_leave", "unpaid_leave", "exceptional", "maternity_paternity"] },
+        "startDate": { "type": "string" },
+        "endDate": { "type": "string" },
+        "daysCount": { "type": "number" },
+        "reason": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "approved", "rejected"] },
+        "reviewedBy": { "type": "string" },
+        "reviewedAt": { "type": "string" },
+        "rejectionReason": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "employeeId", "employeeName", "type", "startDate", "endDate", "daysCount", "status", "createdAt"]
+    },
+    "SalaryAdvance": {
+      "title": "SalaryAdvance",
+      "description": "Employee salary advance and installment request.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "employeeId": { "type": "string" },
+        "employeeName": { "type": "string" },
+        "amount": { "type": "number" },
+        "requestDate": { "type": "string" },
+        "reason": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "approved", "rejected", "deducted"] },
+        "repaymentMonth": { "type": "string" },
+        "approvedBy": { "type": "string" },
+        "approvedAt": { "type": "string" }
+      },
+      "required": ["id", "employeeId", "employeeName", "amount", "requestDate", "status"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/User" },
+      "description": "User profiles collection."
+    },
+    "/partnerCustomers/{customerId}": {
+      "schema": { "$ref": "#/entities/PartnerCustomer" },
+      "description": "Clients registered by partners."
+    },
+    "/services/{serviceId}": {
+      "schema": { "$ref": "#/entities/Service" },
+      "description": "Catalogue of services."
+    },
+    "/orders/{orderId}": {
+      "schema": { "$ref": "#/entities/Order" },
+      "description": "Work orders collection."
+    },
+    "/quotes/{quoteId}": {
+      "schema": { "$ref": "#/entities/Quote" },
+      "description": "Quotes collection."
+    },
+    "/invoices/{invoiceId}": {
+      "schema": { "$ref": "#/entities/Invoice" },
+      "description": "Invoices collection."
+    },
+    "/payments/{paymentId}": {
+      "schema": { "$ref": "#/entities/Payment" },
+      "description": "Payments list."
+    },
+    "/auditLogs/{logId}": {
+      "schema": { "$ref": "#/entities/AuditLog" },
+      "description": "Audit trail logs."
+    },
+    "/settings/{settingsId}": {
+      "schema": { "$ref": "#/entities/SystemSettings" },
+      "description": "Global settings document."
+    },
+    "/notifications/{notificationId}": {
+      "schema": { "$ref": "#/entities/AppNotification" },
+      "description": "System and user notifications."
+    },
+    "/payrolls/{payrollId}": {
+      "schema": { "$ref": "#/entities/PayrollRecord" },
+      "description": "Monthly employee payroll records."
+    },
+    "/leaveRequests/{requestId}": {
+      "schema": { "$ref": "#/entities/LeaveRequest" },
+      "description": "Employee leave requests."
+    },
+    "/salaryAdvances/{advanceId}": {
+      "schema": { "$ref": "#/entities/SalaryAdvance" },
+      "description": "Employee salary advances."
+    }
+  }
+}

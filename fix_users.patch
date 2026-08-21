@@ -1,0 +1,41 @@
+--- src/server.ts
++++ src/server.ts
+@@ -754,6 +754,7 @@
+       if (custIndex !== -1) {
+         const cust = db.partnerCustomers[custIndex];
+         db.partnerCustomers.splice(custIndex, 1);
++        await deleteFirestoreDoc('partnerCustomers', id);
+         await saveDatabase(db);
+         await logAction(
+           (deletedByUserId as string) || 'system',
+@@ -775,10 +776,28 @@
+     db.users.splice(userIndex, 1);
++    await deleteFirestoreDoc('users', id);
+     
+     // Cleanup related entities if necessary (simple approach)
+-    if (db.orders) db.orders = db.orders.filter(o => o.customerDetails.email !== user.email && o.partnerId !== user.id);
+-    if (db.payrolls) db.payrolls = db.payrolls.filter(p => p.employeeId !== user.id);
+-    if (db.leaveRequests) db.leaveRequests = db.leaveRequests.filter(l => l.employeeId !== user.id);
+-    if (db.salaryAdvances) db.salaryAdvances = db.salaryAdvances.filter(a => a.employeeId !== user.id);
++    if (db.orders) {
++      const toDelete = db.orders.filter(o => o.customerDetails.email === user.email || o.partnerId === user.id);
++      db.orders = db.orders.filter(o => o.customerDetails.email !== user.email && o.partnerId !== user.id);
++      for (const o of toDelete) await deleteFirestoreDoc('orders', o.id);
++    }
++    if (db.payrolls) {
++      const toDelete = db.payrolls.filter(p => p.employeeId === user.id);
++      db.payrolls = db.payrolls.filter(p => p.employeeId !== user.id);
++      for (const p of toDelete) await deleteFirestoreDoc('payrolls', p.id);
++    }
++    if (db.leaveRequests) {
++      const toDelete = db.leaveRequests.filter(l => l.employeeId === user.id);
++      db.leaveRequests = db.leaveRequests.filter(l => l.employeeId !== user.id);
++      for (const l of toDelete) await deleteFirestoreDoc('leaveRequests', l.id);
++    }
++    if (db.salaryAdvances) {
++      const toDelete = db.salaryAdvances.filter(a => a.employeeId === user.id);
++      db.salaryAdvances = db.salaryAdvances.filter(a => a.employeeId !== user.id);
++      for (const a of toDelete) await deleteFirestoreDoc('salaryAdvances', a.id);
++    }
+ 
+     await saveDatabase(db);

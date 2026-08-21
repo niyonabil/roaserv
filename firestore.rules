@@ -1,0 +1,62 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Permissive rules for specified collections to allow our Express server to query and save state.
+    match /users/{userId} {
+      allow read, write: if true;
+    }
+
+    match /partnerCustomers/{customerId} {
+      allow read, write: if true;
+    }
+
+    match /services/{serviceId} {
+      allow read, write: if true;
+    }
+
+    match /orders/{orderId} {
+      allow read, write: if true;
+    }
+
+    match /quotes/{quoteId} {
+      allow read, write: if true;
+    }
+
+    match /invoices/{invoiceId} {
+      allow read, write: if true;
+    }
+
+    match /payments/{paymentId} {
+      allow read, write: if true;
+    }
+
+    match /auditLogs/{logId} {
+      allow read, write: if true;
+    }
+
+    match /settings/{settingsId} {
+      allow read, write: if true;
+    }
+
+    match /notifications/{notificationId} {
+      allow read, write: if true;
+    }
+
+    match /payrolls/{payrollId} {
+      allow read, write: if true;
+    }
+
+    match /leaveRequests/{requestId} {
+      allow read, write: if true;
+    }
+
+    match /salaryAdvances/{advanceId} {
+      allow read, write: if true;
+    }
+
+    match /{document=**} {
+      allow read, write: if true;
+    }
+  }
+}
