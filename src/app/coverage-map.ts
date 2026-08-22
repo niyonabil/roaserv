@@ -29,22 +29,45 @@ import { Data, Service, CoverageLocationPoint, MOROCCAN_REGIONS, MOROCCAN_MAJOR_
           </div>
 
           <!-- Quick Stat Chips -->
-          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <div class="bg-white/10 backdrop-blur-md border border-white/10 rounded-2xl p-3.5 text-center">
-              <div class="text-xs text-blue-200 font-medium">Services Actifs</div>
-              <div class="text-xl sm:text-2xl font-bold text-white mt-0.5">{{ data.services().length }}</div>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 w-full lg:w-auto shrink-0">
+            <!-- Card 1: Services Actifs -->
+            <div class="bg-white/[0.08] backdrop-blur-md border border-white/15 rounded-2xl p-4 flex flex-col items-center justify-center text-center hover:bg-white/[0.12] transition duration-300 relative group overflow-hidden min-w-[120px] sm:min-w-[140px] shadow-lg shadow-black/10">
+              <div class="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
+              <div class="w-9 h-9 rounded-full bg-blue-500/25 text-blue-300 flex items-center justify-center mb-2 shadow-inner">
+                <span class="material-icons text-base">layers</span>
+              </div>
+              <span class="text-[10px] sm:text-[11px] text-blue-200/90 font-bold tracking-wide uppercase whitespace-nowrap">Services Actifs</span>
+              <span class="text-xl sm:text-2xl font-black text-white mt-1 tracking-tight">{{ data.services().length }}</span>
             </div>
-            <div class="bg-white/10 backdrop-blur-md border border-white/10 rounded-2xl p-3.5 text-center">
-              <div class="text-xs text-emerald-200 font-medium">Régions Couvertes</div>
-              <div class="text-xl sm:text-2xl font-bold text-emerald-400 mt-0.5">12 / 12</div>
+
+            <!-- Card 2: Régions Couvertes -->
+            <div class="bg-white/[0.08] backdrop-blur-md border border-white/15 rounded-2xl p-4 flex flex-col items-center justify-center text-center hover:bg-white/[0.12] transition duration-300 relative group overflow-hidden min-w-[120px] sm:min-w-[140px] shadow-lg shadow-black/10">
+              <div class="absolute inset-0 bg-gradient-to-br from-emerald-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
+              <div class="w-9 h-9 rounded-full bg-emerald-500/25 text-emerald-300 flex items-center justify-center mb-2 shadow-inner">
+                <span class="material-icons text-base">explore</span>
+              </div>
+              <span class="text-[10px] sm:text-[11px] text-emerald-200/90 font-bold tracking-wide uppercase whitespace-nowrap">Régions</span>
+              <span class="text-xl sm:text-2xl font-black text-emerald-400 mt-1 tracking-tight">12 / 12</span>
             </div>
-            <div class="bg-white/10 backdrop-blur-md border border-white/10 rounded-2xl p-3.5 text-center">
-              <div class="text-xs text-indigo-200 font-medium">Hubs & Agences</div>
-              <div class="text-xl sm:text-2xl font-bold text-indigo-300 mt-0.5">{{ allLocations().length }}</div>
+
+            <!-- Card 3: Hubs & Agences -->
+            <div class="bg-white/[0.08] backdrop-blur-md border border-white/15 rounded-2xl p-4 flex flex-col items-center justify-center text-center hover:bg-white/[0.12] transition duration-300 relative group overflow-hidden min-w-[120px] sm:min-w-[140px] shadow-lg shadow-black/10">
+              <div class="absolute inset-0 bg-gradient-to-br from-indigo-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
+              <div class="w-9 h-9 rounded-full bg-indigo-500/25 text-indigo-300 flex items-center justify-center mb-2 shadow-inner">
+                <span class="material-icons text-base">domain</span>
+              </div>
+              <span class="text-[10px] sm:text-[11px] text-indigo-200/90 font-bold tracking-wide uppercase whitespace-nowrap">Hubs & Agences</span>
+              <span class="text-xl sm:text-2xl font-black text-indigo-300 mt-1 tracking-tight">{{ allLocations().length }}</span>
             </div>
-            <div class="bg-white/10 backdrop-blur-md border border-white/10 rounded-2xl p-3.5 text-center">
-              <div class="text-xs text-purple-200 font-medium">International</div>
-              <div class="text-xl sm:text-2xl font-bold text-purple-300 mt-0.5">10+ Pays</div>
+
+            <!-- Card 4: International -->
+            <div class="bg-white/[0.08] backdrop-blur-md border border-white/15 rounded-2xl p-4 flex flex-col items-center justify-center text-center hover:bg-white/[0.12] transition duration-300 relative group overflow-hidden min-w-[120px] sm:min-w-[140px] shadow-lg shadow-black/10">
+              <div class="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
+              <div class="w-9 h-9 rounded-full bg-purple-500/25 text-purple-300 flex items-center justify-center mb-2 shadow-inner">
+                <span class="material-icons text-base">language</span>
+              </div>
+              <span class="text-[10px] sm:text-[11px] text-purple-200/90 font-bold tracking-wide uppercase whitespace-nowrap">International</span>
+              <span class="text-xl sm:text-2xl font-black text-purple-300 mt-1 tracking-tight">10+ Pays</span>
             </div>
           </div>
         </div>
