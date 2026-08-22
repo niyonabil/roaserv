@@ -270,6 +270,12 @@ export class App {
 
   payrollFormLiveTrigger = signal<number>(0);
   employeesList = computed(() => this.data.allUsers().filter(u => ['operator', 'qa', 'assistant', 'admin'].includes(u.role)));
+  pendingAffiliateRequests = computed(() => this.data.allUsers().filter(u => u.affiliateStatus === 'pending'));
+  isAffiliateActive = computed(() => {
+    const user = this.data.currentUser();
+    if (!user) return false;
+    return user.role === 'admin' || user.role === 'assistant' || user.role === 'partner' || user.role === 'affiliate' || user.affiliateStatus === 'active';
+  });
   editingPayrollId = computed(() => this.payrollForm?.get('id')?.value || null);
 
   payrollComputedSummary = computed(() => {
@@ -4077,11 +4083,41 @@ export class App {
   openAffiliationTab() {
     this.activeTab.set('affiliation');
     this.selectedOrderId.set(null);
-    if (this.data.activeRole() === 'affiliate') {
+    const role = this.data.activeRole();
+    if (role !== 'admin' && role !== 'assistant') {
       this.affiliateTab.set('my_account');
+    } else {
+      this.affiliateTab.set('affiliates_list');
     }
     this.data.loadAffiliates();
     this.data.loadAffiliateCommissions();
+  }
+
+  async requestMyAffiliateActivation() {
+    const user = this.data.currentUser();
+    if (user) {
+      try {
+        await this.data.requestAffiliateActivation(user.id);
+      } catch (err) {
+        console.error('Failed to request affiliate activation:', err);
+      }
+    }
+  }
+
+  async approveAffiliateActivation(userId: string, commissionRate = 10) {
+    try {
+      await this.data.activateAffiliate(userId, 'active', commissionRate);
+    } catch (err) {
+      console.error('Failed to activate affiliate:', err);
+    }
+  }
+
+  async rejectOrDeactivateAffiliate(userId: string) {
+    try {
+      await this.data.activateAffiliate(userId, 'inactive');
+    } catch (err) {
+      console.error('Failed to deactivate affiliate:', err);
+    }
   }
 
   openCreateAffiliateModal() {

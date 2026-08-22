@@ -111,7 +111,7 @@ export interface User {
   affiliateCode?: string;
   affiliateLink?: string;
   commissionRate?: number;
-  affiliateStatus?: 'active' | 'inactive';
+  affiliateStatus?: 'active' | 'inactive' | 'pending';
   referredByAffiliateCode?: string;
   referredByAffiliateId?: string;
 
@@ -1674,6 +1674,39 @@ export class Data {
       await this.loadAffiliates(true);
       await this.loadAllUsers(true);
       return updated;
+    } catch (err) {
+      this.errorMessage.set((err as Error).message);
+      throw err;
+    }
+  }
+
+  async requestAffiliateActivation(userId: string) {
+    try {
+      const res = await this.apiCall<{ success: boolean; user: User }>('/api/affiliates/request-activation', {
+        method: 'POST',
+        body: JSON.stringify({ userId })
+      });
+      this.successMessage.set(`Votre demande d'activation d'affiliation a été envoyée avec succès.`);
+      await this.loadAllUsers(true);
+      await this.loadAffiliates(true);
+      return res.user;
+    } catch (err) {
+      this.errorMessage.set((err as Error).message);
+      throw err;
+    }
+  }
+
+  async activateAffiliate(userId: string, status: 'active' | 'inactive', commissionRate?: number) {
+    try {
+      const res = await this.apiCall<{ success: boolean; user: User }>(`/api/affiliates/${userId}/activate`, {
+        method: 'POST',
+        body: JSON.stringify({ status, commissionRate })
+      });
+      const label = status === 'active' ? 'activé' : 'désactivé';
+      this.successMessage.set(`Le compte d'affiliation de ${res.user.name} a été ${label}.`);
+      await this.loadAffiliates(true);
+      await this.loadAllUsers(true);
+      return res.user;
     } catch (err) {
       this.errorMessage.set((err as Error).message);
       throw err;
