@@ -130,6 +130,8 @@ export interface User {
   hourlyRate?: number;
   pieceRate?: number;
   vacationBalance?: number;
+  advanceBalance?: number;
+  advanceHistory?: SalaryAdvance[];
   emergencyContact?: {
     name: string;
     relation: string;
@@ -213,6 +215,8 @@ export interface SalaryAdvance {
   repaymentMonth: string;
   approvedBy?: string;
   approvedAt?: string;
+  note?: string;
+  date?: string;
 }
 
 export interface AffiliateCommission {
@@ -1720,8 +1724,8 @@ export class Data {
         body: JSON.stringify({ userId, amount })
       });
       this.successMessage.set(`Conversion réussie : ${res.convertedAmount.toFixed(2)} DH convertis en avance sur solde.`);
-      await this.loadAllUsers(true);
-      await this.loadAffiliateCommissions(true);
+      await this.loadAllUsers();
+      await this.loadAffiliateCommissions();
       return res.user;
     } catch (err) {
       this.errorMessage.set((err as Error).message);

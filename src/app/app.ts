@@ -121,6 +121,7 @@ export class App {
   viewingFile = signal<OrderFile | { name: string; type: string; base64Data: string; id?: string } | null>(null);
   pdfPage = signal<number>(1);
   pdfZoom = signal<number>(100);
+  isFileViewerFullScreen = signal<boolean>(false);
 
   // --- ESPACE OUTILS (TOOLS TAB) STATE ---
   activeToolsTab = signal<'resources' | 'utilities' | 'gdrive' | 'firebase'>('resources');
@@ -283,26 +284,17 @@ export class App {
     const referredCustomers = this.data.partnerCustomers().filter(pc => pc.partnerId === userId);
     const totalReferredCount = referredUsers.length + referredCustomers.length;
 
+    const referredClientIds = new Set([...referredUsers.map(u => u.id), ...referredCustomers.map(pc => pc.id)]);
+    const referredClientsOverview = this.data.clientsOverview().filter(c => referredClientIds.has(c.id) || c.partnerId === userId);
+    const salesVolume = referredClientsOverview.reduce((sum, c) => sum + (c.totalSpent || 0), 0);
+
     const comms = this.data.affiliateCommissions().filter(c => c.affiliateId === userId || (affiliateCode && c.affiliateCode && c.affiliateCode.toUpperCase() === affiliateCode.toUpperCase()));
     
     const cumulativeEarnings = comms.reduce((sum, c) => sum + (c.status !== 'cancelled' ? c.commissionAmount : 0), 0);
     const validatedBalance = comms.filter(c => c.status === 'validated').reduce((sum, c) => sum + c.commissionAmount, 0);
 
-    const orders = this.data.orders().filter(o => o.affiliateId === userId || (affiliateCode && o.affiliateCode && o.affiliateCode.toUpperCase() === affiliateCode.toUpperCase()));
-    const salesVolume = orders.reduce((sum, o) => sum + (o.totalAmount || 0), 0);
-
     const months = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
     const monthlyMap = new Array(12).fill(0).map((_, i) => ({ month: months[i], sales: 0, commission: 0 }));
-
-    orders.forEach(o => {
-      if (o.createdAt) {
-        const d = new Date(o.createdAt);
-        const m = d.getMonth();
-        if (m >= 0 && m < 12) {
-          monthlyMap[m].sales += (o.totalAmount || 0);
-        }
-      }
-    });
 
     comms.forEach(c => {
       if (c.createdAt) {
@@ -310,12 +302,13 @@ export class App {
         const m = d.getMonth();
         if (m >= 0 && m < 12) {
           monthlyMap[m].commission += c.commissionAmount;
+          monthlyMap[m].sales += (c.commissionAmount / (currentUser.commissionRate ? currentUser.commissionRate / 100 : 0.10));
         }
       }
     });
 
     return {
-      salesVolume,
+      salesVolume: Math.max(salesVolume, comms.reduce((sum, c) => sum + (c.commissionAmount / 0.1), 0)),
       referredClientsCount: totalReferredCount,
       cumulativeEarnings,
       validatedBalance,
@@ -807,11 +800,12 @@ export class App {
       });
     }
     
-    // QR Code generation
+    // QR Code generation with full sponsor landing URL
     effect(() => {
       const user = this.data.currentUser();
-      if (user && user.affiliateLink) {
-        this.generateAffiliateQrCode(user.affiliateLink);
+      if (user && (user.affiliateCode || user.affiliateLink)) {
+        const landingUrl = this.getSponsorLandingUrl(user);
+        this.generateAffiliateQrCode(landingUrl);
       }
     });
 
@@ -2994,6 +2988,11 @@ export class App {
 
   closeFileViewer() {
     this.viewingFile.set(null);
+    this.isFileViewerFullScreen.set(false);
+  }
+
+  toggleFileViewerFullScreen() {
+    this.isFileViewerFullScreen.update(v => !v);
   }
 
   getSafeUrl(base64: string | undefined, type = 'application/pdf'): SafeResourceUrl {
@@ -4116,7 +4115,7 @@ export class App {
   }
 
   // --- AFFILIATION & REVENTE DE SERVICES STATE & METHODS ---
-  affiliateTab = signal<'affiliates_list' | 'commissions' | 'my_account'>('affiliates_list');
+  affiliateTab = signal<'affiliates_list' | 'commissions' | 'my_account' | 'vendor_dashboard'>('affiliates_list');
   showAddAffiliateModal = signal<boolean>(false);
   editingAffiliate = signal<User | null>(null);
 
