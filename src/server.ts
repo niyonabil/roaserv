@@ -2754,6 +2754,131 @@ app.put('/api/affiliates/:id', async (req, res) => {
   }
 });
 
+// Request affiliate activation by a client or partner
+app.post('/api/affiliates/request-activation', async (req, res) => {
+  try {
+    const { userId } = req.body;
+    const db = await loadDatabase();
+    const user = db.users.find(u => u.id === userId);
+    if (!user) {
+      res.status(404).json({ error: 'Utilisateur introuvable.' });
+      return;
+    }
+    user.affiliateStatus = 'pending';
+    if (!user.affiliateCode) {
+      const code = `AFF-${Math.random().toString(36).substring(2, 7)}`.toUpperCase();
+      user.affiliateCode = code;
+      user.affiliateLink = `?ref=${code}`;
+    }
+    if (user.commissionRate === undefined) {
+      user.commissionRate = db.settings?.affiliateCommissionConfig?.generalCommissionRate || 10;
+    }
+    await saveDatabase(db);
+    await logAction(user.id, user.name, 'Demande Affiliation', `L'utilisateur ${user.name} a demandé l'activation de son compte d'affiliation.`);
+    res.json({ success: true, user });
+  } catch (err) {
+    res.status(500).json({ error: (err as Error).message });
+  }
+});
+
+// Admin/Assistant activate or deactivate affiliate
+app.post('/api/affiliates/:id/activate', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status, commissionRate } = req.body; // 'active' | 'inactive'
+    const db = await loadDatabase();
+    const user = db.users.find(u => u.id === id);
+    if (!user) {
+      res.status(404).json({ error: 'Utilisateur introuvable.' });
+      return;
+    }
+    user.affiliateStatus = status;
+    if (status === 'active') {
+      if (!user.affiliateCode) {
+        const code = `AFF-${Math.random().toString(36).substring(2, 7)}`.toUpperCase();
+        user.affiliateCode = code;
+        user.affiliateLink = `?ref=${code}`;
+      }
+      if (user.role === 'client') {
+        user.role = 'affiliate';
+      }
+    }
+    if (commissionRate !== undefined) {
+      user.commissionRate = Number(commissionRate);
+    }
+    await saveDatabase(db);
+    await logAction('admin', 'Administrateur', 'Activation Affilié', `Le compte d'affiliation de ${user.name} a été défini sur ${status}.`);
+    res.json({ success: true, user });
+  } catch (err) {
+    res.status(500).json({ error: (err as Error).message });
+  }
+});
+
+// Convert affiliate commission balance to advance balance (solde avance)
+app.post('/api/affiliates/convert-balance', async (req, res) => {
+  try {
+    const { userId, amount } = req.body;
+    const db = await loadDatabase();
+    const user = db.users.find(u => u.id === userId);
+    if (!user) {
+      res.status(404).json({ error: 'Utilisateur introuvable.' });
+      return;
+    }
+
+    const commissions = (db.affiliateCommissions || []).filter(c => c.affiliateId === userId && c.status === 'validated');
+    const totalValidated = commissions.reduce((sum, c) => sum + c.commissionAmount, 0);
+
+    const amountToConvert = Number(amount) > 0 ? Number(amount) : totalValidated;
+    if (amountToConvert <= 0) {
+      res.status(400).json({ error: 'Aucune commission validée disponible à convertir.' });
+      return;
+    }
+
+    if (amountToConvert > totalValidated + 0.01) {
+      res.status(400).json({ error: `Montant supérieur au solde de commissions validées disponibles (${totalValidated} DH).` });
+      return;
+    }
+
+    let remainingToCover = amountToConvert;
+    for (const c of commissions) {
+      if (remainingToCover <= 0) break;
+      if (c.commissionAmount <= remainingToCover) {
+        c.status = 'paid';
+        c.paymentReference = 'CONVERSION_AVANCE_SERVICES';
+        remainingToCover -= c.commissionAmount;
+      } else {
+        c.commissionAmount -= remainingToCover;
+        db.affiliateCommissions.push({
+          ...c,
+          id: 'com-conv-' + Math.random().toString(36).substring(2, 9),
+          commissionAmount: remainingToConvert,
+          status: 'paid',
+          paymentReference: 'CONVERSION_AVANCE_SERVICES'
+        });
+        remainingToCover = 0;
+      }
+    }
+
+    user.advanceBalance = (user.advanceBalance || 0) + amountToConvert;
+    if (!user.advanceHistory) {
+      user.advanceHistory = [];
+    }
+    user.advanceHistory.push({
+      id: 'adv-' + Math.random().toString(36).substring(2, 9),
+      amount: amountToConvert,
+      date: new Date().toISOString(),
+      note: `Conversion de ${amountToConvert.toFixed(2)} DH depuis les commissions d'affiliation validées.`
+    });
+
+    await saveDatabase(db);
+    await logAction(user.id, user.name, 'Conversion Commissions', `Conversion de ${amountToConvert.toFixed(2)} DH de commissions en avance sur solde.`);
+
+    res.json({ success: true, user, convertedAmount: amountToConvert, newAdvanceBalance: user.advanceBalance });
+  } catch (err) {
+    res.status(500).json({ error: (err as Error).message });
+  }
+});
+
 // Get commissions list
 app.get('/api/affiliate-commissions', async (req, res) => {
   try {

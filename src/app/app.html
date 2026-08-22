@@ -512,7 +512,7 @@
         <div class="flex items-center gap-2">
           <span class="material-icons text-amber-300 text-base animate-bounce">local_offer</span>
           <span class="font-medium">
-            Page officielle parrainée par <strong class="text-amber-200 underline">{{ currentSponsor()?.name || 'Ambassadeur Agréé' }}</strong>
+            Page officielle parrainée par <strong class="text-amber-200 underline">{{ getSponsorName('Ambassadeur Agréé') }}</strong>
             (Code : <code class="font-mono bg-black/30 px-1.5 py-0.5 rounded text-amber-300 font-bold">{{ getSponsorRefCode(currentSponsor()) }}</code>)
           </span>
           <span class="hidden md:inline-block bg-white/20 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider">
@@ -621,29 +621,29 @@
             <div class="bg-slate-800/80 backdrop-blur-md rounded-2xl p-5 border border-slate-700/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div class="flex items-center gap-4">
                 <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-purple-600 to-indigo-600 text-white font-black text-xl flex items-center justify-center shadow-lg border border-purple-400/30 shrink-0">
-                  {{ (currentSponsor()?.name || 'Parrain').substring(0, 2).toUpperCase() }}
+                  {{ (getSponsorName('Parrain')).substring(0, 2).toUpperCase() }}
                 </div>
                 <div>
                   <div class="flex items-center gap-2">
-                    <h3 class="text-base font-black text-white">{{ currentSponsor()?.name || 'Ambassadeur Officiel' }}</h3>
+                    <h3 class="text-base font-black text-white">{{ getSponsorName('Ambassadeur Officiel') }}</h3>
                     <span class="bg-emerald-500/20 text-emerald-300 text-[10px] font-bold px-2 py-0.5 rounded-full border border-emerald-500/30 flex items-center gap-1">
                       <span class="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-ping"></span> Actif
                     </span>
                   </div>
                   <p class="text-xs text-purple-300 font-medium">
-                    📍 {{ currentSponsor()?.city || 'Casablanca, Maroc' }} • Ambassadeur & Référent Agréé
+                    📍 {{ getSponsorCity() }} • Ambassadeur & Référent Agréé
                   </p>
-                  @if (currentSponsor()?.email) {
-                    <p class="text-[11px] text-slate-400 mt-0.5">📧 {{ currentSponsor()?.email }}</p>
+                  @if (getSponsorEmail()) {
+                    <p class="text-[11px] text-slate-400 mt-0.5">📧 {{ getSponsorEmail() }}</p>
                   }
                 </div>
               </div>
 
               <!-- Quick direct WhatsApp or Phone contact with Sponsor -->
               <div class="flex items-center gap-2 self-stretch sm:self-auto">
-                @if (currentSponsor()?.phone) {
+                @if (getSponsorPhone()) {
                   <a 
-                    [href]="'https://wa.me/' + currentSponsor()?.phone?.replace('+', '')?.replace(' ', '')" 
+                    [href]="'https://wa.me/' + getSponsorPhoneClean()" 
                     target="_blank" 
                     class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-3.5 py-2 rounded-xl flex items-center justify-center gap-1.5 shadow-md transition-transform active:scale-95 cursor-pointer flex-1 sm:flex-initial"
                     title="Contacter le parrain sur WhatsApp"
@@ -7856,7 +7856,15 @@
                 <span class="material-icons text-sm">receipt_long</span> Suivi des Commissions ({{ data.affiliateCommissions().length }})
               </button>
 
-              @if (data.activeRole() === 'affiliate') {
+              <button 
+                type="button" 
+                (click)="affiliateTab.set('vendor_dashboard')"
+                [class]="affiliateTab() === 'vendor_dashboard' ? 'bg-purple-700 text-white font-bold text-xs px-4 py-2 rounded-xl flex items-center gap-1.5 shadow-xs cursor-pointer' : 'bg-white text-slate-600 hover:bg-slate-100 font-semibold text-xs px-4 py-2 rounded-xl flex items-center gap-1.5 border border-slate-200 cursor-pointer'"
+              >
+                <span class="material-icons text-sm">dashboard</span> Tableau de bord Vendeur
+              </button>
+
+              @if (data.activeRole() === 'affiliate' || data.currentUser()?.role === 'partner') {
                 <button 
                   type="button" 
                   (click)="affiliateTab.set('my_account')"
@@ -7866,6 +7874,131 @@
                 </button>
               }
             </div>
+
+            <!-- SUB-TAB: TABLEAU DE BORD VENDEUR (PARTENAIRES B2B & AFFILIÉS) -->
+            @if (affiliateTab() === 'vendor_dashboard') {
+              <div class="space-y-6">
+                <!-- Top Summary Cards -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-xs">
+                    <div class="flex items-center justify-between text-slate-400 mb-2">
+                      <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Volume Ventes</span>
+                      <span class="material-icons text-xl text-purple-600">trending_up</span>
+                    </div>
+                    <p class="text-2xl font-black text-slate-900">{{ vendorDashboardStats().salesVolume | number:'1.2-2' }} <span class="text-xs font-bold text-slate-500">DH</span></p>
+                    <p class="text-[11px] font-medium text-slate-500 mt-1">Chiffre d'affaires parrainé en temps réel</p>
+                  </div>
+
+                  <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-xs">
+                    <div class="flex items-center justify-between text-slate-400 mb-2">
+                      <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Clients Parrainés</span>
+                      <span class="material-icons text-xl text-blue-600">group</span>
+                    </div>
+                    <p class="text-2xl font-black text-slate-900">{{ vendorDashboardStats().referredClientsCount }}</p>
+                    <p class="text-[11px] font-medium text-slate-500 mt-1">Utilisateurs et clients actifs</p>
+                  </div>
+
+                  <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-xs">
+                    <div class="flex items-center justify-between text-slate-400 mb-2">
+                      <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Gains Cumulés</span>
+                      <span class="material-icons text-xl text-emerald-600">account_balance_wallet</span>
+                    </div>
+                    <p class="text-2xl font-black text-emerald-700">{{ vendorDashboardStats().cumulativeEarnings | number:'1.2-2' }} <span class="text-xs font-bold text-slate-500">DH</span></p>
+                    <p class="text-[11px] font-medium text-slate-500 mt-1">Total commissions attribuées</p>
+                  </div>
+
+                  <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-xs">
+                    <div class="flex items-center justify-between text-slate-400 mb-2">
+                      <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Solde Avance Services</span>
+                      <span class="material-icons text-xl text-indigo-600">savings</span>
+                    </div>
+                    <p class="text-2xl font-black text-indigo-700">{{ vendorDashboardStats().advanceBalance | number:'1.2-2' }} <span class="text-xs font-bold text-slate-500">DH</span></p>
+                    <p class="text-[11px] font-medium text-slate-500 mt-1">Disponible pour paiement de services</p>
+                  </div>
+                </div>
+
+                <!-- Conversion Widget -->
+                <div class="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-2xl border border-purple-200 p-6 flex flex-col md:flex-row items-center justify-between gap-6">
+                  <div class="space-y-1">
+                    <span class="bg-purple-200 text-purple-900 font-bold text-[10px] px-2.5 py-0.5 rounded-full uppercase">Conversion de Solde</span>
+                    <h3 class="text-lg font-black text-purple-900">Convertir vos commissions en Avance sur Solde</h3>
+                    <p class="text-xs text-slate-600 max-w-xl">
+                      Transformez vos commissions validées en un crédit d'avance sur votre solde utilisateur/client. Cet avoir est immédiatement utilisable pour régler vos commandes de services sur la plateforme, avec traçabilité dans votre situation financière.
+                    </p>
+                    <div class="text-xs font-bold text-emerald-700 pt-1">
+                      Solde de commissions validées disponible : {{ vendorDashboardStats().validatedBalance | number:'1.2-2' }} DH
+                    </div>
+                  </div>
+                  <button 
+                    type="button" 
+                    (click)="convertMyCommissionsToAdvance()"
+                    [disabled]="vendorDashboardStats().validatedBalance <= 0"
+                    class="bg-purple-700 hover:bg-purple-800 disabled:opacity-50 text-white font-bold text-xs px-5 py-3 rounded-xl shadow-md flex items-center gap-2 cursor-pointer transition-all shrink-0"
+                  >
+                    <span class="material-icons text-sm">currency_exchange</span> Convertir en Avance (Solde)
+                  </button>
+                </div>
+
+                <!-- Monthly Performance Graphical Visualization -->
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-xs p-6 space-y-6">
+                  <div class="flex items-center justify-between">
+                    <div>
+                      <h3 class="font-bold text-slate-900 text-base">Performances Mensuelles (2026)</h3>
+                      <p class="text-xs text-slate-500">Suivi graphique des ventes générées et des commissions accumulées par mois</p>
+                    </div>
+                    <div class="flex items-center gap-4 text-xs font-bold">
+                      <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-purple-600 inline-block"></span> Ventes (DH)</span>
+                      <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-emerald-500 inline-block"></span> Commissions (DH)</span>
+                    </div>
+                  </div>
+
+                  <div class="grid grid-cols-12 gap-2 pt-6 items-end h-64 border-b border-slate-200 pb-2">
+                    @for (m of vendorDashboardStats().monthlyData; track m.month) {
+                      <div class="col-span-1 flex flex-col items-center h-full justify-end gap-1 group relative">
+                        <!-- Tooltip on hover -->
+                        <div class="absolute -top-12 bg-slate-900 text-white text-[10px] rounded-lg px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20 whitespace-nowrap shadow-md">
+                          {{ m.month }} : Ventes {{ m.sales | number:'1.0-0' }} DH | Comm. {{ m.commission | number:'1.0-0' }} DH
+                        </div>
+                        
+                        <div class="w-full flex items-end justify-center gap-1 h-48">
+                          <div 
+                            class="w-1/2 bg-purple-600 rounded-t-sm transition-all hover:bg-purple-500" 
+                            [style.height.%]="m.sales > 0 ? Math.min(100, Math.max(8, (m.sales / 50000) * 100)) : 2"
+                            [title]="'Ventes: ' + m.sales + ' DH'"
+                          ></div>
+                          <div 
+                            class="w-1/2 bg-emerald-500 rounded-t-sm transition-all hover:bg-emerald-400" 
+                            [style.height.%]="m.commission > 0 ? Math.min(100, Math.max(8, (m.commission / 5000) * 100)) : 2"
+                            [title]="'Commissions: ' + m.commission + ' DH'"
+                          ></div>
+                        </div>
+                        <span class="text-[10px] font-bold text-slate-600 mt-2">{{ m.month }}</span>
+                      </div>
+                    }
+                  </div>
+                </div>
+
+                <!-- Advance Conversion History -->
+                @if (data.currentUser()?.advanceHistory && data.currentUser()!.advanceHistory!.length > 0) {
+                  <div class="bg-white rounded-2xl border border-slate-200 shadow-xs p-6 space-y-4">
+                    <h3 class="font-bold text-slate-900 text-base">Historique des Avances & Conversions de Commissions</h3>
+                    <div class="divide-y divide-slate-100">
+                      @for (adv of data.currentUser()!.advanceHistory; track adv.id) {
+                        <div class="py-3 flex items-center justify-between text-xs">
+                          <div>
+                            <p class="font-bold text-slate-800">{{ adv.note }}</p>
+                            <p class="text-[10px] text-slate-400">{{ adv.date | date:'dd/MM/yyyy à HH:mm' }}</p>
+                          </div>
+                          <span class="font-mono font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
+                            +{{ adv.amount | number:'1.2-2' }} DH
+                          </span>
+                        </div>
+                      }
+                    </div>
+                  </div>
+                }
+              </div>
+            }
 
             <!-- SUB-TAB 1: LISTE DES AFFILIÉS -->
             @if (affiliateTab() === 'affiliates_list' && (data.activeRole() === 'admin' || data.activeRole() === 'assistant')) {
@@ -10883,7 +11016,7 @@
             <div>
               <h3 class="font-black text-white text-base">Kit Réseaux Sociaux & Promotion Parrain</h3>
               <p class="text-xs text-purple-200">
-                Textes prêts à publier & visuels pour <strong>{{ currentSponsor()?.name || 'Ambassadeur' }}</strong> (Code : <code class="font-mono bg-black/30 px-1 py-0.5 rounded text-amber-300">{{ getSponsorRefCode(currentSponsor()) }}</code>)
+                Textes prêts à publier & visuels pour <strong>{{ getSponsorName('Ambassadeur') }}</strong> (Code : <code class="font-mono bg-black/30 px-1 py-0.5 rounded text-amber-300">{{ getSponsorRefCode(currentSponsor()) }}</code>)
               </p>
             </div>
           </div>

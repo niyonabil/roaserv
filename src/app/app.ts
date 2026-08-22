@@ -264,6 +264,7 @@ export class App {
 
   showAdvanceModal = signal<boolean>(false);
   advanceStatusFilter = signal<'all' | 'pending' | 'approved' | 'rejected' | 'deducted'>('all');
+  Math = Math;
 
   showEmployeeHrModal = signal<boolean>(false);
   selectedEmployeeForHr = signal<User | null>(null);
@@ -271,6 +272,57 @@ export class App {
   payrollFormLiveTrigger = signal<number>(0);
   employeesList = computed(() => this.data.allUsers().filter(u => ['operator', 'qa', 'assistant', 'admin'].includes(u.role)));
   pendingAffiliateRequests = computed(() => this.data.allUsers().filter(u => u.affiliateStatus === 'pending'));
+  vendorDashboardStats = computed(() => {
+    const currentUser = this.data.currentUser();
+    if (!currentUser) return { salesVolume: 0, referredClientsCount: 0, cumulativeEarnings: 0, validatedBalance: 0, advanceBalance: 0, monthlyData: [] };
+
+    const affiliateCode = currentUser.affiliateCode || '';
+    const userId = currentUser.id;
+
+    const referredUsers = this.data.allUsers().filter(u => u.createdByUserId === userId || (affiliateCode && u.referredByAffiliateCode && u.referredByAffiliateCode.toUpperCase() === affiliateCode.toUpperCase()));
+    const referredCustomers = this.data.partnerCustomers().filter(pc => pc.partnerId === userId);
+    const totalReferredCount = referredUsers.length + referredCustomers.length;
+
+    const comms = this.data.affiliateCommissions().filter(c => c.affiliateId === userId || (affiliateCode && c.affiliateCode && c.affiliateCode.toUpperCase() === affiliateCode.toUpperCase()));
+    
+    const cumulativeEarnings = comms.reduce((sum, c) => sum + (c.status !== 'cancelled' ? c.commissionAmount : 0), 0);
+    const validatedBalance = comms.filter(c => c.status === 'validated').reduce((sum, c) => sum + c.commissionAmount, 0);
+
+    const orders = this.data.orders().filter(o => o.affiliateId === userId || (affiliateCode && o.affiliateCode && o.affiliateCode.toUpperCase() === affiliateCode.toUpperCase()));
+    const salesVolume = orders.reduce((sum, o) => sum + (o.totalAmount || 0), 0);
+
+    const months = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
+    const monthlyMap = new Array(12).fill(0).map((_, i) => ({ month: months[i], sales: 0, commission: 0 }));
+
+    orders.forEach(o => {
+      if (o.createdAt) {
+        const d = new Date(o.createdAt);
+        const m = d.getMonth();
+        if (m >= 0 && m < 12) {
+          monthlyMap[m].sales += (o.totalAmount || 0);
+        }
+      }
+    });
+
+    comms.forEach(c => {
+      if (c.createdAt) {
+        const d = new Date(c.createdAt);
+        const m = d.getMonth();
+        if (m >= 0 && m < 12) {
+          monthlyMap[m].commission += c.commissionAmount;
+        }
+      }
+    });
+
+    return {
+      salesVolume,
+      referredClientsCount: totalReferredCount,
+      cumulativeEarnings,
+      validatedBalance,
+      advanceBalance: currentUser.advanceBalance || 0,
+      monthlyData: monthlyMap
+    };
+  });
   isAffiliateActive = computed(() => {
     const user = this.data.currentUser();
     if (!user) return false;
@@ -4120,6 +4172,23 @@ export class App {
     }
   }
 
+  async convertMyCommissionsToAdvance() {
+    const user = this.data.currentUser();
+    if (!user) return;
+    const stats = this.vendorDashboardStats();
+    if (stats.validatedBalance <= 0) {
+      this.data.errorMessage.set("Aucune commission validée disponible à convertir en avance.");
+      return;
+    }
+    if (confirm(`Voulez-vous convertir votre solde de commissions validées (${stats.validatedBalance.toFixed(2)} DH) en avance sur solde pour payer vos services ?`)) {
+      try {
+        await this.data.convertCommissionBalanceToAdvance(user.id);
+      } catch (err) {
+        console.error('Failed to convert commission balance:', err);
+      }
+    }
+  }
+
   openCreateAffiliateModal() {
     this.editingAffiliate.set(null);
     this.affiliateForm.reset({
@@ -4533,6 +4602,28 @@ export class App {
   currentSponsor = computed(() => {
     return this.data.publicSponsor() || (this.data.activeRole() === 'affiliate' ? this.data.currentUser() : null) || this.data.affiliates()[0] || null;
   });
+
+  getSponsorName(fallback = 'Ambassadeur Agréé'): string {
+    const s = this.currentSponsor();
+    return s ? (s.name || fallback) : fallback;
+  }
+  getSponsorCity(): string {
+    const s = this.currentSponsor();
+    return s?.city || 'Casablanca, Maroc';
+  }
+  getSponsorEmail(): string | undefined {
+    const s = this.currentSponsor();
+    return s?.email;
+  }
+  getSponsorPhone(): string | undefined {
+    const s = this.currentSponsor();
+    return s?.phone;
+  }
+  getSponsorPhoneClean(): string {
+    const s = this.currentSponsor();
+    const p = s?.phone || '';
+    return p.replace('+', '').replace(/ /g, '');
+  }
 
   filteredSponsorServices = computed(() => {
     const cat = this.sponsorLandingCategoryFilter();

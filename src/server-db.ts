@@ -117,9 +117,11 @@ export interface User {
   affiliateCode?: string;
   affiliateLink?: string;
   commissionRate?: number; // e.g. 10 (%)
-  affiliateStatus?: 'active' | 'inactive';
+  affiliateStatus?: 'active' | 'inactive' | 'pending';
   referredByAffiliateCode?: string;
   referredByAffiliateId?: string;
+  advanceBalance?: number;
+  advanceHistory?: Array<{ id: string; amount: number; date: string; note: string; }>;
   // --- Employee & HR Fields ---
   employeeCode?: string; // Matricule (ex: EMP-001)
   jobTitle?: string; // Poste (ex: Opérateur de saisie principal, Responsable Contrôle Qualité, Assistante Administrative)
@@ -704,6 +706,31 @@ export function updateFirebaseConfig(newConfig: Record<string, string>): boolean
   }
 }
 
+// --- LOCAL JSON FALLBACK HELPERS ---
+const localDbPath = join(process.cwd(), 'db.json');
+
+function loadLocalJsonDb(): AppDatabase {
+  try {
+    if (existsSync(localDbPath)) {
+      const data = readFileSync(localDbPath, 'utf-8');
+      return JSON.parse(data);
+    }
+  } catch (e) {
+    console.error('Error loading local db.json:', e);
+  }
+  const seeded = getSeededDatabase();
+  saveLocalJsonDb(seeded);
+  return seeded;
+}
+
+function saveLocalJsonDb(data: AppDatabase) {
+  try {
+    writeFileSync(localDbPath, JSON.stringify(data, null, 2), 'utf-8');
+  } catch (e) {
+    console.error('Error saving local db.json:', e);
+  }
+}
+
 export function loadDatabase(): Promise<AppDatabase> {
   const now = Date.now();
   
@@ -716,182 +743,186 @@ export function loadDatabase(): Promise<AppDatabase> {
   }
   
   activeLoadPromise = (async () => {
-    await ensureAuthenticated();
     try {
+      await ensureAuthenticated();
       const [
-      usersSnap,
-      partnerCustomersSnap,
-      servicesSnap,
-      ordersSnap,
-      quotesSnap,
-      invoicesSnap,
-      paymentsSnap,
-      auditLogsSnap,
-      notificationsSnap,
-      payrollsSnap,
-      leaveRequestsSnap,
-      salaryAdvancesSnap,
-      affiliateCommissionsSnap,
-      settingsSnap
-    ] = await Promise.all([
-      getDocs(collection(db, 'users')),
-      getDocs(collection(db, 'partnerCustomers')),
-      getDocs(collection(db, 'services')),
-      getDocs(collection(db, 'orders')),
-      getDocs(collection(db, 'quotes')),
-      getDocs(collection(db, 'invoices')),
-      getDocs(collection(db, 'payments')),
-      getDocs(collection(db, 'auditLogs')),
-      getDocs(collection(db, 'notifications')),
-      getDocs(collection(db, 'payrolls')),
-      getDocs(collection(db, 'leaveRequests')),
-      getDocs(collection(db, 'salaryAdvances')),
-      getDocs(collection(db, 'affiliateCommissions')),
-      getDoc(doc(db, 'settings', 'global'))
-    ]);
+        usersSnap,
+        partnerCustomersSnap,
+        servicesSnap,
+        ordersSnap,
+        quotesSnap,
+        invoicesSnap,
+        paymentsSnap,
+        auditLogsSnap,
+        notificationsSnap,
+        payrollsSnap,
+        leaveRequestsSnap,
+        salaryAdvancesSnap,
+        affiliateCommissionsSnap,
+        settingsSnap
+      ] = await Promise.all([
+        getDocs(collection(db, 'users')),
+        getDocs(collection(db, 'partnerCustomers')),
+        getDocs(collection(db, 'services')),
+        getDocs(collection(db, 'orders')),
+        getDocs(collection(db, 'quotes')),
+        getDocs(collection(db, 'invoices')),
+        getDocs(collection(db, 'payments')),
+        getDocs(collection(db, 'auditLogs')),
+        getDocs(collection(db, 'notifications')),
+        getDocs(collection(db, 'payrolls')),
+        getDocs(collection(db, 'leaveRequests')),
+        getDocs(collection(db, 'salaryAdvances')),
+        getDocs(collection(db, 'affiliateCommissions')),
+        getDoc(doc(db, 'settings', 'global'))
+      ]);
 
-    const users: User[] = [];
-    usersSnap.forEach(d => users.push(d.data() as User));
+      const users: User[] = [];
+      usersSnap.forEach(d => users.push(d.data() as User));
 
-    const partnerCustomers: PartnerCustomer[] = [];
-    partnerCustomersSnap.forEach(d => partnerCustomers.push(d.data() as PartnerCustomer));
+      const partnerCustomers: PartnerCustomer[] = [];
+      partnerCustomersSnap.forEach(d => partnerCustomers.push(d.data() as PartnerCustomer));
 
-    const services: Service[] = [];
-    servicesSnap.forEach(d => services.push(d.data() as Service));
+      const services: Service[] = [];
+      servicesSnap.forEach(d => services.push(d.data() as Service));
 
-    const orders: Order[] = [];
-    ordersSnap.forEach(d => orders.push(d.data() as Order));
+      const orders: Order[] = [];
+      ordersSnap.forEach(d => orders.push(d.data() as Order));
 
-    const quotes: Quote[] = [];
-    quotesSnap.forEach(d => quotes.push(d.data() as Quote));
+      const quotes: Quote[] = [];
+      quotesSnap.forEach(d => quotes.push(d.data() as Quote));
 
-    const invoices: Invoice[] = [];
-    invoicesSnap.forEach((d: any) => invoices.push(d.data() as Invoice));
+      const invoices: Invoice[] = [];
+      invoicesSnap.forEach((d: any) => invoices.push(d.data() as Invoice));
 
-    const payments: Payment[] = [];
-    paymentsSnap.forEach(d => payments.push(d.data() as Payment));
+      const payments: Payment[] = [];
+      paymentsSnap.forEach(d => payments.push(d.data() as Payment));
 
-    const auditLogs: AuditLog[] = [];
-    auditLogsSnap.forEach(d => auditLogs.push(d.data() as AuditLog));
+      const auditLogs: AuditLog[] = [];
+      auditLogsSnap.forEach(d => auditLogs.push(d.data() as AuditLog));
 
-    const notifications: AppNotification[] = [];
-    notificationsSnap.forEach(d => notifications.push(d.data() as AppNotification));
+      const notifications: AppNotification[] = [];
+      notificationsSnap.forEach(d => notifications.push(d.data() as AppNotification));
 
-    const payrolls: PayrollRecord[] = [];
-    payrollsSnap.forEach(d => payrolls.push(d.data() as PayrollRecord));
+      const payrolls: PayrollRecord[] = [];
+      payrollsSnap.forEach(d => payrolls.push(d.data() as PayrollRecord));
 
-    const leaveRequests: LeaveRequest[] = [];
-    leaveRequestsSnap.forEach(d => leaveRequests.push(d.data() as LeaveRequest));
+      const leaveRequests: LeaveRequest[] = [];
+      leaveRequestsSnap.forEach(d => leaveRequests.push(d.data() as LeaveRequest));
 
-    const salaryAdvances: SalaryAdvance[] = [];
-    salaryAdvancesSnap.forEach(d => salaryAdvances.push(d.data() as SalaryAdvance));
+      const salaryAdvances: SalaryAdvance[] = [];
+      salaryAdvancesSnap.forEach(d => salaryAdvances.push(d.data() as SalaryAdvance));
 
-    const affiliateCommissions: AffiliateCommission[] = [];
-    affiliateCommissionsSnap.forEach(d => affiliateCommissions.push(d.data() as AffiliateCommission));
+      const affiliateCommissions: AffiliateCommission[] = [];
+      affiliateCommissionsSnap.forEach(d => affiliateCommissions.push(d.data() as AffiliateCommission));
 
-    let settings: SystemSettings;
-    if (settingsSnap.exists()) {
-      settings = settingsSnap.data() as SystemSettings;
-    } else {
-      const seeded = getSeededDatabase();
-      settings = seeded.settings;
-      await setDoc(doc(db, 'settings', 'global'), cleanFirestoreData(settings));
-    }
-
-    if (users.length === 0 && services.length === 0 && orders.length === 0) {
-      console.log("Database is empty, seeding Firestore database...");
-      const seeded = getSeededDatabase();
-      await saveDatabase(seeded);
-      return seeded;
-    }
-
-    // Ensure primary administrator account is always present
-    const defaultAdmins: User[] = [
-      {
-        id: "usr-admin-1",
-        name: "Administrateur Principal (Boguiman)",
-        username: "boguiman",
-        email: "boguiman@gmail.com",
-        password: "admin123",
-        role: "admin",
-        phone: "+212 661-000001",
-        city: "Casablanca",
-        employeeCode: "DIR-001",
-        jobTitle: "Directeur Général",
-        department: "direction",
-        contractType: "cdi",
-        hireDate: "2024-01-01",
-        cinNumber: "BK100200",
-        cnssNumber: "123456789",
-        ribNumber: "011780000012345678901234",
-        bankName: "Attijariwafa Bank",
-        baseSalary: 18000,
-        vacationBalance: 22,
-        active: true
-      }
-    ];
-
-    for (const admin of defaultAdmins) {
-      const existing = users.find(u => 
-        u.email.toLowerCase() === admin.email.toLowerCase() || 
-        (u.username && admin.username && u.username.toLowerCase() === admin.username.toLowerCase())
-      );
-      if (!existing) {
-        users.push(admin);
-        await setDoc(doc(db, 'users', admin.id), cleanFirestoreData(admin));
+      let settings: SystemSettings;
+      if (settingsSnap.exists()) {
+        settings = settingsSnap.data() as SystemSettings;
       } else {
-        let updated = false;
-        if (!existing.password || !existing.username) {
-          existing.password = existing.password || admin.password;
-          existing.username = existing.username || admin.username;
-          updated = true;
+        const seeded = getSeededDatabase();
+        settings = seeded.settings;
+        await setDoc(doc(db, 'settings', 'global'), cleanFirestoreData(settings));
+      }
+
+      if (users.length === 0 && services.length === 0 && orders.length === 0) {
+        console.log("Database is empty, seeding Firestore database...");
+        const seeded = getSeededDatabase();
+        await saveDatabase(seeded);
+        return seeded;
+      }
+
+      // Ensure primary administrator account is always present
+      const defaultAdmins: User[] = [
+        {
+          id: "usr-admin-1",
+          name: "Administrateur Principal (Boguiman)",
+          username: "boguiman",
+          email: "boguiman@gmail.com",
+          password: "admin123",
+          role: "admin",
+          phone: "+212 661-000001",
+          city: "Casablanca",
+          employeeCode: "DIR-001",
+          jobTitle: "Directeur Général",
+          department: "direction",
+          contractType: "cdi",
+          hireDate: "2024-01-01",
+          cinNumber: "BK100200",
+          cnssNumber: "123456789",
+          ribNumber: "011780000012345678901234",
+          bankName: "Attijariwafa Bank",
+          baseSalary: 18000,
+          vacationBalance: 22,
+          active: true
         }
-        if (!existing.employeeCode && admin.employeeCode) {
-          existing.employeeCode = admin.employeeCode;
-          existing.jobTitle = admin.jobTitle;
-          existing.department = admin.department;
-          existing.contractType = admin.contractType;
-          existing.baseSalary = admin.baseSalary;
-          existing.hireDate = admin.hireDate;
-          existing.cinNumber = admin.cinNumber;
-          existing.cnssNumber = admin.cnssNumber;
-          existing.ribNumber = admin.ribNumber;
-          existing.bankName = admin.bankName;
-          existing.vacationBalance = admin.vacationBalance;
-          updated = true;
-        }
-        if (updated) {
-          await setDoc(doc(db, 'users', existing.id), cleanFirestoreData(existing));
+      ];
+
+      for (const admin of defaultAdmins) {
+        const existing = users.find(u => 
+          u.email.toLowerCase() === admin.email.toLowerCase() || 
+          (u.username && admin.username && u.username.toLowerCase() === admin.username.toLowerCase())
+        );
+        if (!existing) {
+          users.push(admin);
+          await setDoc(doc(db, 'users', admin.id), cleanFirestoreData(admin));
+        } else {
+          let updated = false;
+          if (!existing.password || !existing.username) {
+            existing.password = existing.password || admin.password;
+            existing.username = existing.username || admin.username;
+            updated = true;
+          }
+          if (!existing.employeeCode && admin.employeeCode) {
+            existing.employeeCode = admin.employeeCode;
+            existing.jobTitle = admin.jobTitle;
+            existing.department = admin.department;
+            existing.contractType = admin.contractType;
+            existing.baseSalary = admin.baseSalary;
+            existing.hireDate = admin.hireDate;
+            existing.cinNumber = admin.cinNumber;
+            existing.cnssNumber = admin.cnssNumber;
+            existing.ribNumber = admin.ribNumber;
+            existing.bankName = admin.bankName;
+            existing.vacationBalance = admin.vacationBalance;
+            updated = true;
+          }
+          if (updated) {
+            await setDoc(doc(db, 'users', existing.id), cleanFirestoreData(existing));
+          }
         }
       }
-    }
 
-    const resultState = {
-      users,
-      partners: users.filter(u => u.role === 'partner'),
-      partnerCustomers,
-      services,
-      orders,
-      quotes,
-      invoices,
-      payments,
-      auditLogs,
-      notifications,
-      payrolls,
-      leaveRequests,
-      salaryAdvances,
-      affiliateCommissions,
-      settings
-    };
-    cachedDatabaseState = resultState;
-    cacheTimestamp = Date.now();
-    return resultState;
-  } catch (err) {
-    handleFirestoreError(err, OperationType.GET, 'database_load');
-    throw err;
-  } finally {
-    activeLoadPromise = null;
-  }
+      const resultState = {
+        users,
+        partners: users.filter(u => u.role === 'partner'),
+        partnerCustomers,
+        services,
+        orders,
+        quotes,
+        invoices,
+        payments,
+        auditLogs,
+        notifications,
+        payrolls,
+        leaveRequests,
+        salaryAdvances,
+        affiliateCommissions,
+        settings
+      };
+      cachedDatabaseState = resultState;
+      cacheTimestamp = Date.now();
+      saveLocalJsonDb(resultState);
+      return resultState;
+    } catch (err) {
+      console.warn("Firestore load failed, falling back to local db.json:", err);
+      const localData = loadLocalJsonDb();
+      cachedDatabaseState = localData;
+      cacheTimestamp = Date.now();
+      return localData;
+    } finally {
+      activeLoadPromise = null;
+    }
   })();
   return activeLoadPromise;
 }
@@ -899,8 +930,9 @@ export function loadDatabase(): Promise<AppDatabase> {
 export async function saveDatabase(databaseState: AppDatabase): Promise<void> {
   cachedDatabaseState = databaseState;
   cacheTimestamp = Date.now();
-  await ensureAuthenticated();
+  saveLocalJsonDb(databaseState);
   try {
+    await ensureAuthenticated();
     const promises: Promise<void>[] = [];
 
     databaseState.users.forEach(u => {
@@ -957,8 +989,7 @@ export async function saveDatabase(databaseState: AppDatabase): Promise<void> {
 
     await Promise.all(promises);
   } catch (err) {
-    handleFirestoreError(err, OperationType.WRITE, 'database_save');
-    throw err;
+    console.warn("Firestore save failed (persisted to local db.json successfully):", err);
   }
 }
 

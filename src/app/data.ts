@@ -1713,6 +1713,22 @@ export class Data {
     }
   }
 
+  async convertCommissionBalanceToAdvance(userId: string, amount?: number) {
+    try {
+      const res = await this.apiCall<{ success: boolean; user: User; convertedAmount: number; newAdvanceBalance: number }>('/api/affiliates/convert-balance', {
+        method: 'POST',
+        body: JSON.stringify({ userId, amount })
+      });
+      this.successMessage.set(`Conversion réussie : ${res.convertedAmount.toFixed(2)} DH convertis en avance sur solde.`);
+      await this.loadAllUsers(true);
+      await this.loadAffiliateCommissions(true);
+      return res.user;
+    } catch (err) {
+      this.errorMessage.set((err as Error).message);
+      throw err;
+    }
+  }
+
   async updateCommissionStatus(id: string, status: 'validated' | 'requested' | 'paid' | 'cancelled', notes?: string) {
     try {
       const updated = await this.apiCall<AffiliateCommission>(`/api/affiliate-commissions/${id}/status`, {
