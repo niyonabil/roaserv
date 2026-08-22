@@ -150,33 +150,7 @@ app.get('/api/notifications', async (req, res) => {
     const { userId } = req.query;
     const db = await loadDatabase();
     let notifications = db.notifications || [];
-
     if (userId) {
-      const requestingUser = db.users.find(u => u.id === userId);
-      const isStaff = requestingUser && (requestingUser.role === 'admin' || requestingUser.role === 'assistant');
-
-      if (isStaff) {
-        // Find any active order that is not viewed yet by the admin staff
-        const unviewedOrders = (db.orders || []).filter(o => !o.viewedByAdmin && o.status !== 'BROUILLON' && o.status !== 'ANNULE');
-        
-        unviewedOrders.forEach(order => {
-          // Check if there is already an unread notification for this order for this staff user
-          const exists = notifications.find(n => n.userId === userId && n.orderId === order.id && !n.read && n.title.includes('non consultée'));
-          if (!exists) {
-            notifications.unshift({
-              id: `dyn-unviewed-${order.id}-${userId}`,
-              userId: userId as string,
-              orderId: order.id,
-              orderReference: order.reference,
-              title: `⚠️ Commande non consultée : ${order.reference}`,
-              message: `Cette commande n'a pas encore été vue par l'administration. Veuillez l'analyser.`,
-              read: false,
-              createdAt: order.createdAt || new Date().toISOString()
-            });
-          }
-        });
-      }
-
       notifications = notifications.filter(n => n.userId === userId);
     }
     res.json(notifications);
@@ -433,18 +407,21 @@ app.post('/api/auth/register', async (req, res) => {
     if (codeToSearch) {
       const affUser = db.users.find(u => u.affiliateCode && u.affiliateCode.toUpperCase() === codeToSearch);
       if (affUser) {
-        referredByAffiliateId = affUser.id;
-        referredByAffiliateCode = affUser.affiliateCode;
+        // Prevent self-referral/self-registration using one's own code
+        if (affUser.email.toLowerCase().trim() !== normalizedEmail) {
+          referredByAffiliateId = affUser.id;
+          referredByAffiliateCode = affUser.affiliateCode;
 
-        if (!db.notifications) db.notifications = [];
-        db.notifications.unshift({
-          id: 'notif-' + Math.random().toString(36).substring(2, 9),
-          userId: affUser.id,
-          title: '🎉 Nouveau Client Parrainé !',
-          message: `Votre code de parrainage (${affUser.affiliateCode}) a été utilisé par "${name.trim()}" lors de sa création de compte.`,
-          read: false,
-          createdAt: new Date().toISOString()
-        });
+          if (!db.notifications) db.notifications = [];
+          db.notifications.unshift({
+            id: 'notif-' + Math.random().toString(36).substring(2, 9),
+            userId: affUser.id,
+            title: '🎉 Nouveau Client Parrainé !',
+            message: `Votre code de parrainage (${affUser.affiliateCode}) a été utilisé par "${name.trim()}" lors de sa création de compte.`,
+            read: false,
+            createdAt: new Date().toISOString()
+          });
+        }
       }
     }
 
@@ -1208,8 +1185,6 @@ app.get('/api/clients/overview', async (req, res) => {
           ice: c.ice || '',
           ordersCount: clientOrders.length,
           totalSpent,
-          paidAmount,
-          solde: paidAmount - totalSpent,
           unpaidAmount: Math.max(0, totalSpent - paidAmount),
           active: c.active !== false,
           clientNotes: c.clientNotes || '',
@@ -1239,8 +1214,6 @@ app.get('/api/clients/overview', async (req, res) => {
           ice: p.ice || '',
           ordersCount: partnerOrders.length,
           totalSpent,
-          paidAmount,
-          solde: paidAmount - totalSpent,
           unpaidAmount: Math.max(0, totalSpent - paidAmount),
           active: p.active !== false,
           clientNotes: 'Partenaire B2B Imprimerie/Centre',
@@ -1485,32 +1458,12 @@ app.get('/api/payments', async (req, res) => {
 app.get('/api/orders/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { userId } = req.query;
     const db = await loadDatabase();
     const order = db.orders.find(o => o.id === id || o.reference === id);
     if (!order) {
       res.status(404).json({ error: 'Commande introuvable.' });
       return;
     }
-
-    if (userId) {
-      const user = db.users.find(u => u.id === userId);
-      if (user && (user.role === 'admin' || user.role === 'assistant')) {
-        order.viewedByAdmin = true;
-        order.consultedByAdmin = true;
-        
-        // Mark all notifications for this order as read for this administrative user
-        if (db.notifications) {
-          db.notifications.forEach(n => {
-            if (n.orderId === order.id && n.userId === userId) {
-              n.read = true;
-            }
-          });
-        }
-        await saveDatabase(db);
-      }
-    }
-
     // Fetch attached structures
     const quote = db.quotes.find(q => q.orderId === order.id);
     const invoice = db.invoices.filter(i => i.orderId === order.id);
@@ -1536,14 +1489,32 @@ app.post('/api/orders', async (req, res) => {
     let affName = orderData.affiliateName;
     let commRate = orderData.commissionRate;
 
+    // Check if the affiliate is trying to refer themselves (forbidden)
+    if (affId) {
+      const affiliateUser = db.users.find(u => u.id === affId);
+      if (affiliateUser && orderData.customerDetails && orderData.customerDetails.email) {
+        const clientEmail = orderData.customerDetails.email.toLowerCase().trim();
+        if (affiliateUser.email.toLowerCase().trim() === clientEmail || affiliateUser.id === orderData.partnerId) {
+          affId = undefined;
+          affCode = undefined;
+          affName = undefined;
+          commRate = undefined;
+        }
+      }
+    }
+
     if (!affId && affCode) {
       const codeSearch = (affCode as string).trim().toUpperCase();
       const affUser = db.users.find(u => u.affiliateCode && u.affiliateCode.toUpperCase() === codeSearch);
       if (affUser) {
-        affId = affUser.id;
-        affCode = affUser.affiliateCode;
-        affName = affUser.name;
-        commRate = affUser.commissionRate || 10;
+        if (orderData.customerDetails && orderData.customerDetails.email && affUser.email.toLowerCase().trim() === orderData.customerDetails.email.toLowerCase().trim()) {
+          // Sponsor cannot refer themselves!
+        } else {
+          affId = affUser.id;
+          affCode = affUser.affiliateCode;
+          affName = affUser.name;
+          commRate = affUser.commissionRate;
+        }
       }
     }
 
@@ -1553,11 +1524,25 @@ app.post('/api/orders', async (req, res) => {
       if (clientUser && clientUser.referredByAffiliateId) {
         const affUser = db.users.find(u => u.id === clientUser.referredByAffiliateId);
         if (affUser) {
-          affId = affUser.id;
-          affCode = affUser.affiliateCode;
-          affName = affUser.name;
-          commRate = affUser.commissionRate || 10;
+          if (affUser.email.toLowerCase().trim() !== clientEmail && affUser.id !== clientUser.id) {
+            affId = affUser.id;
+            affCode = affUser.affiliateCode;
+            affName = affUser.name;
+            commRate = affUser.commissionRate;
+          }
         }
+      }
+    }
+
+    // Determine commission rate based on priority (service specific, then affiliate personal, then general config)
+    if (affId) {
+      const affiliateUser = db.users.find(u => u.id === affId);
+      const serviceId = orderData.serviceId;
+      const serviceSpecificRate = db.settings?.affiliateCommissionConfig?.serviceCommissionRates?.[serviceId];
+      if (serviceSpecificRate !== undefined && serviceSpecificRate !== null) {
+        commRate = Number(serviceSpecificRate);
+      } else if (commRate === undefined || commRate === null) {
+        commRate = affiliateUser?.commissionRate ?? db.settings?.affiliateCommissionConfig?.generalCommissionRate ?? 10;
       }
     }
 
@@ -2054,78 +2039,6 @@ app.post('/api/orders/:id/upload', async (req, res) => {
   }
 });
 
-// Move file inside folders
-app.post('/api/orders/:id/files/:fileId/move', async (req, res) => {
-  try {
-    const { id, fileId } = req.params;
-    const { folder, userId, userName } = req.body;
-    const db = await loadDatabase();
-    const order = db.orders.find(o => o.id === id);
-    if (!order) {
-      res.status(404).json({ error: 'Commande introuvable.' });
-      return;
-    }
-    const file = order.files.find(f => f.id === fileId);
-    if (!file) {
-      res.status(404).json({ error: 'Fichier introuvable.' });
-      return;
-    }
-    const oldFolder = file.folder;
-    file.folder = folder;
-    file.uploadedAt = new Date().toISOString();
-    order.updatedAt = new Date().toISOString();
-
-    if (folder === '05_VERSION_FINALE' && order.status === 'EN_TRAITEMENT') {
-      order.status = 'CONTROLE_QUALITE';
-    }
-
-    await saveDatabase(db);
-    await logAction(
-      userName || 'Système',
-      'Utilisateur',
-      'Fichier déplacé',
-      `Fichier "${file.name}" déplacé du dossier [${oldFolder}] vers [${folder}] pour la commande ${order.reference}.`
-    );
-    res.json(order);
-  } catch (err) {
-    res.status(500).json({ error: (err as Error).message });
-  }
-});
-
-// Delete file from folders
-app.delete('/api/orders/:id/files/:fileId', async (req, res) => {
-  try {
-    const { id, fileId } = req.params;
-    const { userId, userName } = req.query;
-    const db = await loadDatabase();
-    const order = db.orders.find(o => o.id === id);
-    if (!order) {
-      res.status(404).json({ error: 'Commande introuvable.' });
-      return;
-    }
-    const fileIndex = order.files.findIndex(f => f.id === fileId);
-    if (fileIndex === -1) {
-      res.status(404).json({ error: 'Fichier introuvable.' });
-      return;
-    }
-    const fileName = order.files[fileIndex].name;
-    const fileFolder = order.files[fileIndex].folder;
-    order.files.splice(fileIndex, 1);
-    order.updatedAt = new Date().toISOString();
-
-    await saveDatabase(db);
-    await logAction(
-      (userName as string) || 'Système',
-      'Utilisateur',
-      'Fichier supprimé',
-      `Fichier "${fileName}" supprimé du dossier [${fileFolder}] pour la commande ${order.reference}.`
-    );
-    res.json(order);
-  } catch (err) {
-    res.status(500).json({ error: (err as Error).message });
-  }
-});
-
 // Messages & Chat Endpoints
 app.post('/api/orders/:id/messages', async (req, res) => {
   try {
@@ -2391,40 +2304,63 @@ app.post('/api/orders/:id/pay', async (req, res) => {
         if (affId) {
           const affiliateUser = db.users.find(u => u.id === affId);
           if (affiliateUser && affiliateUser.active !== false && affiliateUser.affiliateStatus !== 'inactive') {
-            const rate = order.commissionRate || affiliateUser.commissionRate || 10;
-            const commAmount = Math.round((paymentObj.amount * (rate / 100)) * 100) / 100;
+            const orderEmail = (order.customerDetails?.email || '').toLowerCase().trim();
+            const affEmail = (affiliateUser.email || '').toLowerCase().trim();
 
-            if (!db.affiliateCommissions) db.affiliateCommissions = [];
-
-            const existingComm = db.affiliateCommissions.find(c => c.paymentId === paymentObj.id || (c.orderId === order.id && c.paymentReference === paymentObj.reference));
-            if (!existingComm) {
-              const newComm: AffiliateCommission = {
-                id: 'comm-' + Math.random().toString(36).substring(2, 9),
-                affiliateId: affiliateUser.id,
-                affiliateName: affiliateUser.name,
-                affiliateCode: affiliateUser.affiliateCode || affCode || 'AFF',
-                clientId: order.customerDetails.email || 'client',
-                clientName: order.customerDetails.name,
-                orderId: order.id,
-                orderReference: order.reference,
-                serviceName: order.serviceName,
-                paymentId: paymentObj.id,
-                paymentReference: paymentObj.reference,
-                orderTotalAmount: quote.totalAmount || paymentObj.amount,
-                paidAmount: paymentObj.amount,
-                commissionRate: rate,
-                commissionAmount: commAmount,
-                status: 'validated',
-                createdAt: new Date().toISOString(),
-                validatedAt: new Date().toISOString(),
-                notes: `Commission de ${rate}% calculée automatiquement sur le paiement validé ${paymentObj.reference} (${paymentObj.amount} DH)`
-              };
-              db.affiliateCommissions.push(newComm);
+            // Guard: No self-commissions on own account or own orders!
+            if (orderEmail === affEmail || affiliateUser.id === order.partnerId) {
+              console.warn(`[Affiliation] Auto-commission blocked for self-purchase/own account: ${affEmail}`);
             } else {
-              existingComm.status = 'validated';
-              existingComm.paidAmount = paymentObj.amount;
-              existingComm.commissionAmount = commAmount;
-              existingComm.validatedAt = new Date().toISOString();
+              // Resolve rate by priority: service specific, then order saved, then affiliate rate, then general rate, then fallback 10
+              let rate = 10;
+              const serviceId = order.serviceId;
+              const serviceSpecificRate = db.settings?.affiliateCommissionConfig?.serviceCommissionRates?.[serviceId];
+              
+              if (serviceSpecificRate !== undefined && serviceSpecificRate !== null) {
+                rate = Number(serviceSpecificRate);
+              } else if (order.commissionRate !== undefined && order.commissionRate !== null) {
+                rate = order.commissionRate;
+              } else if (affiliateUser.commissionRate !== undefined && affiliateUser.commissionRate !== null) {
+                rate = affiliateUser.commissionRate;
+              } else if (db.settings?.affiliateCommissionConfig?.generalCommissionRate !== undefined) {
+                rate = db.settings.affiliateCommissionConfig.generalCommissionRate;
+              }
+
+              const commAmount = Math.round((paymentObj.amount * (rate / 100)) * 100) / 100;
+
+              if (!db.affiliateCommissions) db.affiliateCommissions = [];
+
+              const existingComm = db.affiliateCommissions.find(c => c.paymentId === paymentObj.id || (c.orderId === order.id && c.paymentReference === paymentObj.reference));
+              if (!existingComm) {
+                const newComm: AffiliateCommission = {
+                  id: 'comm-' + Math.random().toString(36).substring(2, 9),
+                  affiliateId: affiliateUser.id,
+                  affiliateName: affiliateUser.name,
+                  affiliateCode: affiliateUser.affiliateCode || affCode || 'AFF',
+                  clientId: order.customerDetails.email || 'client',
+                  clientName: order.customerDetails.name,
+                  orderId: order.id,
+                  orderReference: order.reference,
+                  serviceName: order.serviceName,
+                  paymentId: paymentObj.id,
+                  paymentReference: paymentObj.reference,
+                  orderTotalAmount: (quote && quote.totalAmount) || paymentObj.amount,
+                  paidAmount: paymentObj.amount,
+                  commissionRate: rate,
+                  commissionAmount: commAmount,
+                  status: 'validated',
+                  createdAt: new Date().toISOString(),
+                  validatedAt: new Date().toISOString(),
+                  notes: `Commission de ${rate}% calculée automatiquement sur le paiement validé ${paymentObj.reference} (${paymentObj.amount} DH)`
+                };
+                db.affiliateCommissions.push(newComm);
+              } else {
+                existingComm.status = 'validated';
+                existingComm.paidAmount = paymentObj.amount;
+                existingComm.commissionRate = rate;
+                existingComm.commissionAmount = commAmount;
+                existingComm.validatedAt = new Date().toISOString();
+              }
             }
           }
         }
@@ -2692,8 +2628,12 @@ app.get('/api/affiliates', async (req, res) => {
     const enriched = affiliatesList.map(aff => {
       const code = (aff.affiliateCode || '').toUpperCase();
 
-      // Referred clients
-      const clients = db.users.filter(u => u.referredByAffiliateId === aff.id || (code && u.referredByAffiliateCode && u.referredByAffiliateCode.toUpperCase() === code));
+      // Referred clients (excluding self-referrals/self-accounts)
+      const clients = db.users.filter(u => 
+        (u.referredByAffiliateId === aff.id || (code && u.referredByAffiliateCode && u.referredByAffiliateCode.toUpperCase() === code)) &&
+        u.id !== aff.id &&
+        u.email.toLowerCase().trim() !== aff.email.toLowerCase().trim()
+      );
 
       // Orders attributed
       const orders = db.orders.filter(o => o.affiliateId === aff.id || (code && o.affiliateCode && o.affiliateCode.toUpperCase() === code) || clients.some(c => c.email && o.customerDetails && o.customerDetails.email && c.email.toLowerCase() === o.customerDetails.email.toLowerCase()));
@@ -3019,6 +2959,15 @@ app.get('/api/audit-logs', async (req, res) => {
 app.get('/api/settings', async (req, res) => {
   try {
     const db = await loadDatabase();
+    if (!db.settings.affiliateCommissionConfig) {
+      db.settings.affiliateCommissionConfig = {
+        generalCommissionRate: 10,
+        minimumPayoutAmount: 100,
+        serviceCommissionRates: {},
+        isAffiliateSystemEnabled: true
+      };
+      await saveDatabase(db);
+    }
     res.json(db.settings);
   } catch (err) {
     res.status(500).json({ error: (err as Error).message });

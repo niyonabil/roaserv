@@ -1545,15 +1545,6 @@
         </div>
 
         <div class="flex items-center gap-3 text-sm font-semibold">
-          <!-- Mon Solde display for Clients, B2B, and B2C -->
-          @if (data.currentUser() && (data.currentUser()?.role === 'client' || data.currentUser()?.role === 'partner')) {
-            <div [class]="data.currentUserBalanceValue() >= 0 ? 'bg-emerald-50/90 text-emerald-850 border border-emerald-200/60 px-3 py-1.5 rounded-xl text-xs flex items-center gap-1.5 font-bold shadow-2xs' : 'bg-rose-50/90 text-rose-850 border border-rose-200/60 px-3 py-1.5 rounded-xl text-xs flex items-center gap-1.5 font-bold shadow-2xs'">
-              <span class="material-icons text-base" [class]="data.currentUserBalanceValue() >= 0 ? 'text-emerald-600' : 'text-rose-600'">account_balance_wallet</span>
-              <span class="hidden md:inline text-slate-500 font-medium">Mon Solde :</span>
-              <span [class]="data.currentUserBalanceValue() >= 0 ? 'text-emerald-750' : 'text-rose-750'">{{ data.currentUserBalanceFormatted() }}</span>
-            </div>
-          }
-
           <!-- Notification Bell button with popover dropdown -->
           <div class="relative">
             <button 
@@ -3010,17 +3001,15 @@
                         <select 
                           [value]="selectedFolderForUpload()"
                           (change)="selectedFolderForUpload.set($any($event.target).value)"
-                          class="w-full bg-white border border-slate-200 rounded-lg p-1.5 text-[11px] font-medium text-slate-700 focus:ring-1 focus:ring-blue-500"
+                          class="w-full bg-white border border-slate-200 rounded-lg p-1.5 text-[11px]"
                         >
-                          <option value="01_DOCUMENTS_ORIGINAUX">📁 01 DOCUMENTS ORIGINAUX</option>
-                          <option value="02_DOCUMENTS_SUPPLEMENTAIRES">📁 02 DOCUMENTS SUPPLÉMENTAIRES</option>
-                          @if (data.activeRole() === 'operator' || data.activeRole() === 'admin' || data.activeRole() === 'assistant') {
-                            <option value="03_TRAVAIL_EN_COURS">📁 03 TRAVAIL EN COURS</option>
-                            <option value="04_PREVISUALISATION">📁 04 PRÉVISUALISATION</option>
-                            <option value="05_VERSION_FINALE">📁 05 VERSION FINALE</option>
-                            <option value="06_FACTURES">📁 06 FACTURES & DEVIS</option>
-                            <option value="07_PREUVES">📁 07 PREUVES DE PAIEMENT</option>
-                            <option value="08_LIVRAISON">📁 08 BONS DE LIVRAISON</option>
+                          <option value="01_DOCUMENTS_ORIGINAUX">01 ORIGINAL (Scans, photos)</option>
+                          @if (data.activeRole() === 'operator' || data.activeRole() === 'admin') {
+                            <option value="03_TRAVAIL_EN_COURS">03 TRAVAIL EN COURS (Brouillons)</option>
+                            <option value="05_VERSION_FINALE">05 VERSION FINALE (Docx, PDF finaux)</option>
+                          }
+                          @if (data.activeRole() === 'client' || data.activeRole() === 'partner') {
+                            <option value="02_DOCUMENTS_SUPPLEMENTAIRES">02 DOCS SUPPLÉMENTAIRES</option>
                           }
                         </select>
                       </div>
@@ -3036,110 +3025,52 @@
                     </div>
 
                     <!-- Folders visual directory representation tree -->
-                    <div class="space-y-2 text-xs">
-                      @for (folderName of ['01_DOCUMENTS_ORIGINAUX', '02_DOCUMENTS_SUPPLEMENTAIRES', '03_TRAVAIL_EN_COURS', '04_PREVISUALISATION', '05_VERSION_FINALE', '06_FACTURES', '07_PREUVES', '08_LIVRAISON']; track folderName) {
-                        <div class="border border-slate-100 rounded-xl overflow-hidden bg-white">
-                          <div class="font-bold text-slate-700 uppercase text-[10px] tracking-wider p-2.5 bg-slate-50/60 flex items-center justify-between">
-                            <span class="flex items-center gap-1.5">
-                              <span class="material-icons text-base" 
-                                    [class.text-amber-500]="folderName.startsWith('01') || folderName.startsWith('02')"
-                                    [class.text-blue-500]="folderName.startsWith('03') || folderName.startsWith('04')"
-                                    [class.text-indigo-500]="folderName.startsWith('05')"
-                                    [class.text-emerald-500]="folderName.startsWith('06') || folderName.startsWith('07')"
-                                    [class.text-orange-500]="folderName.startsWith('08')">
-                                folder
-                              </span>
-                              <span>{{ folderName.replace(/_/g, ' ') }}</span>
-                            </span>
-                            <span class="text-[9px] font-black px-2 py-0.5 rounded-full bg-slate-200/80 text-slate-600">
-                              {{ getFilesByFolder(details.order.files, folderName).length }}
-                            </span>
-                          </div>
+                    <div class="space-y-3 text-xs">
+                      @for (folderName of ['01_DOCUMENTS_ORIGINAUX', '02_DOCUMENTS_SUPPLEMENTAIRES', '03_TRAVAIL_EN_COURS', '05_VERSION_FINALE', '07_PREUVES']; track folderName) {
+                        <div>
+                          <p class="font-bold text-slate-500 uppercase text-[9px] tracking-wider mb-1 flex items-center gap-1">
+                            <span class="material-icons text-sm text-amber-500">folder</span>
+                            {{ folderName.replace(/_/g, ' ') }}
+                          </p>
 
-                          <div class="p-2.5 space-y-2 bg-white border-t border-slate-50">
-                            @if (getFilesByFolder(details.order.files, folderName).length === 0) {
-                              <p class="text-[10px] text-slate-400 italic pl-1">Dossier vide</p>
-                            } @else {
-                              <div class="space-y-1.5">
-                                @for (f of getFilesByFolder(details.order.files, folderName); track f.id) {
-                                  <div class="bg-slate-50/50 hover:bg-slate-100 p-2 rounded-lg border border-slate-100/60 flex items-center justify-between text-[11px] transition-all">
-                                    <div class="truncate pr-2">
-                                      <p class="font-semibold text-slate-800 truncate flex items-center gap-1" [title]="f.name">
-                                        <span class="material-icons text-slate-400 text-sm">
-                                          {{ f.name.endsWith('.pdf') ? 'picture_as_pdf' : f.name.endsWith('.docx') || f.name.endsWith('.doc') ? 'description' : 'image' }}
-                                        </span>
-                                        {{ f.name }}
-                                      </p>
-                                      <p class="text-[9px] text-slate-400">v{{ f.version }} | {{ f.size / 1024 / 1024 | number:'1.2-2' }} MB | {{ f.uploadedBy }}</p>
-                                    </div>
-                                    
-                                    <div class="flex items-center gap-1.5 shrink-0">
-                                      <!-- Download and integrated preview buttons -->
-                                      @if (details.order.status === 'TERMINE' || details.order.status === 'SOLDE_PAYE' || f.folder === '01_DOCUMENTS_ORIGINAUX' || f.folder === '02_DOCUMENTS_SUPPLEMENTAIRES' || f.folder === '07_PREUVES' || data.activeRole() === 'admin' || data.activeRole() === 'operator' || data.activeRole() === 'assistant') {
-                                        <button 
-                                          type="button"
-                                          (click)="viewFile(f)"
-                                          class="text-indigo-600 hover:text-indigo-800 p-1 cursor-pointer bg-white hover:bg-indigo-50 border border-indigo-100 rounded transition-colors"
-                                          title="Consulter / Visualiser"
-                                        >
-                                          <span class="material-icons text-sm">visibility</span>
-                                        </button>
-                                        <button 
-                                          type="button"
-                                          (click)="downloadFile(f)"
-                                          class="text-blue-600 hover:text-blue-800 p-1 cursor-pointer bg-white hover:bg-blue-50 border border-blue-100 rounded transition-colors"
-                                          title="Télécharger"
-                                        >
-                                          <span class="material-icons text-sm">download</span>
-                                        </button>
-                                      } @else {
-                                        <span class="material-icons text-slate-300 text-base cursor-not-allowed" title="Solde final requis avant téléchargement">lock</span>
-                                      }
-
-                                      <!-- Move option for Staff -->
-                                      @if (data.activeRole() === 'admin' || data.activeRole() === 'assistant' || data.activeRole() === 'operator') {
-                                        <div class="relative group">
-                                          <button 
-                                            type="button"
-                                            class="text-slate-500 hover:text-slate-700 p-1 cursor-pointer bg-white hover:bg-slate-50 border border-slate-200 rounded transition-colors"
-                                            title="Déplacer vers..."
-                                          >
-                                            <span class="material-icons text-sm">drive_file_move</span>
-                                          </button>
-                                          <!-- Hover overlay dropdown to move files -->
-                                          <div class="absolute right-0 top-6 hidden group-hover:block bg-white border border-slate-200 rounded-lg shadow-lg py-1.5 z-30 w-48 text-[10px] font-medium text-slate-700">
-                                            <p class="px-2 py-1 bg-slate-50 text-slate-400 font-bold border-b border-slate-100 text-[9px] uppercase">Choisir Dossier Cible</p>
-                                            @for (tgtFolder of ['01_DOCUMENTS_ORIGINAUX', '02_DOCUMENTS_SUPPLEMENTAIRES', '03_TRAVAIL_EN_COURS', '04_PREVISUALISATION', '05_VERSION_FINALE', '06_FACTURES', '07_PREUVES', '08_LIVRAISON']; track tgtFolder) {
-                                              @if (tgtFolder !== folderName) {
-                                                <button 
-                                                  type="button"
-                                                  (click)="onMoveFile(details.order.id, f.id, tgtFolder)"
-                                                  class="w-full text-left px-2 py-1 hover:bg-slate-50 flex items-center gap-1 cursor-pointer text-slate-600 hover:text-blue-600"
-                                                >
-                                                  <span class="material-icons text-[11px] text-amber-500">folder</span>
-                                                  {{ tgtFolder.replace(/_/g, ' ').substring(3) }}
-                                                </button>
-                                              }
-                                            }
-                                          </div>
-                                        </div>
-
-                                        <!-- Delete option for Staff -->
-                                        <button 
-                                          type="button"
-                                          (click)="onDeleteFile(details.order.id, f.id)"
-                                          class="text-rose-500 hover:text-rose-700 p-1 cursor-pointer bg-white hover:bg-rose-50 border border-rose-100 rounded transition-colors"
-                                          title="Supprimer définitivement"
-                                        >
-                                          <span class="material-icons text-sm">delete</span>
-                                        </button>
-                                      }
-                                    </div>
+                          @if (getFilesByFolder(details.order.files, folderName).length === 0) {
+                            <p class="text-[10px] text-slate-400 italic pl-5">Dossier vide</p>
+                          } @else {
+                            <div class="space-y-1.5 pl-5">
+                              @for (f of getFilesByFolder(details.order.files, folderName); track f.id) {
+                                <div class="bg-slate-50 hover:bg-slate-100 p-2 rounded-lg border border-slate-100 flex items-center justify-between text-[11px] transition-colors">
+                                  <div class="truncate pr-2">
+                                    <p class="font-semibold text-slate-800 truncate" [title]="f.name">{{ f.name }}</p>
+                                    <p class="text-[9px] text-slate-400">v{{ f.version }} | {{ f.size / 1024 / 1024 | number:'1.2-2' }} MB | {{ f.uploadedBy }}</p>
                                   </div>
-                                }
-                              </div>
-                            }
-                          </div>
+                                  
+                                  <!-- Download and integrated preview buttons -->
+                                  @if (details.order.status === 'TERMINE' || details.order.status === 'SOLDE_PAYE' || f.folder === '01_DOCUMENTS_ORIGINAUX' || f.folder === '07_PREUVES' || data.activeRole() === 'admin' || data.activeRole() === 'operator') {
+                                    <div class="flex items-center gap-2 shrink-0">
+                                      <button 
+                                        type="button"
+                                        (click)="viewFile(f)"
+                                        class="text-indigo-600 hover:text-indigo-800 p-1 cursor-pointer"
+                                        title="Consulter / Visualiser"
+                                      >
+                                        <span class="material-icons text-base">visibility</span>
+                                      </button>
+                                      <button 
+                                        type="button"
+                                        (click)="downloadFile(f)"
+                                        class="text-blue-600 hover:text-blue-800 p-1 cursor-pointer"
+                                        title="Télécharger"
+                                      >
+                                        <span class="material-icons text-base">download</span>
+                                      </button>
+                                    </div>
+                                  } @else {
+                                    <span class="material-icons text-slate-300 text-base cursor-not-allowed" title="Solde final requis avant téléchargement">lock</span>
+                                  }
+                                </div>
+                              }
+                            </div>
+                          }
                         </div>
                       }
                     </div>
@@ -3947,6 +3878,75 @@
                   </button>
                 </div>
 
+                <!-- SYSTEME D'AFFILIATION & COMMISSIONS PAR SERVICE (ADMIN EXCLUSIVE) -->
+                <div class="p-6 rounded-2xl bg-blue-50/40 border border-blue-200/60 space-y-4">
+                  <div>
+                    <h3 class="text-blue-900 font-bold text-sm flex items-center gap-2">
+                      <span class="material-icons text-blue-600 text-base font-bold">point_of_sale</span> Configuration du Système d'Affiliation
+                    </h3>
+                    <p class="text-[11px] text-blue-700 mt-1">
+                      Configurez les commissions accordées aux parrains sur les commandes payées de leurs filleuls. Les parrains ne gagnent jamais de commissions sur leurs propres commandes ou leur propre compte.
+                    </p>
+                  </div>
+
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label class="block font-bold text-blue-950 mb-1">Activer le système d'affiliation</label>
+                      <select [value]="s.affiliateCommissionConfig?.isAffiliateSystemEnabled ? 'true' : 'false'" 
+                              (change)="onAffiliateToggle(s, $any($event.target).value)"
+                              class="w-full bg-white border border-blue-200 rounded-xl px-3 py-2 text-xs font-bold text-blue-950">
+                        <option value="true">Activé (Par défaut)</option>
+                        <option value="false">Désactivé</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label class="block font-bold text-blue-950 mb-1">Taux de commission général (%)</label>
+                      <input type="number" 
+                             [value]="s.affiliateCommissionConfig?.generalCommissionRate ?? 10" 
+                             (input)="onAffiliateGeneralRateChange(s, $any($event.target).value)" 
+                             min="0" max="100" step="0.5"
+                             class="w-full bg-white border border-blue-200 rounded-xl px-3 py-2 text-xs" />
+                    </div>
+
+                    <div class="col-span-2">
+                      <label class="block font-bold text-blue-950 mb-1">Seuil de retrait minimum des commissions ({{ s.currency || 'DH' }})</label>
+                      <input type="number" 
+                             [value]="s.affiliateCommissionConfig?.minimumPayoutAmount ?? 100" 
+                             (input)="onAffiliateMinPayoutChange(s, $any($event.target).value)" 
+                             min="1"
+                             class="w-full bg-white border border-blue-200 rounded-xl px-3 py-2 text-xs" />
+                    </div>
+                  </div>
+
+                  <!-- Per-Service Commission Rates -->
+                  <div class="space-y-2 pt-2">
+                    <h4 class="font-bold text-blue-900 text-xs flex items-center gap-1.5">
+                      <span class="material-icons text-blue-600 text-sm font-bold">list</span> Configuration par Service spécifique :
+                    </h4>
+                    <p class="text-[10px] text-slate-500 mb-2">Par défaut, le taux de commission général s'applique. Saisissez une valeur ci-dessous pour spécifier un taux de commission différent pour un service particulier.</p>
+                    
+                    <div class="bg-white rounded-xl border border-blue-100 divide-y divide-blue-50 overflow-hidden max-h-60 overflow-y-auto">
+                      @for (srv of data.services(); track srv.id) {
+                        <div class="p-3 flex items-center justify-between gap-4">
+                          <div class="space-y-0.5">
+                            <span class="font-bold text-slate-800 text-[11px] block">{{ srv.name }}</span>
+                            <span class="text-[10px] text-slate-400">ID: {{ srv.id }} | Catégorie: {{ srv.category }}</span>
+                          </div>
+                          <div class="flex items-center gap-1.5">
+                            <input type="number" 
+                                   [value]="getServiceCommissionRate(s, srv.id)" 
+                                   (input)="onServiceCommissionRateChange(s, srv.id, $any($event.target).value)" 
+                                   min="0" max="100" step="0.5" placeholder="Général"
+                                   class="w-20 text-center bg-slate-50 border border-slate-200 rounded-lg py-1 px-2 text-[11px]" />
+                            <span class="text-[11px] text-slate-500 font-bold">%</span>
+                          </div>
+                        </div>
+                      }
+                    </div>
+                  </div>
+                </div>
+
                 <!-- PURGE DATABASE SECTION (ADMIN ONLY) -->
                 <div class="p-6 rounded-2xl bg-rose-50 border border-rose-200 space-y-4 mt-6">
                   <div>
@@ -4610,17 +4610,6 @@
                   class="text-[11px] font-bold px-3 py-1.5 rounded-lg transition-colors cursor-pointer whitespace-nowrap"
                 >
                   Assistantes ({{ data.assistantCount() }})
-                </button>
-                <button 
-                  type="button"
-                  (click)="teamRoleFilter.set('delivery')"
-                  [class.bg-orange-600]="teamRoleFilter() === 'delivery'"
-                  [class.text-white]="teamRoleFilter() === 'delivery'"
-                  [class.bg-orange-50]="teamRoleFilter() !== 'delivery'"
-                  [class.text-orange-700]="teamRoleFilter() !== 'delivery'"
-                  class="text-[11px] font-bold px-3 py-1.5 rounded-lg transition-colors cursor-pointer whitespace-nowrap"
-                >
-                  Livreurs ({{ data.allUsers().filter(u => u.role === 'delivery').length }})
                 </button>
               </div>
             </div>
@@ -7638,7 +7627,7 @@
                           </td>
 
                           <td class="py-3.5 px-3">
-                            <span [class]="'inline-block text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full border ' + (u.role === 'admin' ? 'bg-purple-50 text-purple-800 border-purple-200' : u.role === 'assistant' ? 'bg-amber-50 text-amber-800 border-amber-200' : u.role === 'operator' ? 'bg-emerald-50 text-emerald-800 border-emerald-200' : u.role === 'qa' ? 'bg-blue-50 text-blue-800 border-blue-200' : u.role === 'delivery' ? 'bg-orange-50 text-orange-800 border-orange-200' : u.role === 'partner' ? 'bg-indigo-50 text-indigo-800 border-indigo-200' : 'bg-slate-100 text-slate-800 border-slate-200')">
+                            <span [class]="'inline-block text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full border ' + (u.role === 'admin' ? 'bg-purple-50 text-purple-800 border-purple-200' : u.role === 'assistant' ? 'bg-amber-50 text-amber-800 border-amber-200' : u.role === 'operator' ? 'bg-emerald-50 text-emerald-800 border-emerald-200' : u.role === 'qa' ? 'bg-blue-50 text-blue-800 border-blue-200' : u.role === 'partner' ? 'bg-indigo-50 text-indigo-800 border-indigo-200' : 'bg-slate-100 text-slate-800 border-slate-200')">
                               {{ u.role }}
                             </span>
                             @if (u.department) {
@@ -10139,7 +10128,6 @@
               <option value="operator">Opérateur de Saisie (Production)</option>
               <option value="qa">Contrôleur Qualité QA (Vérification & Validation)</option>
               <option value="assistant">Assistant(e) de Gestion (Commandes, Facturation, Paie)</option>
-              <option value="delivery">Livreur de commandes (Logistique & Expédition)</option>
               <option value="admin">Administrateur Système (Accès Complet)</option>
               <option value="partner">Partenaire B2B / Agence (Apporteur d'Affaires)</option>
               <option value="client">Client Final</option>

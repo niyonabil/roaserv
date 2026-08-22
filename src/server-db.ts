@@ -509,6 +509,12 @@ export interface SystemSettings {
     status: 'success' | 'failed';
     details: string;
   }[];
+  affiliateCommissionConfig?: {
+    generalCommissionRate: number;
+    minimumPayoutAmount: number;
+    serviceCommissionRates: Record<string, number>;
+    isAffiliateSystemEnabled: boolean;
+  };
 }
 
 export interface Order {
@@ -572,6 +578,8 @@ export interface Order {
   affiliateCode?: string;
   affiliateName?: string;
   commissionRate?: number;
+  viewedByAdmin?: boolean;
+  consultedByAdmin?: boolean;
   createdAt: string;
   updatedAt: string;
   deadline?: string;

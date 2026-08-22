@@ -576,6 +576,12 @@ export interface SystemSettings {
     status: 'success' | 'failed';
     details: string;
   }[];
+  affiliateCommissionConfig?: {
+    generalCommissionRate: number;
+    minimumPayoutAmount: number;
+    serviceCommissionRates: Record<string, number>;
+    isAffiliateSystemEnabled: boolean;
+  };
 }
 
 export interface Order {
@@ -1095,7 +1101,7 @@ export class Data {
   }
 
   currentUser = signal<User | null>(null);
-  activeRole = signal<'public' | 'client' | 'partner' | 'operator' | 'qa' | 'admin' | 'assistant' | 'affiliate'>('public');
+  activeRole = signal<'public' | 'client' | 'partner' | 'operator' | 'qa' | 'admin' | 'assistant' | 'affiliate' | 'delivery'>('public');
 
   services = signal<Service[]>(DEFAULT_SERVICES);
   coverageLocations = signal<CoverageLocationPoint[]>(DEFAULT_COVERAGE_LOCATIONS);
@@ -1274,7 +1280,7 @@ export class Data {
           const userObj = JSON.parse(storedUser);
           this.currentUser.set(userObj);
           if (storedRole) {
-            this.activeRole.set(storedRole as 'public' | 'client' | 'partner' | 'operator' | 'qa' | 'admin' | 'assistant' | 'affiliate');
+            this.activeRole.set(storedRole as 'public' | 'client' | 'partner' | 'operator' | 'qa' | 'admin' | 'assistant' | 'affiliate' | 'delivery');
           } else {
             this.activeRole.set(userObj.role);
           }
