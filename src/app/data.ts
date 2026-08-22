@@ -11,7 +11,7 @@ export interface UserPrivileges {
   canViewFinancials: boolean;
 }
 
-export function getDefaultPrivileges(role: 'admin' | 'partner' | 'operator' | 'qa' | 'client' | 'assistant' | string): UserPrivileges {
+export function getDefaultPrivileges(role: 'admin' | 'partner' | 'operator' | 'qa' | 'client' | 'assistant' | 'delivery' | string): UserPrivileges {
   switch (role) {
     case 'admin':
       return {
@@ -30,6 +30,15 @@ export function getDefaultPrivileges(role: 'admin' | 'partner' | 'operator' | 'q
         canManageClients: true,
         canManageTools: true,
         canViewFinancials: true,
+      };
+    case 'delivery':
+      return {
+        canManageOrders: false,
+        canValidateQuality: false,
+        canDeliverOrders: true,
+        canManageClients: false,
+        canManageTools: false,
+        canViewFinancials: false,
       };
     case 'qa':
       return {
@@ -85,7 +94,7 @@ export interface User {
   username?: string;
   email: string;
   password?: string;
-  role: 'admin' | 'partner' | 'operator' | 'qa' | 'client' | 'assistant' | 'affiliate';
+  role: 'admin' | 'partner' | 'operator' | 'qa' | 'client' | 'assistant' | 'affiliate' | 'delivery';
   privileges?: UserPrivileges;
   company?: string;
   ice?: string;
@@ -1137,6 +1146,17 @@ export class Data {
     return this.clientsOverview().find(c => c.id === user.id || (user.email && c.email?.toLowerCase() === user.email?.toLowerCase())) || null;
   });
 
+  currentUserBalanceValue = computed(() => {
+    const item = this.currentUserSoldeItem();
+    if (!item) return 0;
+    return item.solde ?? ((item.paidAmount ?? 0) - (item.totalSpent ?? 0));
+  });
+
+  currentUserBalanceFormatted = computed(() => {
+    const val = this.currentUserBalanceValue();
+    return `${val >= 0 ? '+' : ''}${val.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} DH`;
+  });
+
   // Affiliation Signals
   affiliates = signal<AffiliateWithStats[]>([]);
   affiliateCommissions = signal<AffiliateCommission[]>([]);
@@ -1813,7 +1833,7 @@ export class Data {
         this.allUsers.set(users);
         const user = this.currentUser();
         if (user?.role === 'admin' || user?.role === 'assistant') {
-          this.teamUsers.set(users.filter(u => ['operator', 'qa', 'assistant', 'admin'].includes(u.role)));
+          this.teamUsers.set(users.filter(u => ['operator', 'qa', 'assistant', 'admin', 'delivery'].includes(u.role)));
         } else if (user?.role === 'partner') {
           this.teamUsers.set(users.filter(u => u.createdByUserId === user.id));
         }
@@ -2397,12 +2417,14 @@ export class Data {
   }
 
   async loadOrderDetails(id: string, silent = false) {
+    const user = this.currentUser();
+    const userIdQuery = user ? `?userId=${user.id}` : '';
     const d = await this.apiCall<{
       order: Order;
       quote?: Quote;
       invoices: Invoice[];
       payments: Payment[];
-    }>(`/api/orders/${id}`, undefined, silent);
+    }>(`/api/orders/${id}${userIdQuery}`, undefined, silent);
     this.activeOrderDetails.set(d);
     return d;
   }
@@ -2584,6 +2606,37 @@ export class Data {
     this.loadStats(true);
     this.loadNotifications(true);
     await this.loadOrderDetails(orderId, true);
+  }
+
+  async moveOrderFile(orderId: string, fileId: string, folder: string) {
+    const user = this.currentUser();
+    const order = await this.apiCall<Order>(`/api/orders/${orderId}/files/${fileId}/move`, {
+      method: 'POST',
+      body: JSON.stringify({
+        folder,
+        userId: user?.id,
+        userName: user?.name
+      })
+    });
+    if (this.activeOrderDetails()?.order.id === orderId) {
+      this.activeOrderDetails.update(prev => prev ? { ...prev, order } : null);
+    }
+    this.successMessage.set("Fichier déplacé avec succès.");
+    await this.loadOrderDetails(orderId, true);
+    this.loadOrders(true);
+  }
+
+  async deleteOrderFile(orderId: string, fileId: string) {
+    const user = this.currentUser();
+    const order = await this.apiCall<Order>(`/api/orders/${orderId}/files/${fileId}?userId=${user?.id || ''}&userName=${encodeURIComponent(user?.name || '')}`, {
+      method: 'DELETE'
+    });
+    if (this.activeOrderDetails()?.order.id === orderId) {
+      this.activeOrderDetails.update(prev => prev ? { ...prev, order } : null);
+    }
+    this.successMessage.set("Fichier supprimé avec succès.");
+    await this.loadOrderDetails(orderId, true);
+    this.loadOrders(true);
   }
 
   async submitPaymentProof(orderId: string, payload: { amount: number; type: 'deposit' | 'balance'; method: string; proofFileName?: string; proofFileBase64?: string }) {

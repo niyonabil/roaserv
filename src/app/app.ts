@@ -269,7 +269,7 @@ export class App {
   selectedEmployeeForHr = signal<User | null>(null);
 
   payrollFormLiveTrigger = signal<number>(0);
-  employeesList = computed(() => this.data.allUsers().filter(u => ['operator', 'qa', 'assistant', 'admin'].includes(u.role)));
+  employeesList = computed(() => this.data.allUsers().filter(u => ['operator', 'qa', 'assistant', 'admin', 'delivery'].includes(u.role)));
   editingPayrollId = computed(() => this.payrollForm?.get('id')?.value || null);
 
   payrollComputedSummary = computed(() => {
@@ -379,7 +379,7 @@ export class App {
   showResetPasswordModal = signal<boolean>(false);
   selectedTeamMember = signal<User | null>(null);
   newResetPassword = signal<string>('');
-  teamRoleFilter = signal<'all' | 'operator' | 'qa' | 'assistant'>('all');
+  teamRoleFilter = signal<'all' | 'operator' | 'qa' | 'assistant' | 'delivery'>('all');
   teamSearchQuery = signal<string>('');
   isSubmittingTeamMember = signal<boolean>(false);
 
@@ -1755,6 +1755,25 @@ export class App {
       this.clearUploadFile();
     } catch (err) {
       console.error('Error uploading file:', err);
+    }
+  }
+
+  async onMoveFile(orderId: string, fileId: string, folder: string) {
+    try {
+      await this.data.moveOrderFile(orderId, fileId, folder);
+    } catch (err) {
+      console.error('Error moving file:', err);
+    }
+  }
+
+  async onDeleteFile(orderId: string, fileId: string) {
+    if (!confirm('Êtes-vous sûr de vouloir supprimer ce fichier ?')) {
+      return;
+    }
+    try {
+      await this.data.deleteOrderFile(orderId, fileId);
+    } catch (err) {
+      console.error('Error deleting file:', err);
     }
   }
 
@@ -3803,8 +3822,8 @@ export class App {
       ice: '',
       customerType: 'particular',
       employeeCode: 'EMP-' + Math.floor(1000 + Math.random() * 9000),
-      jobTitle: defaultRole === 'operator' ? 'Opérateur de Saisie' : defaultRole === 'qa' ? 'Contrôleur Qualité' : defaultRole === 'assistant' ? 'Assistant(e) de Direction' : 'Gestionnaire',
-      department: defaultRole === 'operator' ? 'production' : defaultRole === 'qa' ? 'qualite' : 'administration',
+      jobTitle: defaultRole === 'operator' ? 'Opérateur de Saisie' : defaultRole === 'qa' ? 'Contrôleur Qualité' : defaultRole === 'assistant' ? 'Assistant(e) de Direction' : defaultRole === 'delivery' ? 'Livreur de Commandes' : 'Gestionnaire',
+      department: defaultRole === 'operator' ? 'production' : defaultRole === 'qa' ? 'qualite' : defaultRole === 'delivery' ? 'logistique' : 'administration',
       contractType: 'cdi',
       hireDate: new Date().toISOString().substring(0, 10),
       birthDate: '',
@@ -3836,8 +3855,8 @@ export class App {
       canManageClients: privs.canManageClients,
       canManageTools: privs.canManageTools,
       canViewFinancials: privs.canViewFinancials,
-      jobTitle: role === 'operator' ? 'Opérateur de Saisie' : role === 'qa' ? 'Contrôleur Qualité' : role === 'assistant' ? 'Assistant(e) de Direction' : role === 'client' ? 'Client' : role === 'partner' ? 'Partenaire B2B' : 'Administrateur',
-      department: role === 'operator' ? 'production' : role === 'qa' ? 'qualite' : role === 'assistant' ? 'administration' : 'direction'
+      jobTitle: role === 'operator' ? 'Opérateur de Saisie' : role === 'qa' ? 'Contrôleur Qualité' : role === 'assistant' ? 'Assistant(e) de Direction' : role === 'delivery' ? 'Livreur de Commandes' : role === 'client' ? 'Client' : role === 'partner' ? 'Partenaire B2B' : 'Administrateur',
+      department: role === 'operator' ? 'production' : role === 'qa' ? 'qualite' : role === 'delivery' ? 'logistique' : role === 'assistant' ? 'administration' : 'direction'
     });
   }
 

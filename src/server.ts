@@ -150,7 +150,33 @@ app.get('/api/notifications', async (req, res) => {
     const { userId } = req.query;
     const db = await loadDatabase();
     let notifications = db.notifications || [];
+
     if (userId) {
+      const requestingUser = db.users.find(u => u.id === userId);
+      const isStaff = requestingUser && (requestingUser.role === 'admin' || requestingUser.role === 'assistant');
+
+      if (isStaff) {
+        // Find any active order that is not viewed yet by the admin staff
+        const unviewedOrders = (db.orders || []).filter(o => !o.viewedByAdmin && o.status !== 'BROUILLON' && o.status !== 'ANNULE');
+        
+        unviewedOrders.forEach(order => {
+          // Check if there is already an unread notification for this order for this staff user
+          const exists = notifications.find(n => n.userId === userId && n.orderId === order.id && !n.read && n.title.includes('non consultée'));
+          if (!exists) {
+            notifications.unshift({
+              id: `dyn-unviewed-${order.id}-${userId}`,
+              userId: userId as string,
+              orderId: order.id,
+              orderReference: order.reference,
+              title: `⚠️ Commande non consultée : ${order.reference}`,
+              message: `Cette commande n'a pas encore été vue par l'administration. Veuillez l'analyser.`,
+              read: false,
+              createdAt: order.createdAt || new Date().toISOString()
+            });
+          }
+        });
+      }
+
       notifications = notifications.filter(n => n.userId === userId);
     }
     res.json(notifications);
@@ -1182,6 +1208,8 @@ app.get('/api/clients/overview', async (req, res) => {
           ice: c.ice || '',
           ordersCount: clientOrders.length,
           totalSpent,
+          paidAmount,
+          solde: paidAmount - totalSpent,
           unpaidAmount: Math.max(0, totalSpent - paidAmount),
           active: c.active !== false,
           clientNotes: c.clientNotes || '',
@@ -1211,6 +1239,8 @@ app.get('/api/clients/overview', async (req, res) => {
           ice: p.ice || '',
           ordersCount: partnerOrders.length,
           totalSpent,
+          paidAmount,
+          solde: paidAmount - totalSpent,
           unpaidAmount: Math.max(0, totalSpent - paidAmount),
           active: p.active !== false,
           clientNotes: 'Partenaire B2B Imprimerie/Centre',
@@ -1455,12 +1485,32 @@ app.get('/api/payments', async (req, res) => {
 app.get('/api/orders/:id', async (req, res) => {
   try {
     const { id } = req.params;
+    const { userId } = req.query;
     const db = await loadDatabase();
     const order = db.orders.find(o => o.id === id || o.reference === id);
     if (!order) {
       res.status(404).json({ error: 'Commande introuvable.' });
       return;
     }
+
+    if (userId) {
+      const user = db.users.find(u => u.id === userId);
+      if (user && (user.role === 'admin' || user.role === 'assistant')) {
+        order.viewedByAdmin = true;
+        order.consultedByAdmin = true;
+        
+        // Mark all notifications for this order as read for this administrative user
+        if (db.notifications) {
+          db.notifications.forEach(n => {
+            if (n.orderId === order.id && n.userId === userId) {
+              n.read = true;
+            }
+          });
+        }
+        await saveDatabase(db);
+      }
+    }
+
     // Fetch attached structures
     const quote = db.quotes.find(q => q.orderId === order.id);
     const invoice = db.invoices.filter(i => i.orderId === order.id);
@@ -1998,6 +2048,78 @@ app.post('/api/orders/:id/upload', async (req, res) => {
       `Fichier "${name}" (v${version}) ajouté dans le dossier [${folder}] pour la commande ${order.reference}.`
     );
 
+    res.json(order);
+  } catch (err) {
+    res.status(500).json({ error: (err as Error).message });
+  }
+});
+
+// Move file inside folders
+app.post('/api/orders/:id/files/:fileId/move', async (req, res) => {
+  try {
+    const { id, fileId } = req.params;
+    const { folder, userId, userName } = req.body;
+    const db = await loadDatabase();
+    const order = db.orders.find(o => o.id === id);
+    if (!order) {
+      res.status(404).json({ error: 'Commande introuvable.' });
+      return;
+    }
+    const file = order.files.find(f => f.id === fileId);
+    if (!file) {
+      res.status(404).json({ error: 'Fichier introuvable.' });
+      return;
+    }
+    const oldFolder = file.folder;
+    file.folder = folder;
+    file.uploadedAt = new Date().toISOString();
+    order.updatedAt = new Date().toISOString();
+
+    if (folder === '05_VERSION_FINALE' && order.status === 'EN_TRAITEMENT') {
+      order.status = 'CONTROLE_QUALITE';
+    }
+
+    await saveDatabase(db);
+    await logAction(
+      userName || 'Système',
+      'Utilisateur',
+      'Fichier déplacé',
+      `Fichier "${file.name}" déplacé du dossier [${oldFolder}] vers [${folder}] pour la commande ${order.reference}.`
+    );
+    res.json(order);
+  } catch (err) {
+    res.status(500).json({ error: (err as Error).message });
+  }
+});
+
+// Delete file from folders
+app.delete('/api/orders/:id/files/:fileId', async (req, res) => {
+  try {
+    const { id, fileId } = req.params;
+    const { userId, userName } = req.query;
+    const db = await loadDatabase();
+    const order = db.orders.find(o => o.id === id);
+    if (!order) {
+      res.status(404).json({ error: 'Commande introuvable.' });
+      return;
+    }
+    const fileIndex = order.files.findIndex(f => f.id === fileId);
+    if (fileIndex === -1) {
+      res.status(404).json({ error: 'Fichier introuvable.' });
+      return;
+    }
+    const fileName = order.files[fileIndex].name;
+    const fileFolder = order.files[fileIndex].folder;
+    order.files.splice(fileIndex, 1);
+    order.updatedAt = new Date().toISOString();
+
+    await saveDatabase(db);
+    await logAction(
+      (userName as string) || 'Système',
+      'Utilisateur',
+      'Fichier supprimé',
+      `Fichier "${fileName}" supprimé du dossier [${fileFolder}] pour la commande ${order.reference}.`
+    );
     res.json(order);
   } catch (err) {
     res.status(500).json({ error: (err as Error).message });
