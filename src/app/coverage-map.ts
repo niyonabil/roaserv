@@ -422,6 +422,16 @@ export class CoverageMap implements AfterViewInit, OnDestroy {
   readonly mapContainer = viewChild<ElementRef<HTMLDivElement>>('mapContainer');
 
   selectService = output<string>();
+  customLocations = input<CoverageLocationPoint[] | null>(null);
+
+  constructor() {
+    effect(() => {
+      const locs = this.filteredLocations();
+      if (this.mapInstance) {
+        this.renderMapLocations();
+      }
+    });
+  }
 
   // Lookup constants
   readonly regions = MOROCCAN_REGIONS;
@@ -448,7 +458,7 @@ export class CoverageMap implements AfterViewInit, OnDestroy {
     estimatedDelay: string;
   } | null>(null);
 
-  allLocations = computed(() => this.data.coverageLocations());
+  allLocations = computed(() => this.customLocations() ?? this.data.coverageLocations());
 
   filteredLocations = computed(() => {
     const list = this.allLocations();

@@ -407,8 +407,12 @@ export class App {
   showProfileConfirmPassword = signal<boolean>(false);
   isSavingProfile = signal<boolean>(false);
 
+  // --- MOBILE NAV STATE ---
+  showMobileMenu = signal<boolean>(false);
+
   // --- SERVICE CATALOG MANAGEMENT STATE ---
   showServiceModal = signal<boolean>(false);
+  showInteractiveCoverageManager = signal<boolean>(false);
   editingServiceId = signal<string | null>(null);
   serviceImageBase64 = signal<string | null>(null);
   serviceOptionsList = signal<{ id: string; name: string; price: number }[]>([]);
@@ -2559,6 +2563,14 @@ export class App {
       imageUrl: service.imageUrl || ''
     });
     this.showServiceModal.set(true);
+  }
+
+  openInteractiveCoverageManager() {
+    this.showInteractiveCoverageManager.set(true);
+  }
+
+  closeInteractiveCoverageManager() {
+    this.showInteractiveCoverageManager.set(false);
   }
 
   onServiceImageSelected(event: Event) {

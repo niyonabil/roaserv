@@ -67,7 +67,7 @@
                   <input type="text" formControlName="host" placeholder="localhost ou url-serveur.db" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-hidden focus:border-slate-500 focus:bg-white transition-colors" />
                 </div>
                 
-                <div class="grid grid-cols-2 gap-3">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Port *</label>
                     <input type="number" formControlName="port" placeholder="3306" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-hidden focus:border-slate-500 focus:bg-white transition-colors" />
@@ -78,7 +78,7 @@
                   </div>
                 </div>
 
-                <div class="grid grid-cols-2 gap-3">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Utilisateur *</label>
                     <input type="text" formControlName="username" placeholder="root" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-hidden focus:border-slate-500 focus:bg-white transition-colors" />
@@ -301,7 +301,7 @@
           <!-- Role Selection -->
           <div>
             <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Type de profil *</label>
-            <div class="grid grid-cols-2 gap-2">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
               <label 
                 [class]="authForm.value.role === 'client' ? 'border-2 border-blue-600 bg-blue-50/50 text-blue-900 rounded-xl p-3 cursor-pointer text-center block transition-all' : 'border border-slate-200 hover:bg-slate-50 rounded-xl p-3 cursor-pointer text-center block transition-all'"
               >
@@ -356,7 +356,7 @@
 
           <!-- Conditional fields for B2B Partner -->
           @if (authForm.value.role === 'partner') {
-            <div class="grid grid-cols-2 gap-3 pt-2 border-t border-slate-100 animate-fadeIn">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-slate-100 animate-fadeIn">
               <div>
                 <label class="block text-[10px] font-bold text-slate-600 uppercase tracking-wider mb-1">Raison sociale *</label>
                 <input 
@@ -705,7 +705,7 @@
             </div>
 
             <!-- Social Media Buttons Grid -->
-            <div class="grid grid-cols-2 gap-3">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <!-- WhatsApp -->
               <button 
                 type="button" 
@@ -1316,7 +1316,7 @@
               </div>
 
               <!-- Quantity input -->
-              <div class="grid grid-cols-2 gap-4">
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">2. Quantité (Volume)</label>
                   <input 
@@ -1394,7 +1394,7 @@
                 </div>
 
                 @if (estPrintOption()) {
-                  <div class="grid grid-cols-2 gap-4 mt-4 bg-slate-800/50 p-3 rounded-xl border border-slate-800 animate-fadeIn">
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4 bg-slate-800/50 p-3 rounded-xl border border-slate-800 animate-fadeIn">
                     <div>
                       <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Colorimétrie</label>
                       <select 
@@ -1527,12 +1527,19 @@
     <!-- Inner Topbar Navigation -->
     <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-xs">
       <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
-        <div class="flex items-center gap-3">
-          <span class="material-icons text-2xl text-blue-600">article</span>
-          <span class="font-black text-slate-900 tracking-tight text-base md:text-lg">
+        <div class="flex items-center gap-2 sm:gap-3">
+          <button 
+            type="button" 
+            (click)="showMobileMenu.set(!showMobileMenu())" 
+            class="lg:hidden p-1.5 -ml-1.5 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer flex items-center justify-center"
+          >
+            <span class="material-icons">{{ showMobileMenu() ? 'close' : 'menu' }}</span>
+          </button>
+          <span class="material-icons text-2xl text-blue-600 hidden sm:block">article</span>
+          <span class="font-black text-slate-900 tracking-tight text-base md:text-lg truncate max-w-[150px] sm:max-w-xs">
             {{ data.settings()?.saasWorkspaceTitle || 'SAAS WORKSPACE' }}
           </span>
-          <span class="bg-blue-50 text-blue-800 text-[10px] font-bold uppercase px-2.5 py-0.5 rounded-md border border-blue-200">
+          <span class="bg-blue-50 text-blue-800 text-[10px] font-bold uppercase px-2 py-0.5 rounded-md border border-blue-200 hidden sm:inline-block">
             {{ data.activeRole() }}
           </span>
         </div>
@@ -1658,7 +1665,7 @@
                 <div class="bg-slate-50 p-2.5 border-t border-slate-100 flex items-center justify-between text-xs">
                   <button 
                     type="button" 
-                    (click)="activeTab.set('notifications'); closeNotificationsDropdown()"
+                    (click)="showMobileMenu.set(false); activeTab.set('notifications'); closeNotificationsDropdown()"
                     class="text-blue-600 hover:text-blue-800 font-bold text-[11px] flex items-center gap-1 cursor-pointer"
                   >
                     Voir l'historique complet <span class="material-icons text-xs">arrow_forward</span>
@@ -1693,7 +1700,7 @@
     <!-- Main Workspace Area -->
     <div class="max-w-7xl mx-auto w-full px-4 py-8 flex-1 flex flex-col lg:flex-row gap-8">
       <!-- Sidebar Navigation Menu -->
-      <aside class="w-full lg:w-64 shrink-0 space-y-4">
+      <aside [class]="showMobileMenu() ? 'w-full lg:w-64 shrink-0 space-y-4 block animate-fadeIn' : 'hidden lg:block w-full lg:w-64 shrink-0 space-y-4'">
         <div class="bg-white rounded-2xl p-3 border border-slate-200 shadow-xs space-y-4">
 
           <!-- GROUP 1: OPÉRATIONS & TRAVAUX -->
@@ -1702,7 +1709,7 @@
             
             @if (data.activeRole() !== 'operator' && data.activeRole() !== 'qa') {
               <button 
-                (click)="activeTab.set('dashboard'); selectedOrderId.set(null)"
+                (click)="showMobileMenu.set(false); activeTab.set('dashboard'); selectedOrderId.set(null)"
                 [class]="activeTab() === 'dashboard' ? 'w-full text-left px-3.5 py-2 rounded-xl text-xs font-bold bg-blue-50 text-blue-700 flex items-center gap-2 border border-blue-100' : 'w-full text-left px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 flex items-center gap-2'"
               >
                 <span class="material-icons text-sm">dashboard</span> Dashboard Principal
@@ -1710,7 +1717,7 @@
             }
 
             <button 
-              (click)="activeTab.set('orders'); selectedOrderId.set(null)"
+              (click)="showMobileMenu.set(false); activeTab.set('orders'); selectedOrderId.set(null)"
               [class]="activeTab() === 'orders' ? 'w-full text-left px-3.5 py-2 rounded-xl text-xs font-bold bg-blue-50 text-blue-700 flex items-center gap-2 border border-blue-100' : 'w-full text-left px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 flex items-center gap-2'"
             >
               <span class="material-icons text-sm">receipt_long</span> 
@@ -1722,7 +1729,7 @@
 
             @if (data.activeRole() === 'client' || data.activeRole() === 'partner' || data.activeRole() === 'admin' || data.activeRole() === 'assistant') {
               <button 
-                (click)="activeTab.set('new_order')"
+                (click)="showMobileMenu.set(false); activeTab.set('new_order')"
                 [class]="activeTab() === 'new_order' ? 'w-full text-left px-3.5 py-2 rounded-xl text-xs font-bold bg-emerald-50 text-emerald-700 flex items-center gap-2 border border-emerald-100' : 'w-full text-left px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 flex items-center gap-2'"
               >
                 <span class="material-icons text-sm text-emerald-600">add_circle</span> Nouvelle Commande
@@ -1731,7 +1738,7 @@
 
             @if (data.activeRole() === 'admin' || data.activeRole() === 'assistant' || data.activeRole() === 'operator' || data.activeRole() === 'qa') {
               <button 
-                (click)="activeTab.set('tools'); selectedOrderId.set(null)"
+                (click)="showMobileMenu.set(false); activeTab.set('tools'); selectedOrderId.set(null)"
                 [class]="activeTab() === 'tools' ? 'w-full text-left px-3.5 py-2 rounded-xl text-xs font-bold bg-indigo-50 text-indigo-700 flex items-center gap-2 border border-indigo-100 shadow-xs' : 'w-full text-left px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 flex items-center gap-2'"
                 id="sidebar-tools-btn"
               >
@@ -1746,7 +1753,7 @@
 
             @if (data.activeRole() === 'admin' || data.activeRole() === 'assistant') {
               <button 
-                (click)="activeTab.set('services')"
+                (click)="showMobileMenu.set(false); activeTab.set('services')"
                 [class]="activeTab() === 'services' ? 'w-full text-left px-3.5 py-2 rounded-xl text-xs font-bold bg-blue-50 text-blue-700 flex items-center gap-2 border border-blue-100' : 'w-full text-left px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 flex items-center gap-2'"
               >
                 <span class="material-icons text-sm text-blue-600">list_alt</span> Catalogue Services & Tarifs
@@ -1754,7 +1761,7 @@
             }
 
             <button 
-              (click)="activeTab.set('coverage'); selectedOrderId.set(null)"
+              (click)="showMobileMenu.set(false); activeTab.set('coverage'); selectedOrderId.set(null)"
               [class]="activeTab() === 'coverage' ? 'w-full text-left px-3.5 py-2 rounded-xl text-xs font-bold bg-blue-50 text-blue-700 flex items-center gap-2 border border-blue-100 shadow-xs' : 'w-full text-left px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 flex items-center gap-2'"
               id="sidebar-coverage-btn"
             >
@@ -1763,7 +1770,7 @@
 
             @if (data.activeRole() === 'partner' || data.activeRole() === 'admin' || data.activeRole() === 'assistant' || data.activeRole() === 'client') {
               <button 
-                (click)="activeTab.set('clients')"
+                (click)="showMobileMenu.set(false); activeTab.set('clients')"
                 [class]="activeTab() === 'clients' ? 'w-full text-left px-3.5 py-2 rounded-xl text-xs font-bold bg-blue-50 text-blue-700 flex items-center gap-2 border border-blue-100' : 'w-full text-left px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 flex items-center gap-2'"
               >
                 <span class="material-icons text-sm">people_outline</span> @if (data.activeRole() === 'admin' || data.activeRole() === 'assistant') { Tous les Clients } @else { Mes Clients }
@@ -1789,7 +1796,7 @@
 
             @if (data.activeRole() === 'admin' || data.activeRole() === 'partner' || data.activeRole() === 'client' || data.activeRole() === 'assistant') {
               <button 
-                (click)="activeTab.set('client_statement'); selectedOrderId.set(null)"
+                (click)="showMobileMenu.set(false); activeTab.set('client_statement'); selectedOrderId.set(null)"
                 [class]="activeTab() === 'client_statement' ? 'w-full text-left px-3.5 py-2 rounded-xl text-xs font-bold bg-amber-50 text-amber-800 flex items-center gap-2 border border-amber-200 shadow-xs' : 'w-full text-left px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 flex items-center gap-2'"
                 id="sidebar-client-statement-btn"
               >
@@ -1818,7 +1825,7 @@
 
             @if (data.activeRole() === 'client' || data.activeRole() === 'partner' || data.activeRole() === 'admin' || data.activeRole() === 'assistant') {
               <button 
-                (click)="activeTab.set('team'); selectedOrderId.set(null)"
+                (click)="showMobileMenu.set(false); activeTab.set('team'); selectedOrderId.set(null)"
                 [class]="activeTab() === 'team' ? 'w-full text-left px-3.5 py-2 rounded-xl text-xs font-bold bg-blue-50 text-blue-700 flex items-center gap-2 border border-blue-100' : 'w-full text-left px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 flex items-center gap-2'"
               >
                 <span class="material-icons text-sm">badge</span> Gérer l'Équipe
@@ -1845,7 +1852,7 @@
             }
 
             <button 
-              (click)="activeTab.set('notifications'); selectedOrderId.set(null)"
+              (click)="showMobileMenu.set(false); activeTab.set('notifications'); selectedOrderId.set(null)"
               [class]="activeTab() === 'notifications' ? 'w-full text-left px-3.5 py-2 rounded-xl text-xs font-bold bg-blue-50 text-blue-700 flex items-center gap-2 border border-blue-100' : 'w-full text-left px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 flex items-center gap-2'"
               id="sidebar-notifications-btn"
             >
@@ -1870,14 +1877,14 @@
 
             @if (data.activeRole() === 'admin') {
               <button 
-                (click)="activeTab.set('settings')"
+                (click)="showMobileMenu.set(false); activeTab.set('settings')"
                 [class]="activeTab() === 'settings' ? 'w-full text-left px-3.5 py-2 rounded-xl text-xs font-bold bg-blue-50 text-blue-700 flex items-center gap-2 border border-blue-100' : 'w-full text-left px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 flex items-center gap-2'"
               >
                 <span class="material-icons text-sm">settings</span> Configuration & Siège
               </button>
 
               <button 
-                (click)="activeTab.set('audit_logs')"
+                (click)="showMobileMenu.set(false); activeTab.set('audit_logs')"
                 [class]="activeTab() === 'audit_logs' ? 'w-full text-left px-3.5 py-2 rounded-xl text-xs font-bold bg-blue-50 text-blue-700 flex items-center gap-2 border border-blue-100' : 'w-full text-left px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 flex items-center gap-2'"
               >
                 <span class="material-icons text-sm">history</span> Journal d'Audit
@@ -1925,7 +1932,7 @@
 
             <!-- Dashboard Statistics Cards Grid (Bento style) -->
             @if (data.dashboardStats(); as stats) {
-              <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <!-- Stat 1 -->
                 <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-xs flex flex-col justify-between">
                   <div class="flex items-center justify-between text-slate-400 mb-2">
@@ -2021,7 +2028,7 @@
             <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-xs">
               <div class="flex items-center justify-between mb-4 pb-2 border-b border-slate-100">
                 <h3 class="text-sm font-bold text-slate-800">Dernières commandes en cours</h3>
-                <button (click)="activeTab.set('orders')" class="text-blue-600 hover:text-blue-800 text-xs font-bold">
+                <button (click)="showMobileMenu.set(false); activeTab.set('orders')" class="text-blue-600 hover:text-blue-800 text-xs font-bold">
                   Voir tout
                 </button>
               </div>
@@ -2045,7 +2052,7 @@
                       @for (ord of data.orders().slice(0, 4); track ord.id) {
                         <tr class="hover:bg-slate-50/50 transition-colors">
                           <td class="py-3 font-bold text-blue-600">
-                            <button (click)="selectedOrderId.set(ord.id); activeTab.set('orders')" class="hover:underline">
+                            <button (click)="selectedOrderId.set(ord.id); showMobileMenu.set(false); activeTab.set('orders')" class="hover:underline">
                               {{ ord.reference }}
                             </button>
                           </td>
@@ -2091,7 +2098,7 @@
                 </button>
                 @if (data.activeRole() === 'client' || data.activeRole() === 'partner') {
                   <button 
-                    (click)="activeTab.set('new_order')"
+                    (click)="showMobileMenu.set(false); activeTab.set('new_order')"
                     class="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-4 py-2 rounded-xl flex items-center gap-1 shadow-sm"
                   >
                     <span class="material-icons text-sm">add</span> Nouvelle Demande
@@ -2332,7 +2339,7 @@
                       Détails de la demande
                     </h3>
                     
-                    <div class="grid grid-cols-2 gap-4 text-xs">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
                       <div>
                         <p class="font-bold text-slate-400 uppercase text-[10px] tracking-wider">Service Principal</p>
                         <p class="text-slate-800 font-semibold mt-0.5">{{ details.order.serviceName }}</p>
@@ -2392,7 +2399,7 @@
                           Auto-remplir selon la commande
                         </button>
 
-                        <form [formGroup]="quoteForm" (ngSubmit)="onSendQuote(details.order.id)" class="grid grid-cols-2 gap-4 text-xs">
+                        <form [formGroup]="quoteForm" (ngSubmit)="onSendQuote(details.order.id)" class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
                           <div>
                             <label class="block font-bold text-slate-600 mb-1">Prix de base (DH)</label>
                             <input type="number" formControlName="basePrice" class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs" />
@@ -2429,7 +2436,7 @@
                           <span class="text-lg font-black text-slate-900">{{ details.quote.totalAmount }} DH</span>
                         </div>
                         <div class="p-4 space-y-3">
-                          <div class="grid grid-cols-2 gap-3">
+                          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div class="bg-slate-50/50 p-2.5 rounded border border-slate-100">
                               <p class="text-[10px] font-bold text-slate-400 uppercase">Montant Acompte ({{ details.quote.depositPercent }}%)</p>
                               <p class="font-black text-blue-700 mt-0.5">{{ details.quote.depositAmount }} DH</p>
@@ -2471,7 +2478,7 @@
                       @if (data.activeRole() === 'client' || data.activeRole() === 'partner') {
                         <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 space-y-4">
                           <p class="text-xs font-bold text-slate-700">Déposer un justificatif de paiement manuel (Virement/Espèces) :</p>
-                          <form [formGroup]="paymentForm" (ngSubmit)="onPaymentSubmit(details.order.id)" class="grid grid-cols-2 gap-4 text-xs">
+                          <form [formGroup]="paymentForm" (ngSubmit)="onPaymentSubmit(details.order.id)" class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
                             <div>
                               <label class="block font-bold text-slate-600 mb-1">Montant à régler (DH)</label>
                               <input type="number" formControlName="amount" class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs" />
@@ -2565,7 +2572,7 @@
                       @if (data.activeRole() === 'admin') {
                         <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 space-y-3 text-xs">
                           <p class="font-bold text-slate-700">Assigner cette tâche à un spécialiste :</p>
-                          <form [formGroup]="assignForm" (ngSubmit)="onAssignSubmit(details.order.id)" class="grid grid-cols-2 gap-4">
+                          <form [formGroup]="assignForm" (ngSubmit)="onAssignSubmit(details.order.id)" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                               <label class="block font-bold text-slate-600 mb-1">Choisir Opérateur</label>
                               <select formControlName="operatorId" class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs">
@@ -2606,7 +2613,7 @@
                       @if (details.order.tasks.length > 0) {
                         <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 space-y-2 text-xs">
                           <p class="font-bold text-slate-800">Détails de la tâche assignée :</p>
-                          <div class="grid grid-cols-2 gap-3 text-slate-600">
+                          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-slate-600">
                             <p><strong class="text-slate-700">Assigné à :</strong> {{ details.order.tasks[0].operatorName }}</p>
                             <p><strong class="text-slate-700">Contrôle :</strong> {{ details.order.tasks[0].qaName }}</p>
                             <p><strong class="text-slate-700">Priorité :</strong> {{ details.order.tasks[0].priority }}</p>
@@ -3210,7 +3217,7 @@
                   <p class="text-xs font-bold text-blue-900">Enregistrer Amal, Karim ou un nouveau client final :</p>
                   <button type="button" (click)="isCreatingNewCustomer.set(false)" class="text-xs font-bold text-blue-700">Retour</button>
                 </div>
-                <form [formGroup]="customerForm" (ngSubmit)="onAddCustomer()" class="grid grid-cols-2 gap-3 text-xs">
+                <form [formGroup]="customerForm" (ngSubmit)="onAddCustomer()" class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                   <div class="col-span-2">
                     <label class="block text-[10px] font-bold text-slate-500 uppercase mb-0.5">Nom complet</label>
                     <input type="text" formControlName="name" placeholder="Ex: Karim Benjelloun" class="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5" />
@@ -3291,7 +3298,7 @@
               @if (data.activeRole() === 'partner') {
                 <div formGroupName="customerDetails" class="bg-slate-50 p-4 rounded-xl border border-slate-100 space-y-4 text-xs">
                   <p class="font-bold text-slate-700">Coordonnées du client final :</p>
-                  <div class="grid grid-cols-2 gap-4">
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label class="block font-bold text-slate-500 mb-1">Nom complet</label>
                       <input type="text" formControlName="name" class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs" />
@@ -3317,7 +3324,7 @@
               }
 
               <!-- SECTION 2: Work type selection -->
-              <div class="grid grid-cols-2 gap-4 text-xs">
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
                 <div>
                   <label class="block font-bold text-slate-600 mb-1">Type de travail documentaire</label>
                   <select formControlName="serviceId" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs">
@@ -3398,7 +3405,7 @@
               @if (orderForm.get('serviceId')?.value) {
                 <div class="bg-slate-950 text-white p-5 rounded-2xl border border-blue-900/60 text-xs">
                   <p class="font-bold text-blue-300 mb-3 uppercase tracking-wider">Estimation préliminaire du coût</p>
-                  <div class="grid grid-cols-2 gap-4 text-center">
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-center">
                     <div>
                       <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Acompte d'initiation ({{ calculatedFormEstimate.depositPercent }}%)</p>
                       <p class="text-lg font-black text-emerald-400">{{ calculatedFormEstimate.deposit | number:'1.2-2' }} DH</p>
@@ -3447,7 +3454,7 @@
                   <span class="material-icons">close</span>
                 </button>
                 <p class="text-xs font-bold text-slate-800">Ajouter un nouveau compte ou client final :</p>
-                <form [formGroup]="customerForm" (ngSubmit)="onAddCustomer()" class="grid grid-cols-2 gap-3 text-xs">
+                <form [formGroup]="customerForm" (ngSubmit)="onAddCustomer()" class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                   <div class="col-span-2">
                     <label class="block text-[10px] font-bold text-slate-500 uppercase mb-0.5">Nom complet</label>
                     <input type="text" formControlName="name" placeholder="Ex: Karim Benjelloun" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5" />
@@ -3597,7 +3604,7 @@
 
                       <div class="flex items-center gap-1.5">
                         <button 
-                          (click)="selectPartnerCustomer(client); activeTab.set('new_order')"
+                          (click)="selectPartnerCustomer(client); showMobileMenu.set(false); activeTab.set('new_order')"
                           class="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-3.5 py-1.5 rounded-lg flex items-center gap-1 transition-all active:scale-95"
                           id="btn-client-new-order"
                         >
@@ -3613,7 +3620,7 @@
                     </div>
 
                     <!-- Client Coordinates Grid -->
-                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs bg-slate-50/50 p-4 rounded-xl border border-slate-100" id="client-coords-grid">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs bg-slate-50/50 p-4 rounded-xl border border-slate-100" id="client-coords-grid">
                       <div>
                         <span class="block text-[10px] font-bold text-slate-400 uppercase">Téléphone</span>
                         <span class="font-bold text-slate-700">{{ client.phone || '-' }}</span>
@@ -3724,7 +3731,7 @@
 
                               <div class="flex items-center gap-1.5">
                                 <button 
-                                  (click)="selectedOrderId.set(ord.id); activeTab.set('orders')"
+                                  (click)="selectedOrderId.set(ord.id); showMobileMenu.set(false); activeTab.set('orders')"
                                   class="bg-white hover:bg-slate-100 text-slate-700 font-bold px-2.5 py-1.5 rounded-lg text-[10px] border border-slate-200"
                                 >
                                   Consulter
@@ -3789,7 +3796,7 @@
                     Sélectionnez votre SGBD compatible (Firebase, Supabase, MySQL ou MariaDB). Si le type change ou que la base n'est pas connectée, lancez l'installation et l'initialisation setup.
                   </p>
 
-                  <div class="grid grid-cols-2 gap-4">
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div class="col-span-2">
                       <label class="block font-bold text-amber-900 mb-1">Moteur de Base de Données</label>
                       <select [value]="s.databaseType || 'firebase'" (change)="s.databaseType = $any($event.target).value" class="w-full bg-white border border-amber-200 rounded-xl px-3 py-2 text-xs font-bold text-amber-900">
@@ -3830,7 +3837,7 @@
                 </div>
 
                 <!-- General Settings Grid -->
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label class="block font-bold text-slate-600 mb-1">Raison Sociale</label>
                     <input type="text" [value]="s.companyName" (input)="s.companyName = $any($event.target).value" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs" />
@@ -3899,7 +3906,7 @@
               <p class="text-sm text-slate-500">Historique non-modifiable de toutes les actions système.</p>
             </div>
 
-            <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs">
+            <div class="bg-white rounded-2xl border border-slate-200 overflow-x-auto shadow-xs">
               <table class="w-full text-left text-xs border-collapse">
                 <thead>
                   <tr class="bg-slate-50 text-slate-400 font-bold uppercase tracking-wider border-b border-slate-100">
@@ -4166,7 +4173,7 @@
             </div>
 
             <!-- Role Summary Badges -->
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
               <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-xs flex items-center gap-3">
                 <div class="w-9 h-9 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center">
                   <span class="material-icons text-lg">badge</span>
@@ -5513,7 +5520,7 @@
                     </div>
 
                     <!-- 4 Metric Cards -->
-                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-center">
                       <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-100">
                         <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Facturé</p>
                         <p class="text-lg font-black text-slate-900 mt-1">{{ stmt.totalAmount }} DH</p>
@@ -5570,7 +5577,7 @@
                                 <td class="p-3 text-right">
                                   <button 
                                     type="button" 
-                                    (click)="activeTab.set('orders'); selectedOrderId.set(ord.id)" 
+                                    (click)="showMobileMenu.set(false); activeTab.set('orders'); selectedOrderId.set(ord.id)" 
                                     class="text-blue-600 hover:text-blue-800 font-bold text-[11px] underline cursor-pointer"
                                   >
                                     Ouvrir Commande
@@ -5996,7 +6003,7 @@
 
                           <div class="space-y-3">
                             <p class="font-bold text-slate-700 pt-2">2. Choisir le filtre d'amélioration :</p>
-                            <div class="grid grid-cols-2 gap-2">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                               <button 
                                 type="button" 
                                 (click)="activeImageFilter.set('grayscale(1)')"
@@ -6721,7 +6728,7 @@
 
             <!-- KPI Metric Cards Grid -->
             @if (data.hrStats(); as hrStats) {
-              <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-xs flex flex-col justify-between">
                   <div class="flex items-center justify-between text-slate-400 mb-2">
                     <span class="text-xs font-bold uppercase tracking-wider text-slate-600">Masse Salariale Nette</span>
@@ -7269,7 +7276,7 @@
                         </span>
                       </div>
 
-                      <div class="grid grid-cols-2 gap-2 text-[11px] bg-white p-2.5 rounded-xl border border-slate-100">
+                      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] bg-white p-2.5 rounded-xl border border-slate-100">
                         <div>
                           <span class="text-slate-400 block text-[9px] uppercase font-bold">Salaire de Base</span>
                           <span class="font-black text-emerald-700">{{ (emp.baseSalary || 4000) | number:'1.0-0' }} DH</span>
@@ -7400,7 +7407,7 @@
                     {{ data.directClientsSolde() >= 0 ? '+' : '' }}{{ data.directClientsSolde() | number:'1.2-2' }} DH
                   </div>
                 </div>
-                <div class="grid grid-cols-2 gap-2 text-[10px] mt-2 pt-2 border-t border-amber-200/60 font-medium">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[10px] mt-2 pt-2 border-t border-amber-200/60 font-medium">
                   <div class="text-emerald-700 font-bold flex items-center justify-between">
                     <span>Avances :</span>
                     <span class="font-mono">+{{ data.directClientsAdvances() | number:'1.2-2' }} DH</span>
@@ -7426,7 +7433,7 @@
                     {{ data.b2bPartnersSolde() >= 0 ? '+' : '' }}{{ data.b2bPartnersSolde() | number:'1.2-2' }} DH
                   </div>
                 </div>
-                <div class="grid grid-cols-2 gap-2 text-[10px] mt-2 pt-2 border-t border-indigo-200/60 font-medium">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[10px] mt-2 pt-2 border-t border-indigo-200/60 font-medium">
                   <div class="text-emerald-700 font-bold flex items-center justify-between">
                     <span>Avances :</span>
                     <span class="font-mono">+{{ data.b2bPartnersAdvances() | number:'1.2-2' }} DH</span>
@@ -7452,7 +7459,7 @@
                     {{ data.totalClientsSolde() >= 0 ? '+' : '' }}{{ data.totalClientsSolde() | number:'1.2-2' }} DH
                   </div>
                 </div>
-                <div class="grid grid-cols-2 gap-2 text-[10px] mt-2 pt-2 border-t border-slate-700/80 font-medium">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[10px] mt-2 pt-2 border-t border-slate-700/80 font-medium">
                   <div class="text-emerald-400 font-bold flex items-center justify-between">
                     <span>Total Avances :</span>
                     <span class="font-mono">+{{ data.totalClientsAdvances() | number:'1.2-2' }} DH</span>
@@ -8185,7 +8192,7 @@
                     </span>
                   </div>
 
-                  <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 pt-2">
+                  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 md:grid-cols-5 gap-3 pt-2">
                     <!-- WhatsApp -->
                     <button 
                       type="button" 
@@ -8623,6 +8630,24 @@
                 </span>
               </div>
 
+              <!-- Bouton d'accès au gestionnaire de couverture interactif -->
+              <div class="bg-white/80 p-3 rounded-xl border border-emerald-100/80 flex items-center justify-between gap-4">
+                <div class="space-y-0.5">
+                  <p class="font-bold text-slate-800 text-[11px] flex items-center gap-1">
+                    <span class="material-icons text-xs text-blue-600">map</span>
+                    Carte de couverture interactive
+                  </p>
+                  <p class="text-[10px] text-slate-500">Visualisez et configurez graphiquement vos points de livraison et rayons d'action.</p>
+                </div>
+                <button 
+                  type="button"
+                  (click)="openInteractiveCoverageManager()"
+                  class="bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold text-[11px] px-3.5 py-2 rounded-xl flex items-center gap-1.5 shadow-sm transition-all active:scale-95 cursor-pointer shrink-0"
+                >
+                  <span class="material-icons text-xs font-semibold">explore</span> Gérer la zone de couverture
+                </button>
+              </div>
+
               <!-- Scope selector & Options -->
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
@@ -8813,6 +8838,226 @@
     </div>
   }
 
+  <!-- DEDICATED INTERFACE: GESTIONNAIRE INTERACTIF DE COUVERTURE (MAP + CONTROLS) -->
+  @if (showInteractiveCoverageManager()) {
+    <div class="fixed inset-0 bg-slate-900/85 backdrop-blur-xs flex items-center justify-center z-50 p-4 overflow-y-auto" id="interactive-coverage-manager-overlay">
+      <div class="bg-slate-50 rounded-3xl border border-slate-200/80 w-full max-w-6xl shadow-2xl overflow-hidden my-4 animate-fadeIn flex flex-col h-[90vh]">
+        
+        <!-- Header -->
+        <div class="bg-white border-b border-slate-100 px-6 py-4 flex items-center justify-between shrink-0 shadow-xs">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+              <span class="material-icons text-xl">explore</span>
+            </div>
+            <div>
+              <h4 class="font-black text-slate-900 text-base">
+                Gestionnaire de Couverture Géographique
+              </h4>
+              <p class="text-[11px] text-slate-500 font-medium">
+                Configurez de façon cartographique les zones de service pour : <strong class="text-blue-600">{{ serviceForm.get('name')?.value || 'Nouveau Service' }}</strong>
+              </p>
+            </div>
+          </div>
+          <button (click)="closeInteractiveCoverageManager()" class="bg-slate-100 hover:bg-slate-200 text-slate-600 p-2 rounded-xl transition cursor-pointer flex items-center justify-center">
+            <span class="material-icons text-lg">close</span>
+          </button>
+        </div>
+
+        <!-- Main Body Grid -->
+        <div class="flex-1 overflow-hidden grid grid-cols-1 lg:grid-cols-12 gap-0">
+          
+          <!-- Sidebar (Left Panel - 5 Cols) -->
+          <div class="lg:col-span-5 border-r border-slate-200/80 bg-white overflow-y-auto p-6 space-y-6 flex flex-col justify-between h-full">
+            <div class="space-y-6 text-xs">
+              
+              <!-- Segment 1: Quick Mode Status -->
+              <div class="bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-100 p-4 rounded-2xl">
+                <div class="flex items-start gap-3">
+                  <span class="material-icons text-emerald-600 text-base mt-0.5">verified_user</span>
+                  <div class="space-y-1">
+                    <span class="text-[10px] uppercase font-black text-emerald-800 tracking-wider">Statut Général de la Portée</span>
+                    <p class="text-xs font-bold text-slate-800 capitalize">
+                      Portée actuelle : 
+                      @if (coverageScope() === 'national') {
+                        🇲🇦 Nationale (Tout le Maroc)
+                      } @else if (coverageScope() === 'regional') {
+                        📍 Régionale (Villes ciblées)
+                      } @else if (coverageScope() === 'international') {
+                        🌍 Internationale & En ligne
+                      } @else {
+                        ⭕ Rayon (km du centre) / Autre
+                      }
+                    </p>
+                    <p class="text-[10px] text-slate-500">
+                      Vous pouvez changer la portée globale depuis le formulaire principal ou ajouter des points de livraison spécifiques ci-dessous.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Segment 2: Add Location Point Form -->
+              <div class="space-y-3.5 bg-slate-50/50 p-4 rounded-2xl border border-slate-200/60">
+                <div class="flex items-center gap-1.5 pb-2 border-b border-slate-200/60">
+                  <span class="material-icons text-emerald-600 text-sm">add_location_alt</span>
+                  <span class="font-bold text-slate-800 text-xs">Créer un Nouveau Point de Service</span>
+                </div>
+
+                <div class="space-y-3">
+                  <div>
+                    <label class="block text-[10px] font-bold text-slate-600 uppercase tracking-wider mb-1">Nom du point *</label>
+                    <input 
+                      type="text" 
+                      [value]="newLocationName()" 
+                      (input)="newLocationName.set($any($event.target).value)" 
+                      placeholder="Ex: Agence Centre-Ville, Point Relais Sud" 
+                      class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                    />
+                  </div>
+
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label class="block text-[10px] font-bold text-slate-600 uppercase tracking-wider mb-1">Ville *</label>
+                      <input 
+                        type="text" 
+                        [value]="newLocationCity()" 
+                        (input)="newLocationCity.set($any($event.target).value)" 
+                        placeholder="Ex: Casablanca, Fès, Rabat" 
+                        class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label class="block text-[10px] font-bold text-slate-600 uppercase tracking-wider mb-1">Type de point *</label>
+                      <select 
+                        [value]="newLocationType()" 
+                        (change)="newLocationType.set($any($event.target).value)" 
+                        class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold focus:ring-2 focus:ring-emerald-500 focus:outline-none text-slate-800"
+                      >
+                        <option value="hub">⭐ Hub Principal</option>
+                        <option value="agency">🏢 Agence Locale</option>
+                        <option value="relay_point">📍 Point Relais</option>
+                        <option value="express_zone">⚡ Zone Express</option>
+                        <option value="city_coverage">🏙️ Couverture Ville entière</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label class="block text-[10px] font-bold text-slate-600 uppercase tracking-wider mb-1">Rayon d'action (KM)</label>
+                      <div class="flex items-center gap-1.5 bg-white border border-slate-200 rounded-xl px-3 py-1.5">
+                        <input 
+                          type="number" 
+                          min="1" 
+                          max="1000" 
+                          [value]="newLocationRadiusKm()" 
+                          (input)="newLocationRadiusKm.set(+$any($event.target).value || 35)" 
+                          class="w-full bg-transparent border-0 p-0 text-xs text-right font-bold focus:ring-0 focus:outline-none text-slate-800"
+                        />
+                        <span class="text-slate-400 text-[10px] font-black shrink-0">KM</span>
+                      </div>
+                    </div>
+                    <div>
+                      <label class="block text-[10px] font-bold text-slate-600 uppercase tracking-wider mb-1">Délai moyen</label>
+                      <input 
+                        type="text" 
+                        [value]="newLocationDeliveryDelay()" 
+                        (input)="newLocationDeliveryDelay.set($any($event.target).value)" 
+                        placeholder="Ex: 24h, 12h, Express" 
+                        class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none text-slate-800"
+                      />
+                    </div>
+                  </div>
+
+                  <button 
+                    type="button"
+                    (click)="addCoverageLocationPoint()"
+                    class="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md shadow-emerald-500/15 active:scale-95 transition cursor-pointer"
+                  >
+                    <span class="material-icons text-sm">add_location</span> Ajouter ce point sur la carte
+                  </button>
+                </div>
+              </div>
+
+              <!-- Segment 3: Existing Points List -->
+              <div class="space-y-3">
+                <div class="flex items-center justify-between pb-1 border-b border-slate-100">
+                  <span class="font-bold text-slate-800 text-xs">Points de Service Actuels ({{ coverageLocationsList().length }})</span>
+                  @if (coverageLocationsList().length > 0) {
+                    <span class="text-[9px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded-md font-bold uppercase">Tracés</span>
+                  }
+                </div>
+
+                @if (coverageLocationsList().length > 0) {
+                  <div class="space-y-2 max-h-[22vh] overflow-y-auto pr-1">
+                    @for (loc of coverageLocationsList(); track loc.id) {
+                      <div class="flex items-center justify-between bg-slate-50 hover:bg-slate-100/70 p-3 rounded-2xl border border-slate-200/60 shadow-xs transition group">
+                        <div class="flex items-start gap-2.5">
+                          <span class="material-icons text-emerald-600 text-sm mt-0.5">location_on</span>
+                          <div>
+                            <p class="font-bold text-slate-900 text-xs">{{ loc.name }}</p>
+                            <p class="text-[10px] text-slate-500 font-medium">
+                              {{ loc.city }} • <strong class="text-emerald-700">Rayon: {{ loc.radiusKm }} km</strong> • Délai: {{ loc.deliveryDelay }}
+                            </p>
+                          </div>
+                        </div>
+                        <button 
+                          type="button" 
+                          (click)="removeCoverageLocationPoint(loc.id)" 
+                          class="text-slate-400 hover:text-red-600 p-1.5 rounded-xl hover:bg-white transition cursor-pointer"
+                          title="Supprimer ce point"
+                        >
+                          <span class="material-icons text-sm">delete</span>
+                        </button>
+                      </div>
+                    }
+                  </div>
+                } @else {
+                  <div class="text-center py-6 bg-slate-50 border border-dashed border-slate-200 rounded-2xl">
+                    <span class="material-icons text-slate-300 text-3xl">map_marker</span>
+                    <p class="text-slate-400 italic text-[11px] mt-1.5">Aucun point d'attache sur-mesure tracé.</p>
+                  </div>
+                }
+              </div>
+
+            </div>
+
+            <!-- Panel Footer buttons -->
+            <div class="pt-4 border-t border-slate-150 flex items-center justify-end gap-2">
+              <button 
+                type="button" 
+                (click)="closeInteractiveCoverageManager()"
+                class="bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-black text-xs px-5 py-2.5 rounded-xl shadow-md transition-all active:scale-95 cursor-pointer w-full text-center"
+              >
+                Confirmer & Fermer la carte
+              </button>
+            </div>
+          </div>
+
+          <!-- Leaflet Map Container (Right Panel - 7 Cols) -->
+          <div class="lg:col-span-7 h-full relative bg-slate-200 min-h-[400px] lg:min-h-0 flex flex-col">
+            <!-- Absolute Overlay Badge on Map -->
+            <div class="absolute top-4 left-4 z-10 bg-slate-900/90 backdrop-blur-md border border-slate-800 px-3 py-2 rounded-2xl shadow-lg text-white pointer-events-none">
+              <div class="flex items-center gap-2">
+                <span class="w-2.5 h-2.5 bg-emerald-400 rounded-full animate-pulse"></span>
+                <div>
+                  <span class="text-[10px] uppercase font-black tracking-wider text-slate-400 block leading-none">Simulation de service</span>
+                  <span class="text-xs font-bold block mt-0.5">Rayons d'éligibilité mis à jour</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- The real-time interactive CoverageMap Component -->
+            <div class="w-full flex-1 min-h-[350px] lg:min-h-0 relative">
+              <app-coverage-map [customLocations]="coverageLocationsList()" class="absolute inset-0 w-full h-full"></app-coverage-map>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+  }
+
   <!-- MODAL: LECTEUR DE FICHIER INTÉGRÉ (PDF & IMAGES) -->
   @if (viewingFile(); as file) {
     <div class="fixed inset-0 bg-slate-900/80 backdrop-blur-md flex items-center justify-center z-50 p-4">
@@ -8943,7 +9188,7 @@
               <label class="block font-bold text-slate-700 uppercase tracking-wider text-[11px]">
                 2. Base & Temps de Travail
               </label>
-              <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                 <div>
                   <label class="block font-semibold text-slate-600 mb-1">Salaire Base Mensuel (DH) *</label>
                   <input 
@@ -9009,7 +9254,7 @@
               <label class="block font-bold text-blue-900 uppercase tracking-wider text-[11px]">
                 3. Primes & Indemnités (DH)
               </label>
-              <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                 <div>
                   <label class="block font-semibold text-slate-600 mb-1">Prime de Production</label>
                   <input 
@@ -9106,7 +9351,7 @@
                   <span class="text-[10px] text-slate-300">Normes Sociales Marocaines</span>
                 </div>
 
-                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
                   <div class="bg-white/5 p-2.5 rounded-xl">
                     <span class="text-slate-400 block text-[10px]">Salaire Brut Imposable</span>
                     <span class="font-bold text-sm text-white">{{ cs.grossSalary | number:'1.2-2' }} DH</span>
@@ -9251,7 +9496,7 @@
           </div>
 
           <!-- Line by line Breakdown Table -->
-          <div class="border border-slate-300 rounded-xl overflow-hidden">
+          <div class="border border-slate-300 rounded-xl overflow-x-auto">
             <table class="w-full text-left text-xs border-collapse">
               <thead>
                 <tr class="bg-slate-800 text-white font-bold uppercase text-[10px]">
@@ -9379,7 +9624,7 @@
           </div>
 
           <!-- Signatures & Stamp Area -->
-          <div class="grid grid-cols-2 gap-8 pt-4">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-8 pt-4">
             <div class="border border-slate-300 rounded-xl p-4 h-28 flex flex-col justify-between">
               <span class="text-[10px] uppercase font-bold text-slate-500">Signature du Salarié (Précédée de "Lu et Approuvé")</span>
               <div class="border-b border-dashed border-slate-300 pb-1"></div>
@@ -9439,7 +9684,7 @@
             </select>
           </div>
 
-          <div class="grid grid-cols-2 gap-3">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label class="block font-bold text-slate-700 mb-1">Date de Début *</label>
               <input 
@@ -10864,7 +11109,7 @@
         <!-- Body -->
         <div class="p-6 overflow-y-auto space-y-6 flex-1">
           <!-- Summary Metrics Bento -->
-          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             <div class="bg-slate-50 border border-slate-200 rounded-xl p-3.5">
               <span class="text-[10px] font-bold uppercase text-slate-400 tracking-wider">Total URL Indexées</span>
               <p class="text-2xl font-black text-slate-900 mt-1">{{ sitemapStats().total }}</p>
