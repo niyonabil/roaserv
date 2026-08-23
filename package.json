@@ -2,6 +2,7 @@
   "name": "root-delegator",
   "version": "0.0.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "build": "ng build",
     "dev": "PORT=3000 ng serve --port=3000 --host=0.0.0.0 --allowed-hosts=true ${DISABLE_HMR:+--live-reload=false}"

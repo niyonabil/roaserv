@@ -234,6 +234,22 @@
       "details": "Création catégorie Test �ph�m�re"
     },
     {
+      "details": "Paramètres système mis à jour.",
+      "action": "Mise à jour paramètres",
+      "timestamp": "2026-08-23T20:29:08.482Z",
+      "userId": "usr-admin-1",
+      "userName": "NABIL",
+      "id": "LOG-IC8DGT4"
+    },
+    {
+      "action": "Catégorie métier",
+      "id": "LOG-ITX0VAG",
+      "details": "Création catégorie Imprimerie",
+      "userId": "usr-admin-1",
+      "timestamp": "2026-08-23T20:26:05.300Z",
+      "userName": "NABIL"
+    },
+    {
       "details": "Commande CMD-2026-0001 créée pour le service Saisie manuscrit vers Word.",
       "action": "Création Commande",
       "timestamp": "2026-08-23T09:08:24.457Z",
@@ -541,204 +557,204 @@
     }
   ],
   "settings": {
-    "databaseType": "firebase",
+    "depositRules": {
+      "very_urgent": 80,
+      "fast": 60,
+      "normal": 50,
+      "urgent": 70
+    },
+    "googleDriveTransferLogs": [],
     "address": "14 Boulevard d'Anfa, Étage 3, Casablanca, Maroc",
-    "isSetupCompleted": true,
+    "email": "contact@digidocs.ma",
+    "printPricing": {
+      "basePricePerPage": {
+        "nb_a4": 0.5,
+        "couleur_photo": 5,
+        "nb_a5": 0.4,
+        "nb_photo": 2.5,
+        "nb_a3": 1,
+        "couleur_grand_format": 60,
+        "couleur_a4": 2,
+        "couleur_a5": 1.6,
+        "nb_grand_format": 25,
+        "couleur_a3": 4
+      },
+      "paperSurcharge": {
+        "photo_200g": 1.2,
+        "couleur_speciale": 0.5,
+        "standard_80g": 0,
+        "bristol_250g": 0.9,
+        "couche_135g": 0.3
+      },
+      "finishingForfaits": {
+        "pliage": 0.5,
+        "perforation": 1,
+        "massicotage": 3,
+        "reliure_spirale": 15,
+        "thermoreliure": 25,
+        "plastification": 5,
+        "agrafage": 1
+      },
+      "volumeTiers": [
+        {
+          "minPages": 500,
+          "discountPercent": 20
+        },
+        {
+          "discountPercent": 10,
+          "minPages": 100
+        }
+      ],
+      "deliveryFees": {
+        "livraison_nationale": 45,
+        "coursier_local": 20,
+        "retrait_atelier": 0
+      },
+      "duplexDiscountPercent": 20,
+      "urgencyMultipliers": {
+        "very_urgent": 2,
+        "fast": 1.3,
+        "normal": 1,
+        "urgent": 1.6
+      }
+    },
+    "saasWorkspaceTitle": "SAAS WORKSPACE",
+    "globalGeminiApiKeyEnabled": true,
+    "phone": "+212 522-123456",
+    "globalGeminiApiKey": "",
+    "dbConfig": {
+      "lastTestedAt": "2026-08-21T11:52:09.613Z",
+      "databaseName": "",
+      "connected": true,
+      "port": 3306,
+      "password": "",
+      "host": "",
+      "username": ""
+    },
     "urgencySurcharges": {
+      "very_urgent": 100,
       "normal": 0,
       "fast": 30,
-      "urgent": 60,
-      "very_urgent": 100
+      "urgent": 60
     },
+    "isSetupCompleted": true,
+    "currency": "DH",
     "serviceCategories": [
       {
         "key": "saisie",
+        "isActive": true,
+        "createdAt": "2026-08-23T14:47:54.659Z",
         "label": "Saisie de données & transcription",
         "isSystem": true,
-        "icon": "edit_note",
+        "icon": "edit_note"
+      },
+      {
+        "createdAt": "2026-08-23T14:47:54.659Z",
+        "isSystem": true,
+        "label": "Numérisation, OCR & Conversion",
+        "icon": "document_scanner",
+        "key": "conversion",
+        "isActive": true
+      },
+      {
         "isActive": true,
+        "label": "Mise en forme & PAO avancée",
+        "icon": "auto_fix_high",
+        "createdAt": "2026-08-23T14:47:54.659Z",
+        "key": "mise_en_forme",
+        "isSystem": true
+      },
+      {
+        "isSystem": true,
+        "label": "Traitement & Nettoyage de données",
+        "icon": "filter_alt",
+        "key": "traitement",
+        "createdAt": "2026-08-23T14:47:54.659Z",
+        "isActive": true
+      },
+      {
+        "isSystem": true,
+        "icon": "print",
+        "label": "Impression papier & reliure",
+        "isActive": true,
+        "createdAt": "2026-08-23T14:47:54.659Z",
+        "key": "impression"
+      },
+      {
+        "icon": "local_shipping",
+        "key": "livraison",
+        "isActive": true,
+        "label": "Expédition & Livraison physique",
+        "isSystem": true,
+        "createdAt": "2026-08-23T14:47:54.659Z"
+      },
+      {
+        "label": "Design Graphique & Logo",
+        "icon": "palette",
+        "key": "design_graphique",
+        "isActive": false,
+        "isSystem": true,
         "createdAt": "2026-08-23T14:47:54.659Z"
       },
       {
         "createdAt": "2026-08-23T14:47:54.659Z",
-        "isActive": true,
-        "label": "Numérisation, OCR & Conversion",
-        "icon": "document_scanner",
-        "isSystem": true,
-        "key": "conversion"
-      },
-      {
-        "isSystem": true,
-        "createdAt": "2026-08-23T14:47:54.659Z",
-        "label": "Mise en forme & PAO avancée",
-        "key": "mise_en_forme",
-        "icon": "auto_fix_high",
-        "isActive": true
-      },
-      {
-        "createdAt": "2026-08-23T14:47:54.659Z",
-        "isActive": true,
-        "key": "traitement",
-        "label": "Traitement & Nettoyage de données",
-        "icon": "filter_alt",
-        "isSystem": true
-      },
-      {
-        "isSystem": true,
-        "key": "impression",
-        "isActive": true,
-        "createdAt": "2026-08-23T14:47:54.659Z",
-        "label": "Impression papier & reliure",
-        "icon": "print"
-      },
-      {
-        "icon": "local_shipping",
-        "label": "Expédition & Livraison physique",
-        "createdAt": "2026-08-23T14:47:54.659Z",
-        "isActive": true,
-        "key": "livraison",
-        "isSystem": true
-      },
-      {
-        "key": "design_graphique",
-        "createdAt": "2026-08-23T14:47:54.659Z",
-        "label": "Design Graphique & Logo",
-        "isActive": false,
-        "isSystem": true,
-        "icon": "palette"
-      },
-      {
-        "isSystem": true,
-        "createdAt": "2026-08-23T14:47:54.659Z",
-        "icon": "translate",
-        "isActive": false,
         "label": "Traduction & Rédaction",
-        "key": "traduction"
+        "key": "traduction",
+        "isActive": false,
+        "icon": "translate",
+        "isSystem": true
       },
       {
-        "createdAt": "2026-08-23T14:47:54.659Z",
-        "key": "marketing_digital",
-        "isActive": false,
-        "icon": "campaign",
         "label": "Marketing Digital & Réseaux sociaux",
+        "key": "marketing_digital",
+        "icon": "campaign",
+        "createdAt": "2026-08-23T14:47:54.659Z",
+        "isActive": false,
         "isSystem": true
       },
       {
         "isSystem": true,
-        "createdAt": "2026-08-23T14:47:54.659Z",
-        "key": "dev_web",
         "icon": "code",
         "label": "Développement Web & Tech",
+        "createdAt": "2026-08-23T14:47:54.659Z",
+        "key": "dev_web",
         "isActive": false
       },
       {
-        "isActive": false,
-        "key": "video_audio",
         "isSystem": true,
-        "createdAt": "2026-08-23T14:47:54.659Z",
+        "key": "video_audio",
         "label": "Vidéo, Montage & Audio",
+        "createdAt": "2026-08-23T14:47:54.659Z",
+        "isActive": false,
         "icon": "movie"
       },
       {
+        "isSystem": true,
+        "key": "emballage_pod",
         "createdAt": "2026-08-23T14:47:54.659Z",
         "isActive": false,
-        "key": "emballage_pod",
-        "isSystem": true,
         "label": "Emballage & Print-on-Demand",
         "icon": "inventory"
       },
       {
         "icon": "science",
-        "createdAt": "2026-08-23T14:48:24.846Z",
         "label": "Test �ph�m�re",
+        "isActive": true,
         "key": "test_ph_m_re",
-        "isActive": true
+        "createdAt": "2026-08-23T14:48:24.846Z"
       }
     ],
-    "saasWorkspaceTitle": "SAAS WORKSPACE",
-    "currency": "DH",
-    "taxRate": 20,
-    "depositRules": {
-      "urgent": 70,
-      "normal": 50,
-      "very_urgent": 80,
-      "fast": 60
-    },
-    "affiliateCommissionConfig": {
-      "isAffiliateSystemEnabled": true,
-      "minimumPayoutAmount": 100,
-      "generalCommissionRate": 10,
-      "serviceCommissionRates": {}
-    },
-    "companyName": "DigiDocs Services SARL",
-    "logoUrl": "",
-    "globalGeminiApiKey": "",
-    "printPricing": {
-      "finishingForfaits": {
-        "plastification": 5,
-        "agrafage": 1,
-        "massicotage": 3,
-        "thermoreliure": 25,
-        "perforation": 1,
-        "reliure_spirale": 15,
-        "pliage": 0.5
-      },
-      "basePricePerPage": {
-        "couleur_a5": 1.6,
-        "nb_a4": 0.5,
-        "couleur_a3": 4,
-        "nb_a3": 1,
-        "nb_photo": 2.5,
-        "nb_a5": 0.4,
-        "nb_grand_format": 25,
-        "couleur_photo": 5,
-        "couleur_grand_format": 60,
-        "couleur_a4": 2
-      },
-      "volumeTiers": [
-        {
-          "discountPercent": 20,
-          "minPages": 500
-        },
-        {
-          "minPages": 100,
-          "discountPercent": 10
-        }
-      ],
-      "duplexDiscountPercent": 20,
-      "urgencyMultipliers": {
-        "normal": 1,
-        "very_urgent": 2,
-        "urgent": 1.6,
-        "fast": 1.3
-      },
-      "paperSurcharge": {
-        "couleur_speciale": 0.5,
-        "photo_200g": 1.2,
-        "couche_135g": 0.3,
-        "bristol_250g": 0.9,
-        "standard_80g": 0
-      },
-      "deliveryFees": {
-        "coursier_local": 20,
-        "livraison_nationale": 45,
-        "retrait_atelier": 0
-      }
-    },
-    "globalGeminiApiKeyEnabled": true,
     "resourceDocuments": [],
-    "googleDriveTransferLogs": [],
-    "email": "contact@digidocs.ma",
-    "phone": "+212 522-123456",
     "googleDriveAccounts": [],
-    "dbConfig": {
-      "password": "",
-      "username": "",
-      "port": 3306,
-      "connected": true,
-      "databaseName": "",
-      "host": "",
-      "lastTestedAt": "2026-08-21T11:52:09.613Z"
+    "logoUrl": "",
+    "companyName": "DigiDocs Services SARL",
+    "taxRate": 20,
+    "databaseType": "firebase",
+    "affiliateCommissionConfig": {
+      "isAffiliateSystemEnabled": false,
+      "serviceCommissionRates": {},
+      "generalCommissionRate": 10,
+      "minimumPayoutAmount": 100
     }
   }
 }

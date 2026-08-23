@@ -5,11 +5,16 @@ import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { initializeFirestore, doc, getDoc, getDocs, setDoc, collection, deleteDoc } from 'firebase/firestore';
 // Import JSON compatible serverless (Vercel bundle CJS : les attributs d'import JSON ne passent pas)
-const require = createRequire(import.meta.url);
-// 🖨️ Module Imprimerie — types partagés avec le front (source unique: src/app/data.ts)
+// Import JSON compatible serverless (Vercel bundle CJS : import.meta.url est undefined)
 let defaultFirebaseAppletConfig: any = {};
-try { defaultFirebaseAppletConfig = require('../firebase-applet-config.json'); }
-catch { try { defaultFirebaseAppletConfig = JSON.parse(readFileSync(join(process.cwd(), 'firebase-applet-config.json'), 'utf-8')); } catch { /* pas de config par défaut */ } }
+try {
+  const _req = createRequire(
+    (typeof import.meta !== 'undefined' && import.meta.url) ? import.meta.url
+      : (typeof __filename !== 'undefined' ? __filename : join(process.cwd(), 'index.js'))
+  );
+  try { defaultFirebaseAppletConfig = _req('../firebase-applet-config.json'); }
+  catch { defaultFirebaseAppletConfig = JSON.parse(readFileSync(join(process.cwd(), 'firebase-applet-config.json'), 'utf-8')); }
+} catch { /* pas de config par défaut — FIREBASE_CONFIG env ou fichier cwd seront utilisés plus bas */ }
 import type {
   PrintJob,
   PrintMachine,

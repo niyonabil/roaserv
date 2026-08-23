@@ -3,6 +3,11 @@
   "framework": "angular",
   "buildCommand": "npm run build",
   "outputDirectory": "dist/browser",
+  "functions": {
+    "api/index.js": {
+      "includeFiles": "dist/**"
+    }
+  },
   "rewrites": [
     {
       "source": "/api/(.*)",
