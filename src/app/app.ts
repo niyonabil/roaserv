@@ -4748,6 +4748,21 @@ export class App {
     }
   }
 
+  affiliateSaveState = signal<'idle' | 'saving' | 'saved' | 'error'>('idle');
+
+  async saveAffiliateSettings(s: SystemSettings) {
+    this.affiliateSaveState.set('saving');
+    try {
+      await this.data.saveSettings({ affiliateCommissionConfig: s.affiliateCommissionConfig });
+      this.affiliateSaveState.set('saved');
+      setTimeout(() => this.affiliateSaveState.set('idle'), 3000);
+    } catch (err) {
+      console.error('Erreur sauvegarde affiliation:', err);
+      this.affiliateSaveState.set('error');
+      setTimeout(() => this.affiliateSaveState.set('idle'), 5000);
+    }
+  }
+
   number(val: unknown) {
     return Number(val);
   }
