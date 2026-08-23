@@ -45,13 +45,27 @@ import {
   PrintStockMovement,
   DeliveryTask,
   PrintPricingConfig,
+  ServiceCategory,
 } from './server-db';
 
+// Résolution de chemin compatible Vercel/serverless :
+// en bundle CJS, `import.meta` est indéfini — on retombe sur process.cwd().
+const _metaDir: string | undefined = (() => {
+  try { return (import.meta as unknown as { dirname?: string })?.dirname ?? undefined; }
+  catch { return undefined; }
+})();
+const _cwd = process.cwd();
+
 const possiblePaths = [
-  join(import.meta.dirname, '../browser'),       // Default SSR structure (when outputPath is dist/app)
-  join(import.meta.dirname, '../'),              // outputPath has base="dist", browser=""
-  join(import.meta.dirname, '../../dist'),       // running node src/server.ts directly from workspace root
-  join(import.meta.dirname, '../dist')           // backup check
+  ...(typeof _metaDir === 'string' ? [
+    join(_metaDir, '../browser'),       // Default SSR structure (when outputPath is dist/app)
+    join(_metaDir, '../'),              // outputPath has base="dist", browser=""
+    join(_metaDir, '../../dist'),       // running node src/server.ts directly from workspace root
+    join(_metaDir, '../dist')           // backup check
+  ] : []),
+  join(_cwd, 'dist/browser'),           // Vercel / serverless: cwd = racine du projet
+  join(_cwd, 'browser'),
+  join(_cwd, 'dist')
 ];
 
 let browserDistFolder = '';
@@ -1277,6 +1291,98 @@ app.get('/api/services', async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: (err as Error).message });
   }
+});
+
+// --- Catégories métier éditables (stockées dans settings.serviceCategories) ---
+const DEFAULT_SERVICE_CATEGORIES: ServiceCategory[] = [
+  { key: 'saisie', label: 'Saisie de données & transcription', icon: 'edit_note', isActive: true, isSystem: true, createdAt: new Date().toISOString() },
+  { key: 'conversion', label: 'Numérisation, OCR & Conversion', icon: 'document_scanner', isActive: true, isSystem: true, createdAt: new Date().toISOString() },
+  { key: 'mise_en_forme', label: 'Mise en forme & PAO avancée', icon: 'auto_fix_high', isActive: true, isSystem: true, createdAt: new Date().toISOString() },
+  { key: 'traitement', label: 'Traitement & Nettoyage de données', icon: 'filter_alt', isActive: true, isSystem: true, createdAt: new Date().toISOString() },
+  { key: 'impression', label: 'Impression papier & reliure', icon: 'print', isActive: true, isSystem: true, createdAt: new Date().toISOString() },
+  { key: 'livraison', label: 'Expédition & Livraison physique', icon: 'local_shipping', isActive: true, isSystem: true, createdAt: new Date().toISOString() },
+  // Catégories orientées marketplace (Fiverr-like) prêtes à activer
+  { key: 'design_graphique', label: 'Design Graphique & Logo', icon: 'palette', isActive: false, isSystem: true, createdAt: new Date().toISOString() },
+  { key: 'traduction', label: 'Traduction & Rédaction', icon: 'translate', isActive: false, isSystem: true, createdAt: new Date().toISOString() },
+  { key: 'marketing_digital', label: 'Marketing Digital & Réseaux sociaux', icon: 'campaign', isActive: false, isSystem: true, createdAt: new Date().toISOString() },
+  { key: 'dev_web', label: 'Développement Web & Tech', icon: 'code', isActive: false, isSystem: true, createdAt: new Date().toISOString() },
+  { key: 'video_audio', label: 'Vidéo, Montage & Audio', icon: 'movie', isActive: false, isSystem: true, createdAt: new Date().toISOString() },
+  { key: 'emballage_pod', label: 'Emballage & Print-on-Demand', icon: 'inventory', isActive: false, isSystem: true, createdAt: new Date().toISOString() }
+];
+
+function getServiceCategories(settings: SystemSettings): ServiceCategory[] {
+  const stored = (settings as SystemSettings & { serviceCategories?: ServiceCategory[] }).serviceCategories;
+  if (!stored || !Array.isArray(stored) || stored.length === 0) return DEFAULT_SERVICE_CATEGORIES;
+  // fusion : catégories par défaut manquantes ajoutées automatiquement
+  const keys = new Set(stored.map(c => c.key));
+  for (const d of DEFAULT_SERVICE_CATEGORIES) if (!keys.has(d.key)) stored.push(d);
+  return stored;
+}
+
+app.get('/api/service-categories', async (req, res) => {
+  try {
+    const db = await loadDatabase();
+    res.json(getServiceCategories(db.settings));
+  } catch (err) { res.status(500).json({ error: (err as Error).message }); }
+});
+
+app.post('/api/service-categories', async (req, res): Promise<void> => {
+  try {
+    const db = await loadDatabase();
+    const cats = getServiceCategories(db.settings);
+    const rawKey = String(req.body.key || req.body.label || '').trim();
+    if (!rawKey) { res.status(400).json({ error: 'Clé ou libellé requis.' }); return; }
+    const key = rawKey.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
+    if (cats.some(c => c.key === key)) { res.status(400).json({ error: `La catégorie "${key}" existe déjà.` }); return; }
+    const cat: ServiceCategory = {
+      key, label: String(req.body.label || rawKey).trim(),
+      icon: String(req.body.icon || 'category'),
+      description: req.body.description || undefined,
+      isActive: req.body.isActive !== false,
+      createdAt: new Date().toISOString()
+    };
+    cats.push(cat);
+    (db.settings as SystemSettings & { serviceCategories?: ServiceCategory[] }).serviceCategories = cats;
+    await saveDatabase(db);
+    await logAction(String(req.body.userId || 'system'), String(req.body.userName || 'Système'), 'Catégorie métier', `Création catégorie ${cat.label}`);
+    res.json(cat);
+  } catch (err) { res.status(500).json({ error: (err as Error).message }); }
+});
+
+app.put('/api/service-categories/:key', async (req, res): Promise<void> => {
+  try {
+    const db = await loadDatabase();
+    const cats = getServiceCategories(db.settings);
+    const cat = cats.find(c => c.key === req.params.key);
+    if (!cat) { res.status(404).json({ error: 'Catégorie introuvable.' }); return; }
+    if (req.body.newKey && req.body.newKey !== cat.key) {
+      // renommage de clé : répercuter sur les services existants
+      const services = await Promise.resolve(db.services.filter(s => s.category === cat.key));
+      for (const s of services) s.category = req.body.newKey as Service['category'];
+      cat.key = String(req.body.newKey);
+    }
+    if (req.body.label) cat.label = String(req.body.label);
+    if (req.body.icon) cat.icon = String(req.body.icon);
+    if (typeof req.body.description === 'string') cat.description = req.body.description;
+    if (typeof req.body.isActive === 'boolean') cat.isActive = req.body.isActive;
+    (db.settings as SystemSettings & { serviceCategories?: ServiceCategory[] }).serviceCategories = cats;
+    await saveDatabase(db);
+    res.json(cat);
+  } catch (err) { res.status(500).json({ error: (err as Error).message }); }
+});
+
+app.delete('/api/service-categories/:key', async (req, res): Promise<void> => {
+  try {
+    const db = await loadDatabase();
+    const cats = getServiceCategories(db.settings);
+    const cat = cats.find(c => c.key === req.params.key);
+    if (!cat) { res.status(404).json({ error: 'Catégorie introuvable.' }); return; }
+    const inUse = db.services.filter(s => s.category === cat.key).length;
+    if (inUse > 0) { res.status(400).json({ error: `Impossible : ${inUse} service(s) utilisent cette catégorie. Déplacez-les d'abord.` }); return; }
+    (db.settings as SystemSettings & { serviceCategories?: ServiceCategory[] }).serviceCategories = cats.filter(c => c.key !== cat.key);
+    await saveDatabase(db);
+    res.json({ success: true });
+  } catch (err) { res.status(500).json({ error: (err as Error).message }); }
 });
 
 app.post('/api/services', async (req, res) => {
@@ -4440,7 +4546,7 @@ app.use((req, res, next) => {
  * Start the server if this module is the main entry point, or it is ran via PM2.
  * The server listens on the port defined by the `PORT` environment variable, or defaults to 4000.
  */
-if (isMainModule(import.meta.url) || process.env['pm_id']) {
+if ((process.env['VERCEL'] !== '1' && (() => { try { return isMainModule(import.meta.url); } catch { return false; } })()) || process.env['pm_id']) {
   const port = 3000;
   app.listen(port, (error) => {
     if (error) {

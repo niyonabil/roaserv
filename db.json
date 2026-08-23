@@ -1,200 +1,200 @@
 {
   "users": [
     {
-      "role": "admin",
+      "username": "admin",
       "active": true,
-      "hireDate": "2024-01-01",
-      "cinNumber": "BK100200",
-      "cnssNumber": "123456789",
-      "jobTitle": "Directeur Général",
-      "contractType": "cdi",
-      "password": "Roa0629605450",
-      "bankName": "Attijariwafa Bank",
-      "city": "Casablanca",
       "id": "usr-admin-1",
-      "employeeCode": "DIR-001",
-      "ribNumber": "011780000012345678901234",
-      "name": "NABIL",
-      "department": "direction",
-      "phone": "+212 661-000001",
-      "vacationBalance": 22,
+      "jobTitle": "Directeur Général",
       "email": "boguiman@gmail.com",
+      "phone": "+212 661-000001",
+      "contractType": "cdi",
+      "department": "direction",
+      "cnssNumber": "123456789",
+      "vacationBalance": 22,
+      "bankName": "Attijariwafa Bank",
+      "ribNumber": "011780000012345678901234",
+      "role": "admin",
+      "city": "Casablanca",
       "baseSalary": 18000,
-      "username": "admin"
+      "employeeCode": "DIR-001",
+      "password": "Roa0629605450",
+      "cinNumber": "BK100200",
+      "hireDate": "2024-01-01",
+      "name": "NABIL"
     },
     {
-      "city": "Casablanca",
-      "name": "nabil",
-      "address": "",
-      "privileges": {
-        "canManageOrders": false,
-        "canManageClients": false,
-        "canViewFinancials": false,
-        "canManageTools": false,
-        "canValidateQuality": false,
-        "canDeliverOrders": false
-      },
-      "password": "Roa0629605450",
-      "phone": "+126255656",
-      "createdAt": "2026-08-21T17:22:43.290Z",
-      "role": "client",
-      "ice": "",
-      "email": "niyo@gmail.com",
       "username": "niyonabil",
-      "company": "",
-      "active": true,
-      "id": "usr-yl4d9i7",
+      "commissionRate": 10,
       "affiliateCode": "AFF-M6UB1",
-      "commissionRate": 10
+      "address": "",
+      "active": true,
+      "privileges": {
+        "canManageClients": false,
+        "canValidateQuality": false,
+        "canViewFinancials": false,
+        "canManageOrders": false,
+        "canDeliverOrders": false,
+        "canManageTools": false
+      },
+      "company": "",
+      "email": "niyo@gmail.com",
+      "role": "client",
+      "phone": "+126255656",
+      "city": "Casablanca",
+      "ice": "",
+      "password": "Roa0629605450",
+      "createdAt": "2026-08-21T17:22:43.290Z",
+      "name": "nabil",
+      "id": "usr-yl4d9i7"
     }
   ],
   "partners": [],
   "partnerCustomers": [],
   "services": [
     {
-      "description": "Transformation de manuscrits rédigés à la main en documents Word parfaitement formatés.",
-      "basePrice": 0,
-      "options": [
-        {
-          "name": "Correction de texte avancée (+0.5 DH/Page)",
-          "price": 0.5,
-          "id": "opt-1-1"
-        },
-        {
-          "price": 0.5,
-          "id": "opt-1-2",
-          "name": "Mise en page professionnelle complexe (+0.5 DH/Page)"
-        },
-        {
-          "name": "Insertion de table des matières et index (+20 DH fixe)",
-          "price": 20,
-          "id": "opt-1-3"
-        }
-      ],
-      "category": "saisie",
-      "unitPriceName": "Page",
-      "unitPrice": 2,
       "priceMethod": "per_page",
-      "isActive": true,
       "id": "srv-1",
-      "name": "Saisie de manuscrit manuscrit vers Word"
-    },
-    {
-      "basePrice": 50,
       "isActive": true,
-      "name": "Saisie de listes et tableaux Excel",
-      "unitPrice": 80,
-      "options": [
-        {
-          "price": 30,
-          "id": "opt-2-1",
-          "name": "Formatage conditionnel & formules de calcul (+30 DH fixe)"
-        }
-      ],
-      "description": "Saisie, tri et classement de données manuscrites ou scannées dans des tableaux Excel complexes.",
-      "category": "saisie",
-      "unitPriceName": "Heure",
-      "priceMethod": "per_hour",
-      "id": "srv-2"
-    },
-    {
-      "description": "Extraction de texte à partir de documents PDF ou scans non-éditables via un traitement OCR avancé et relecture.",
       "basePrice": 0,
-      "category": "conversion",
-      "name": "Conversion PDF vers Word/Excel avec OCR",
+      "description": "Transformation de manuscrits rédigés à la main en documents Word parfaitement formatés.",
+      "category": "saisie",
       "unitPriceName": "Page",
-      "unitPrice": 3,
-      "priceMethod": "per_page",
-      "id": "srv-3",
       "options": [
         {
-          "name": "Conservation stricte de la mise en page d'origine (+1 DH/Page)",
-          "price": 1,
-          "id": "opt-3-1"
-        }
-      ],
-      "isActive": true
-    },
-    {
-      "unitPrice": 1.5,
-      "basePrice": 50,
-      "id": "srv-4",
-      "isActive": true,
-      "options": [
-        {
-          "name": "Pagination et gestion des en-têtes (+15 DH fixe)",
-          "price": 15,
-          "id": "opt-4-1"
+          "id": "opt-1-1",
+          "name": "Correction de texte avancée (+0.5 DH/Page)",
+          "price": 0.5
         },
         {
-          "name": "Génération de sommaire dynamique (+10 DH fixe)",
-          "price": 10,
-          "id": "opt-4-2"
-        }
-      ],
-      "category": "mise_en_forme",
-      "priceMethod": "per_page",
-      "description": "Mise aux normes académiques et éditoriales de rapports, mémoires ou livres (polices, marges, pagination, titres).",
-      "unitPriceName": "Page",
-      "name": "Mise en page Word de Mémoire/Livre"
-    },
-    {
-      "basePrice": 0,
-      "description": "Relecture approfondie pour correction de l'orthographe, de la syntaxe, de la grammaire et de la ponctuation.",
-      "isActive": true,
-      "unitPriceName": "Mot",
-      "unitPrice": 0.05,
-      "name": "Correction orthographique et relecture",
-      "options": [],
-      "priceMethod": "per_word",
-      "id": "srv-5",
-      "category": "traitement"
-    },
-    {
-      "category": "traitement",
-      "options": [
+          "price": 0.5,
+          "name": "Mise en page professionnelle complexe (+0.5 DH/Page)",
+          "id": "opt-1-2"
+        },
         {
-          "id": "opt-6-1",
-          "name": "Indexation et signets cliquables (+20 DH)",
+          "id": "opt-1-3",
+          "name": "Insertion de table des matières et index (+20 DH fixe)",
           "price": 20
         }
       ],
+      "name": "Saisie de manuscrit manuscrit vers Word",
+      "unitPrice": 2
+    },
+    {
+      "id": "srv-2",
+      "isActive": true,
+      "unitPrice": 80,
+      "name": "Saisie de listes et tableaux Excel",
+      "priceMethod": "per_hour",
+      "basePrice": 50,
+      "unitPriceName": "Heure",
+      "options": [
+        {
+          "name": "Formatage conditionnel & formules de calcul (+30 DH fixe)",
+          "price": 30,
+          "id": "opt-2-1"
+        }
+      ],
+      "category": "saisie",
+      "description": "Saisie, tri et classement de données manuscrites ou scannées dans des tableaux Excel complexes."
+    },
+    {
+      "category": "conversion",
+      "basePrice": 0,
+      "description": "Extraction de texte à partir de documents PDF ou scans non-éditables via un traitement OCR avancé et relecture.",
+      "id": "srv-3",
+      "name": "Conversion PDF vers Word/Excel avec OCR",
+      "priceMethod": "per_page",
+      "unitPriceName": "Page",
+      "isActive": true,
+      "options": [
+        {
+          "price": 1,
+          "name": "Conservation stricte de la mise en page d'origine (+1 DH/Page)",
+          "id": "opt-3-1"
+        }
+      ],
+      "unitPrice": 3
+    },
+    {
+      "basePrice": 50,
+      "isActive": true,
+      "id": "srv-4",
+      "options": [
+        {
+          "price": 15,
+          "id": "opt-4-1",
+          "name": "Pagination et gestion des en-têtes (+15 DH fixe)"
+        },
+        {
+          "price": 10,
+          "id": "opt-4-2",
+          "name": "Génération de sommaire dynamique (+10 DH fixe)"
+        }
+      ],
+      "unitPriceName": "Page",
+      "name": "Mise en page Word de Mémoire/Livre",
+      "category": "mise_en_forme",
+      "description": "Mise aux normes académiques et éditoriales de rapports, mémoires ou livres (polices, marges, pagination, titres).",
+      "priceMethod": "per_page",
+      "unitPrice": 1.5
+    },
+    {
+      "name": "Correction orthographique et relecture",
+      "basePrice": 0,
+      "category": "traitement",
+      "description": "Relecture approfondie pour correction de l'orthographe, de la syntaxe, de la grammaire et de la ponctuation.",
+      "unitPriceName": "Mot",
+      "isActive": true,
+      "unitPrice": 0.05,
+      "priceMethod": "per_word",
+      "options": [],
+      "id": "srv-5"
+    },
+    {
+      "category": "traitement",
+      "basePrice": 50,
+      "id": "srv-6",
+      "unitPriceName": "Travail",
       "name": "Fusion, Découpage et Indexation PDF",
       "description": "Regroupement de several fichiers PDF, réorganisation de l'ordre des pages et création de signets d'indexation.",
-      "unitPrice": 0,
-      "id": "srv-6",
-      "basePrice": 50,
+      "isActive": true,
       "priceMethod": "fixed",
-      "unitPriceName": "Travail",
-      "isActive": true
+      "unitPrice": 0,
+      "options": [
+        {
+          "price": 20,
+          "name": "Indexation et signets cliquables (+20 DH)",
+          "id": "opt-6-1"
+        }
+      ]
     }
   ],
   "orders": [
     {
-      "reference": "CMD-2026-0001",
+      "deadline": "2026-08-28T09:08:23.645Z",
+      "urgency": "normal",
       "createdAt": "2026-08-23T09:08:23.645Z",
       "updatedAt": "2026-08-23T09:08:23.645Z",
-      "serviceId": "srv-1",
-      "description": "M�moire 120 pages � imprimer et relier",
-      "serviceCategory": "saisie",
-      "status": "DEMANDE_ENVOYEE",
       "messages": [],
-      "commissionRate": 10,
-      "customerType": "particular",
-      "urgency": "normal",
-      "tasks": [],
-      "serviceName": "Saisie manuscrit vers Word",
-      "customerDetails": {
-        "email": "ahmed@test.ma",
-        "address": "12 Rue Test",
-        "name": "Ahmed Test",
-        "city": "Casablanca",
-        "phone": "0661000000"
-      },
-      "files": [],
-      "deadline": "2026-08-28T09:08:23.645Z",
       "id": "ord-fp89wo6",
-      "quantity": 1
+      "status": "DEMANDE_ENVOYEE",
+      "description": "M�moire 120 pages � imprimer et relier",
+      "files": [],
+      "tasks": [],
+      "customerDetails": {
+        "address": "12 Rue Test",
+        "city": "Casablanca",
+        "name": "Ahmed Test",
+        "phone": "0661000000",
+        "email": "ahmed@test.ma"
+      },
+      "reference": "CMD-2026-0001",
+      "quantity": 1,
+      "serviceCategory": "saisie",
+      "serviceId": "srv-1",
+      "customerType": "particular",
+      "serviceName": "Saisie manuscrit vers Word",
+      "commissionRate": 10
     }
   ],
   "quotes": [],
@@ -202,48 +202,56 @@
   "payments": [],
   "auditLogs": [
     {
-      "id": "LOG-4X7OAO1",
+      "action": "Création utilisateur / membre",
       "userName": "nabil",
-      "userId": "usr-yl4d9i7",
-      "details": "Création du compte \"nabil\" (@niyonabil) avec le rôle client.",
       "timestamp": "2026-08-21T17:22:43.622Z",
-      "action": "Création utilisateur / membre"
+      "details": "Création du compte \"nabil\" (@niyonabil) avec le rôle client.",
+      "id": "LOG-4X7OAO1",
+      "userId": "usr-yl4d9i7"
     },
     {
+      "id": "LOG-BUTVSJS",
+      "userId": "system",
+      "action": "Création travail impression",
       "userName": "Système",
       "timestamp": "2026-08-23T09:09:01.031Z",
-      "action": "Création travail impression",
-      "id": "LOG-BUTVSJS",
-      "details": "JOB-2026-001 pour CMD-2026-0001",
-      "userId": "system"
+      "details": "JOB-2026-001 pour CMD-2026-0001"
     },
     {
-      "userName": "NABIL",
       "timestamp": "2026-08-21T11:52:09.786Z",
       "userId": "usr-admin-1",
-      "id": "LOG-BXW5Y73",
       "details": "Configuration initiale réussie de la base de données et création du compte administrateur.",
+      "id": "LOG-BXW5Y73",
+      "userName": "NABIL",
       "action": "Installation Système"
     },
     {
-      "timestamp": "2026-08-23T09:08:24.457Z",
+      "id": "LOG-GFKMAU9",
+      "userId": "system",
+      "userName": "Système",
+      "timestamp": "2026-08-23T14:48:27.528Z",
+      "action": "Catégorie métier",
+      "details": "Création catégorie Test �ph�m�re"
+    },
+    {
       "details": "Commande CMD-2026-0001 créée pour le service Saisie manuscrit vers Word.",
-      "userName": "Ahmed Test",
       "action": "Création Commande",
-      "userId": "client-direct",
-      "id": "LOG-POJLWA6"
+      "timestamp": "2026-08-23T09:08:24.457Z",
+      "id": "LOG-POJLWA6",
+      "userName": "Ahmed Test",
+      "userId": "client-direct"
     }
   ],
   "notifications": [
     {
-      "orderId": "ord-fp89wo6",
-      "message": "La commande CMD-2026-0001 (Saisie manuscrit vers Word) a été enregistrée avec succès. Statut: En attente d'analyse.",
-      "id": "not-j66cdf9",
-      "userId": "usr-admin-1",
-      "title": "Nouvelle commande enregistrée",
       "createdAt": "2026-08-23T09:08:23.645Z",
       "orderReference": "CMD-2026-0001",
-      "read": true
+      "title": "Nouvelle commande enregistrée",
+      "read": true,
+      "message": "La commande CMD-2026-0001 (Saisie manuscrit vers Word) a été enregistrée avec succès. Statut: En attente d'analyse.",
+      "userId": "usr-admin-1",
+      "id": "not-j66cdf9",
+      "orderId": "ord-fp89wo6"
     }
   ],
   "payrolls": [],
@@ -252,10 +260,28 @@
   "affiliateCommissions": [],
   "printJobs": [
     {
-      "copies": 3,
-      "reference": "JOB-2026-001",
-      "format": "A4",
+      "machineId": "pm-1",
+      "serviceName": "Impression m�moire",
+      "status": "production",
+      "estimatedCost": 66.88,
       "createdAt": "2026-08-23T09:09:00.364Z",
+      "updatedAt": "2026-08-23T09:11:43.027Z",
+      "orderId": "ord-fp89wo6",
+      "pages": 120,
+      "finishingOptions": [
+        "reliure_spirale"
+      ],
+      "paperType": "standard_80g",
+      "copies": 3,
+      "format": "A4",
+      "clientName": "Ahmed Test",
+      "duplex": true,
+      "salePrice": 174.6,
+      "reference": "JOB-2026-001",
+      "colorMode": "nb",
+      "id": "pjob-1787476140364",
+      "orderReference": "CMD-2026-0001",
+      "machineName": "Canon IR Advance 4545",
       "progress": 0,
       "consumptions": [
         {
@@ -267,298 +293,407 @@
         {
           "materialId": "mat-8",
           "unitCost": 1.8,
-          "materialName": "Spirale plastique 12mm",
-          "quantity": 3
+          "quantity": 3,
+          "materialName": "Spirale plastique 12mm"
         }
       ],
-      "updatedAt": "2026-08-23T09:11:43.027Z",
-      "pages": 120,
-      "colorMode": "nb",
-      "paperType": "standard_80g",
-      "clientName": "Ahmed Test",
-      "machineName": "Canon IR Advance 4545",
-      "priority": "normal",
-      "estimatedCost": 66.88,
-      "id": "pjob-1787476140364",
-      "orderId": "ord-fp89wo6",
-      "salePrice": 174.6,
-      "duplex": true,
-      "status": "production",
-      "serviceName": "Impression m�moire",
-      "orderReference": "CMD-2026-0001",
-      "finishingOptions": [
-        "reliure_spirale"
-      ],
-      "machineId": "pm-1"
+      "priority": "normal"
     }
   ],
   "printMachines": [
     {
-      "location": "Atelier - Poste 1",
-      "name": "Canon IR Advance 4545",
-      "counterNb": 126850,
-      "status": "active",
-      "brand": "Canon",
-      "id": "pm-1",
-      "lastMaintenanceDate": "2026-07-15",
-      "nextMaintenanceDate": "2026-10-15",
-      "model": "iR-ADV 4545 III",
-      "counterColor": 8500,
-      "type": "photocopieur",
-      "costPerPageColor": 0.65,
-      "createdAt": "2026-08-23T09:07:21.345Z",
       "costPerPageNb": 0.12,
-      "internalNumber": "M-001"
-    },
-    {
+      "counterNb": 126850,
       "createdAt": "2026-08-23T09:07:21.345Z",
-      "costPerPageColor": 0.7,
-      "nextMaintenanceDate": "2026-09-01",
-      "location": "Atelier - Poste 2",
-      "model": "VersaLink C405",
-      "lastMaintenanceDate": "2026-06-01",
-      "counterColor": 45300,
-      "name": "Xerox VersaLink C405",
-      "id": "pm-2",
-      "brand": "Xerox",
-      "costPerPageNb": 0.14,
-      "counterNb": 98120,
+      "costPerPageColor": 0.65,
+      "brand": "Canon",
+      "nextMaintenanceDate": "2026-10-15",
+      "lastMaintenanceDate": "2026-07-15",
+      "name": "Canon IR Advance 4545",
+      "model": "iR-ADV 4545 III",
       "type": "photocopieur",
+      "id": "pm-1",
       "status": "active",
-      "internalNumber": "M-002"
+      "internalNumber": "M-001",
+      "location": "Atelier - Poste 1",
+      "counterColor": 8500
     },
     {
+      "model": "VersaLink C405",
+      "location": "Atelier - Poste 2",
+      "name": "Xerox VersaLink C405",
+      "nextMaintenanceDate": "2026-09-01",
+      "counterColor": 45300,
+      "costPerPageColor": 0.7,
+      "status": "active",
+      "lastMaintenanceDate": "2026-06-01",
+      "costPerPageNb": 0.14,
+      "id": "pm-2",
+      "internalNumber": "M-002",
+      "type": "photocopieur",
       "createdAt": "2026-08-23T09:07:21.345Z",
-      "status": "maintenance",
-      "costPerPageColor": 9.5,
-      "model": "DesignJet T650 36in",
-      "name": "Traceur HP DesignJet T650",
-      "internalNumber": "M-003",
-      "counterColor": 12400,
-      "nextMaintenanceDate": "2026-09-05",
-      "location": "Atelier - Grand Format",
-      "counterNb": 0,
-      "costPerPageNb": 0,
-      "id": "pm-3",
-      "type": "traceur",
-      "brand": "HP"
+      "counterNb": 98120,
+      "brand": "Xerox"
     },
     {
-      "internalNumber": "M-004",
-      "status": "active",
-      "costPerPageNb": 0.02,
+      "nextMaintenanceDate": "2026-09-05",
+      "internalNumber": "M-003",
+      "brand": "HP",
+      "costPerPageColor": 9.5,
+      "type": "traceur",
+      "location": "Atelier - Grand Format",
+      "costPerPageNb": 0,
+      "name": "Traceur HP DesignJet T650",
+      "model": "DesignJet T650 36in",
+      "counterNb": 0,
+      "status": "maintenance",
+      "createdAt": "2026-08-23T09:07:21.345Z",
+      "counterColor": 12400,
+      "id": "pm-3"
+    },
+    {
+      "type": "scanner",
       "counterColor": 0,
       "brand": "Epson",
       "location": "Atelier - Numérisation",
-      "type": "scanner",
-      "counterNb": 210500,
+      "internalNumber": "M-004",
+      "costPerPageNb": 0.02,
+      "model": "DS-30000 A3",
       "costPerPageColor": 0,
       "id": "pm-4",
+      "counterNb": 210500,
       "name": "Scanner Epson DS-30000",
-      "model": "DS-30000 A3",
-      "createdAt": "2026-08-23T09:07:21.345Z"
+      "createdAt": "2026-08-23T09:07:21.345Z",
+      "status": "active"
     },
     {
-      "status": "en_panne",
-      "name": "Relieuse Fastbind Booxter Duo",
-      "costPerPageColor": 0,
-      "createdAt": "2026-08-23T09:07:21.345Z",
       "model": "Booxter Duo",
-      "costPerPageNb": 0,
+      "internalNumber": "M-005",
+      "type": "relieuse",
       "counterNb": 0,
       "location": "Atelier - Finition",
-      "brand": "Fastbind",
-      "type": "relieuse",
+      "createdAt": "2026-08-23T09:07:21.345Z",
       "id": "pm-5",
-      "internalNumber": "M-005",
-      "counterColor": 0
+      "name": "Relieuse Fastbind Booxter Duo",
+      "costPerPageColor": 0,
+      "costPerPageNb": 0,
+      "status": "en_panne",
+      "counterColor": 0,
+      "brand": "Fastbind"
     }
   ],
   "machineCounterReadings": [
     {
+      "readByUserName": "NABIL",
       "previousNb": 125430,
-      "machineId": "pm-1",
-      "previousColor": 8420,
+      "readByUserId": "usr-admin-1",
       "deltaNb": 1420,
       "machineName": "Canon IR Advance 4545",
-      "readingDate": "2026-08-23T09:11:01.625Z",
-      "readByUserName": "NABIL",
+      "previousColor": 8420,
+      "currentNb": 126850,
       "deltaColor": 80,
       "currentColor": 8500,
-      "currentNb": 126850,
-      "readByUserId": "usr-admin-1",
+      "machineId": "pm-1",
+      "readingDate": "2026-08-23T09:11:01.625Z",
       "id": "mcr-1787476261625"
     }
   ],
   "printMaterials": [
     {
-      "unitCost": 0.042,
-      "unit": "feuilles",
-      "spec": "80g/m² standard",
-      "category": "papier",
-      "id": "mat-1",
       "minQuantity": 2000,
+      "spec": "80g/m² standard",
+      "createdAt": "2026-08-23T09:07:21.345Z",
       "quantity": 8320,
+      "unitCost": 0.042,
+      "category": "papier",
+      "unit": "feuilles",
       "name": "Papier A4 80g Blanc",
-      "createdAt": "2026-08-23T09:07:21.345Z"
+      "id": "mat-1"
     },
     {
+      "spec": "Couché brillant 135g",
       "id": "mat-2",
       "quantity": 1200,
-      "name": "Papier A4 Couché 135g",
-      "minQuantity": 500,
-      "unitCost": 0.09,
-      "spec": "Couché brillant 135g",
-      "unit": "feuilles",
       "createdAt": "2026-08-23T09:07:21.345Z",
-      "category": "papier"
+      "unitCost": 0.09,
+      "category": "papier",
+      "minQuantity": 500,
+      "unit": "feuilles",
+      "name": "Papier A4 Couché 135g"
     },
     {
-      "quantity": 350,
-      "createdAt": "2026-08-23T09:07:21.345Z",
       "id": "mat-3",
       "unit": "feuilles",
-      "spec": "Bristol 250g",
       "name": "Papier Bristol A4 250g (couvertures)",
-      "unitCost": 0.35,
+      "createdAt": "2026-08-23T09:07:21.345Z",
+      "spec": "Bristol 250g",
+      "quantity": 350,
       "minQuantity": 150,
-      "category": "papier"
+      "category": "papier",
+      "unitCost": 0.35
     },
     {
-      "id": "mat-4",
-      "quantity": 900,
       "spec": "80g/m² A3",
-      "unit": "feuilles",
-      "minQuantity": 400,
+      "id": "mat-4",
       "unitCost": 0.084,
+      "category": "papier",
+      "createdAt": "2026-08-23T09:07:21.345Z",
+      "quantity": 900,
+      "minQuantity": 400,
       "name": "Papier A3 80g Blanc",
-      "createdAt": "2026-08-23T09:07:21.345Z",
-      "category": "papier"
+      "unit": "feuilles"
     },
     {
       "createdAt": "2026-08-23T09:07:21.345Z",
-      "spec": "Canon iR-ADV",
-      "unit": "unites",
-      "quantity": 4,
-      "id": "mat-5",
-      "category": "toner",
-      "minQuantity": 2,
       "name": "Toner Noir Canon NPG-59",
-      "unitCost": 480
+      "unit": "unites",
+      "id": "mat-5",
+      "minQuantity": 2,
+      "spec": "Canon iR-ADV",
+      "quantity": 4,
+      "unitCost": 480,
+      "category": "toner"
     },
     {
+      "minQuantity": 1,
+      "spec": "VersaLink C405",
+      "createdAt": "2026-08-23T09:07:21.345Z",
+      "unitCost": 520,
+      "category": "toner",
+      "id": "mat-6",
       "quantity": 2,
       "name": "Toner Cyan Xerox 106R02757",
-      "id": "mat-6",
-      "unitCost": 520,
-      "createdAt": "2026-08-23T09:07:21.345Z",
-      "spec": "VersaLink C405",
-      "unit": "unites",
-      "category": "toner",
-      "minQuantity": 1
+      "unit": "unites"
     },
     {
-      "name": "Toner Magenta Xerox 106R02756",
+      "spec": "VersaLink C405 — STOCK FAIBLE",
+      "unitCost": 520,
+      "category": "toner",
       "quantity": 1,
       "minQuantity": 1,
-      "category": "toner",
+      "id": "mat-7",
       "createdAt": "2026-08-23T09:07:21.345Z",
-      "unitCost": 520,
-      "spec": "VersaLink C405 — STOCK FAIBLE",
       "unit": "unites",
-      "id": "mat-7"
+      "name": "Toner Magenta Xerox 106R02756"
     },
     {
-      "minQuantity": 100,
-      "unitCost": 1.8,
-      "category": "finition",
-      "name": "Spirale plastique 12mm",
       "id": "mat-8",
-      "unit": "unites",
-      "spec": "Noir, A4",
+      "minQuantity": 100,
       "quantity": 237,
+      "category": "finition",
+      "unitCost": 1.8,
+      "spec": "Noir, A4",
+      "unit": "unites",
+      "name": "Spirale plastique 12mm",
       "createdAt": "2026-08-23T09:07:21.345Z"
     },
     {
-      "unitCost": 1.2,
-      "name": "Film plastification A4",
       "createdAt": "2026-08-23T09:07:21.345Z",
       "id": "mat-9",
-      "category": "finition",
-      "quantity": 180,
-      "minQuantity": 80,
       "unit": "unites",
-      "spec": "125 microns mat"
+      "name": "Film plastification A4",
+      "minQuantity": 80,
+      "spec": "125 microns mat",
+      "quantity": 180,
+      "category": "finition",
+      "unitCost": 1.2
     }
   ],
   "printStockMovements": [
     {
-      "stockAfter": 237,
-      "date": "2026-08-23T09:09:56.945Z",
-      "printJobId": "pjob-1787476140364",
-      "materialName": "Spirale plastique 12mm",
       "userName": "NABIL",
-      "userId": "usr-admin-1",
       "id": "mv-1787476196945-6zu7",
+      "userId": "usr-admin-1",
+      "stockAfter": 237,
       "materialId": "mat-8",
       "type": "consommation_production",
-      "quantity": -3
+      "quantity": -3,
+      "printJobId": "pjob-1787476140364",
+      "date": "2026-08-23T09:09:56.945Z",
+      "materialName": "Spirale plastique 12mm"
     },
     {
-      "stockAfter": 8320,
-      "printJobId": "pjob-1787476140364",
-      "materialName": "Papier A4 80g Blanc",
-      "quantity": -180,
       "id": "mv-1787476196945-yjuq",
       "date": "2026-08-23T09:09:56.945Z",
-      "userId": "usr-admin-1",
-      "type": "consommation_production",
+      "printJobId": "pjob-1787476140364",
+      "quantity": -180,
+      "stockAfter": 8320,
       "materialId": "mat-1",
-      "userName": "NABIL"
+      "userId": "usr-admin-1",
+      "userName": "NABIL",
+      "type": "consommation_production",
+      "materialName": "Papier A4 80g Blanc"
     }
   ],
   "deliveryTasks": [
     {
-      "createdAt": "2026-08-23T09:11:42.208Z",
-      "orderReference": "CMD-2026-0001",
-      "id": "dlv-1787476302208",
-      "status": "a_preparer",
-      "phone": "0661000000",
       "fee": 20,
       "city": "Casablanca",
-      "address": "12 Rue Test",
       "orderId": "ord-fp89wo6",
+      "createdAt": "2026-08-23T09:11:42.208Z",
+      "id": "dlv-1787476302208",
+      "courierName": "Youssef",
+      "status": "a_preparer",
       "mode": "coursier_local",
-      "courierName": "Youssef"
+      "phone": "0661000000",
+      "address": "12 Rue Test",
+      "orderReference": "CMD-2026-0001"
     }
   ],
   "settings": {
-    "printPricing": {
-      "deliveryFees": {
-        "livraison_nationale": 45,
-        "retrait_atelier": 0,
-        "coursier_local": 20
+    "databaseType": "firebase",
+    "address": "14 Boulevard d'Anfa, Étage 3, Casablanca, Maroc",
+    "isSetupCompleted": true,
+    "urgencySurcharges": {
+      "normal": 0,
+      "fast": 30,
+      "urgent": 60,
+      "very_urgent": 100
+    },
+    "serviceCategories": [
+      {
+        "key": "saisie",
+        "label": "Saisie de données & transcription",
+        "isSystem": true,
+        "icon": "edit_note",
+        "isActive": true,
+        "createdAt": "2026-08-23T14:47:54.659Z"
       },
+      {
+        "createdAt": "2026-08-23T14:47:54.659Z",
+        "isActive": true,
+        "label": "Numérisation, OCR & Conversion",
+        "icon": "document_scanner",
+        "isSystem": true,
+        "key": "conversion"
+      },
+      {
+        "isSystem": true,
+        "createdAt": "2026-08-23T14:47:54.659Z",
+        "label": "Mise en forme & PAO avancée",
+        "key": "mise_en_forme",
+        "icon": "auto_fix_high",
+        "isActive": true
+      },
+      {
+        "createdAt": "2026-08-23T14:47:54.659Z",
+        "isActive": true,
+        "key": "traitement",
+        "label": "Traitement & Nettoyage de données",
+        "icon": "filter_alt",
+        "isSystem": true
+      },
+      {
+        "isSystem": true,
+        "key": "impression",
+        "isActive": true,
+        "createdAt": "2026-08-23T14:47:54.659Z",
+        "label": "Impression papier & reliure",
+        "icon": "print"
+      },
+      {
+        "icon": "local_shipping",
+        "label": "Expédition & Livraison physique",
+        "createdAt": "2026-08-23T14:47:54.659Z",
+        "isActive": true,
+        "key": "livraison",
+        "isSystem": true
+      },
+      {
+        "key": "design_graphique",
+        "createdAt": "2026-08-23T14:47:54.659Z",
+        "label": "Design Graphique & Logo",
+        "isActive": false,
+        "isSystem": true,
+        "icon": "palette"
+      },
+      {
+        "isSystem": true,
+        "createdAt": "2026-08-23T14:47:54.659Z",
+        "icon": "translate",
+        "isActive": false,
+        "label": "Traduction & Rédaction",
+        "key": "traduction"
+      },
+      {
+        "createdAt": "2026-08-23T14:47:54.659Z",
+        "key": "marketing_digital",
+        "isActive": false,
+        "icon": "campaign",
+        "label": "Marketing Digital & Réseaux sociaux",
+        "isSystem": true
+      },
+      {
+        "isSystem": true,
+        "createdAt": "2026-08-23T14:47:54.659Z",
+        "key": "dev_web",
+        "icon": "code",
+        "label": "Développement Web & Tech",
+        "isActive": false
+      },
+      {
+        "isActive": false,
+        "key": "video_audio",
+        "isSystem": true,
+        "createdAt": "2026-08-23T14:47:54.659Z",
+        "label": "Vidéo, Montage & Audio",
+        "icon": "movie"
+      },
+      {
+        "createdAt": "2026-08-23T14:47:54.659Z",
+        "isActive": false,
+        "key": "emballage_pod",
+        "isSystem": true,
+        "label": "Emballage & Print-on-Demand",
+        "icon": "inventory"
+      },
+      {
+        "icon": "science",
+        "createdAt": "2026-08-23T14:48:24.846Z",
+        "label": "Test �ph�m�re",
+        "key": "test_ph_m_re",
+        "isActive": true
+      }
+    ],
+    "saasWorkspaceTitle": "SAAS WORKSPACE",
+    "currency": "DH",
+    "taxRate": 20,
+    "depositRules": {
+      "urgent": 70,
+      "normal": 50,
+      "very_urgent": 80,
+      "fast": 60
+    },
+    "affiliateCommissionConfig": {
+      "isAffiliateSystemEnabled": true,
+      "minimumPayoutAmount": 100,
+      "generalCommissionRate": 10,
+      "serviceCommissionRates": {}
+    },
+    "companyName": "DigiDocs Services SARL",
+    "logoUrl": "",
+    "globalGeminiApiKey": "",
+    "printPricing": {
       "finishingForfaits": {
-        "thermoreliure": 25,
-        "agrafage": 1,
-        "pliage": 0.5,
         "plastification": 5,
-        "reliure_spirale": 15,
+        "agrafage": 1,
         "massicotage": 3,
-        "perforation": 1
+        "thermoreliure": 25,
+        "perforation": 1,
+        "reliure_spirale": 15,
+        "pliage": 0.5
       },
       "basePricePerPage": {
-        "couleur_a4": 2,
+        "couleur_a5": 1.6,
         "nb_a4": 0.5,
         "couleur_a3": 4,
         "nb_a3": 1,
-        "nb_grand_format": 25,
-        "couleur_a5": 1.6,
-        "nb_a5": 0.4,
         "nb_photo": 2.5,
+        "nb_a5": 0.4,
+        "nb_grand_format": 25,
+        "couleur_photo": 5,
         "couleur_grand_format": 60,
-        "couleur_photo": 5
+        "couleur_a4": 2
       },
       "volumeTiers": [
         {
@@ -566,66 +701,44 @@
           "minPages": 500
         },
         {
-          "discountPercent": 10,
-          "minPages": 100
+          "minPages": 100,
+          "discountPercent": 10
         }
       ],
       "duplexDiscountPercent": 20,
+      "urgencyMultipliers": {
+        "normal": 1,
+        "very_urgent": 2,
+        "urgent": 1.6,
+        "fast": 1.3
+      },
       "paperSurcharge": {
         "couleur_speciale": 0.5,
-        "standard_80g": 0,
+        "photo_200g": 1.2,
         "couche_135g": 0.3,
         "bristol_250g": 0.9,
-        "photo_200g": 1.2
+        "standard_80g": 0
       },
-      "urgencyMultipliers": {
-        "fast": 1.3,
-        "normal": 1,
-        "urgent": 1.6,
-        "very_urgent": 2
+      "deliveryFees": {
+        "coursier_local": 20,
+        "livraison_nationale": 45,
+        "retrait_atelier": 0
       }
     },
-    "taxRate": 20,
-    "phone": "+212 522-123456",
-    "companyName": "DigiDocs Services SARL",
-    "email": "contact@digidocs.ma",
-    "currency": "DH",
-    "databaseType": "firebase",
-    "globalGeminiApiKey": "",
-    "affiliateCommissionConfig": {
-      "serviceCommissionRates": {},
-      "generalCommissionRate": 10,
-      "isAffiliateSystemEnabled": true,
-      "minimumPayoutAmount": 100
-    },
-    "saasWorkspaceTitle": "SAAS WORKSPACE",
-    "dbConfig": {
-      "username": "",
-      "databaseName": "",
-      "connected": true,
-      "lastTestedAt": "2026-08-21T11:52:09.613Z",
-      "host": "",
-      "password": "",
-      "port": 3306
-    },
     "globalGeminiApiKeyEnabled": true,
-    "urgencySurcharges": {
-      "urgent": 60,
-      "very_urgent": 100,
-      "fast": 30,
-      "normal": 0
-    },
-    "googleDriveAccounts": [],
-    "depositRules": {
-      "fast": 60,
-      "normal": 50,
-      "very_urgent": 80,
-      "urgent": 70
-    },
     "resourceDocuments": [],
-    "address": "14 Boulevard d'Anfa, Étage 3, Casablanca, Maroc",
-    "isSetupCompleted": true,
     "googleDriveTransferLogs": [],
-    "logoUrl": ""
+    "email": "contact@digidocs.ma",
+    "phone": "+212 522-123456",
+    "googleDriveAccounts": [],
+    "dbConfig": {
+      "password": "",
+      "username": "",
+      "port": 3306,
+      "connected": true,
+      "databaseName": "",
+      "host": "",
+      "lastTestedAt": "2026-08-21T11:52:09.613Z"
+    }
   }
 }

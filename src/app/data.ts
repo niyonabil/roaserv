@@ -311,6 +311,17 @@ export interface ServiceOption {
 
 export type CoverageScopeType = 'international' | 'national' | 'regional' | 'city' | 'street' | 'hybrid';
 
+/** Catégorie métier de service — entièrement éditable par l'admin (inspiré Fiverr). */
+export interface ServiceCategory {
+  key: string;        // slug unique ex: 'design_graphique'
+  label: string;      // affichage ex: 'Design Graphique & Logo'
+  icon: string;       // material icon name
+  description?: string;
+  isActive: boolean;
+  isSystem?: boolean; // catégorie d'origine non supprimable si des services l'utilisent
+  createdAt: string;
+}
+
 export interface CoverageLocationPoint {
   id: string;
   name: string;
@@ -559,6 +570,8 @@ export interface SystemSettings {
     status: 'connected' | 'disconnected';
     createdAt: string;
   }[];
+  /** Catégories métier éditables des services (Fiverr-like) */
+  serviceCategories?: ServiceCategory[];
   resourceDocuments?: {
     id: string;
     name: string;
@@ -1875,6 +1888,7 @@ export class Data {
       
       // Batch 1: Essential data
       await this.loadServices(true);
+      await this.loadServiceCategories(true);
       await this.loadSettings(true);
       
       if (role !== 'public' && user) {
@@ -2739,6 +2753,47 @@ export class Data {
   async loadSettings(silent = false) {
     const s = await this.apiCall<SystemSettings>('/api/settings', undefined, silent);
     this.settings.set(s);
+  }
+
+  // --- Catégories métier éditables ---
+  serviceCategories = signal<ServiceCategory[]>([]);
+
+  async loadServiceCategories(silent = true) {
+    try {
+      const cats = await this.apiCall<ServiceCategory[]>('/api/service-categories', undefined, silent);
+      this.serviceCategories.set(cats.filter(c => c.isActive !== false));
+    } catch { /* silencieux */ }
+  }
+
+  async createServiceCategory(payload: Partial<ServiceCategory> & { userId?: string; userName?: string }): Promise<ServiceCategory> {
+    const cat = await this.apiCall<ServiceCategory>('/api/service-categories', { method: 'POST', body: JSON.stringify(payload) });
+    await this.loadServiceCategories(true);
+    return cat;
+  }
+
+  async updateServiceCategory(key: string, patch: Partial<ServiceCategory> & { newKey?: string }): Promise<ServiceCategory> {
+    const cat = await this.apiCall<ServiceCategory>(`/api/service-categories/${key}`, { method: 'PUT', body: JSON.stringify(patch) });
+    await Promise.all([this.loadServiceCategories(true), this.loadServices(true)]);
+    return cat;
+  }
+
+  async deleteServiceCategory(key: string): Promise<void> {
+    await this.apiCall(`/api/service-categories/${key}`, { method: 'DELETE' });
+    await this.loadServiceCategories(true);
+  }
+
+  categoryLabel(key: string): string {
+    const c = this.serviceCategories().find(c => c.key === key);
+    if (c) return c.label;
+    const fallbacks: Record<string, string> = {
+      saisie: 'Saisie & Numérisation', conversion: 'Conversion & OCR', mise_en_forme: 'Mise en forme',
+      traitement: 'Traitement', impression: 'Impression', livraison: 'Livraison'
+    };
+    return fallbacks[key] || key;
+  }
+
+  categoryIcon(key: string): string {
+    return this.serviceCategories().find(c => c.key === key)?.icon || 'category';
   }
 
   async loadPartnerCustomers(silent = false) {

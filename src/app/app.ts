@@ -97,6 +97,37 @@ export class App {
     }
   }
 
+  // --- Gestion catégories métier (admin) ---
+  newServiceCategoryLabel = signal<string>('');
+  newServiceCategoryIcon = signal<string>('category');
+
+  async addServiceCategory() {
+    const label = this.newServiceCategoryLabel().trim();
+    if (!label) { alert('Veuillez saisir un libellé pour la catégorie.'); return; }
+    try {
+      await this.data.createServiceCategory({ label, icon: this.newServiceCategoryIcon().trim() || 'category', userId: this.data.currentUser()?.id, userName: this.data.currentUser()?.name });
+      this.newServiceCategoryLabel.set('');
+      this.newServiceCategoryIcon.set('category');
+    } catch (err) { alert((err as Error).message); }
+  }
+
+  async renameServiceCategory(key: string, label: string) {
+    if (!label.trim()) return;
+    try { await this.data.updateServiceCategory(key, { label: label.trim() }); }
+    catch (err) { alert((err as Error).message); }
+  }
+
+  async toggleServiceCategory(key: string, currentActive: boolean) {
+    try { await this.data.updateServiceCategory(key, { isActive: !currentActive }); }
+    catch (err) { alert((err as Error).message); }
+  }
+
+  async removeServiceCategory(key: string) {
+    if (!confirm('Supprimer cette catégorie métier ?')) return;
+    try { await this.data.deleteServiceCategory(key); }
+    catch (err) { alert((err as Error).message); }
+  }
+
   jobsByKanbanColumn(key: string): PrintJob[] {
     return this.data.printJobs().filter(j => j.status === key).sort((a, b) => {
       const prio = { tres_urgent: 0, urgent: 1, normal: 2 } as Record<string, number>;

@@ -3895,6 +3895,53 @@
                   </button>
                 </div>
 
+                <!-- 🗂️ CATÉGORIES MÉTIER ÉDITABLES (ADMIN) -->
+                <div class="p-6 rounded-2xl bg-violet-50/40 border border-violet-200/60 space-y-4">
+                  <div>
+                    <h3 class="text-violet-900 font-bold text-sm flex items-center gap-2">
+                      <span class="material-icons text-violet-600 text-base">category</span> Catégories Métier des Services
+                    </h3>
+                    <p class="text-[11px] text-violet-700 mt-1">
+                      Ajoutez, renommez, activez/désactivez ou supprimez les catégories métier. Inspirez-vous des marketplaces (Fiverr : Design, Traduction, Marketing, Vidéo…) pour élargir votre catalogue. Les catégories utilisées par des services existants ne peuvent pas être supprimées.
+                    </p>
+                  </div>
+
+                  <div class="space-y-2 max-h-72 overflow-y-auto pr-1">
+                    @for (cat of data.serviceCategories(); track cat.key) {
+                      <div class="flex items-center gap-2 bg-white p-2.5 rounded-xl border border-slate-200">
+                        <span class="material-icons text-sm text-violet-500">{{ cat.icon }}</span>
+                        <input type="text" [value]="cat.label"
+                          (change)="renameServiceCategory(cat.key, $any($event.target).value)"
+                          class="flex-1 bg-transparent text-xs font-semibold text-slate-700 focus:bg-violet-50 rounded px-1 py-0.5 focus:outline-none" />
+                        <code class="text-[9px] text-slate-400 hidden sm:inline">{{ cat.key }}</code>
+                        <button (click)="toggleServiceCategory(cat.key, cat.isActive)"
+                          [class]="cat.isActive ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-400'"
+                          class="text-[10px] font-bold px-2 py-1 rounded-lg" [title]="cat.isActive ? 'Désactiver' : 'Activer'">
+                          {{ cat.isActive ? 'Active' : 'Inactive' }}
+                        </button>
+                        @if (!data.services().some(s => s.category === cat.key)) {
+                          <button (click)="removeServiceCategory(cat.key)" class="text-red-400 hover:text-red-600 p-1" title="Supprimer">
+                            <span class="material-icons text-sm">delete</span>
+                          </button>
+                        }
+                      </div>
+                    }
+                  </div>
+
+                  <!-- Ajout nouvelle catégorie -->
+                  <div class="flex flex-col sm:flex-row gap-2 pt-2 border-t border-violet-100">
+                    <input type="text" placeholder="Libellé (ex: Design Graphique & Logo)" [value]="newServiceCategoryLabel()"
+                      (input)="newServiceCategoryLabel.set($any($event.target).value)"
+                      class="flex-1 bg-white border border-violet-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-violet-400" />
+                    <input type="text" placeholder="Icône Material (ex: palette)" [value]="newServiceCategoryIcon()"
+                      (input)="newServiceCategoryIcon.set($any($event.target).value)"
+                      class="sm:w-44 bg-white border border-violet-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-violet-400" />
+                    <button (click)="addServiceCategory()" class="bg-violet-600 hover:bg-violet-700 text-white text-xs font-bold px-4 py-2 rounded-xl whitespace-nowrap">
+                      + Ajouter
+                    </button>
+                  </div>
+                </div>
+
                 <!-- SYSTEME D'AFFILIATION & COMMISSIONS PAR SERVICE (ADMIN EXCLUSIVE) -->
                 <div class="p-6 rounded-2xl bg-blue-50/40 border border-blue-200/60 space-y-4">
                   <div>
@@ -4052,42 +4099,14 @@
                 >
                   Tous ({{ data.services().length }})
                 </button>
-                <button 
-                  (click)="activeCategoryFilter.set('saisie')"
-                  [class]="activeCategoryFilter() === 'saisie' ? 'bg-blue-600 text-white text-xs font-bold px-3 py-1.5 rounded-lg' : 'bg-slate-100 text-slate-600 hover:bg-slate-200 text-xs font-semibold px-3 py-1.5 rounded-lg'"
-                >
-                  Saisie
-                </button>
-                <button 
-                  (click)="activeCategoryFilter.set('conversion')"
-                  [class]="activeCategoryFilter() === 'conversion' ? 'bg-blue-600 text-white text-xs font-bold px-3 py-1.5 rounded-lg' : 'bg-slate-100 text-slate-600 hover:bg-slate-200 text-xs font-semibold px-3 py-1.5 rounded-lg'"
-                >
-                  Conversion & OCR
-                </button>
-                <button 
-                  (click)="activeCategoryFilter.set('mise_en_forme')"
-                  [class]="activeCategoryFilter() === 'mise_en_forme' ? 'bg-blue-600 text-white text-xs font-bold px-3 py-1.5 rounded-lg' : 'bg-slate-100 text-slate-600 hover:bg-slate-200 text-xs font-semibold px-3 py-1.5 rounded-lg'"
-                >
-                  Mise en page
-                </button>
-                <button 
-                  (click)="activeCategoryFilter.set('traitement')"
-                  [class]="activeCategoryFilter() === 'traitement' ? 'bg-blue-600 text-white text-xs font-bold px-3 py-1.5 rounded-lg' : 'bg-slate-100 text-slate-600 hover:bg-slate-200 text-xs font-semibold px-3 py-1.5 rounded-lg'"
-                >
-                  Traitement
-                </button>
-                <button 
-                  (click)="activeCategoryFilter.set('impression')"
-                  [class]="activeCategoryFilter() === 'impression' ? 'bg-blue-600 text-white text-xs font-bold px-3 py-1.5 rounded-lg' : 'bg-slate-100 text-slate-600 hover:bg-slate-200 text-xs font-semibold px-3 py-1.5 rounded-lg'"
-                >
-                  Impression
-                </button>
-                <button 
-                  (click)="activeCategoryFilter.set('livraison')"
-                  [class]="activeCategoryFilter() === 'livraison' ? 'bg-blue-600 text-white text-xs font-bold px-3 py-1.5 rounded-lg' : 'bg-slate-100 text-slate-600 hover:bg-slate-200 text-xs font-semibold px-3 py-1.5 rounded-lg'"
-                >
-                  Livraison
-                </button>
+                @for (cat of data.serviceCategories(); track cat.key) {
+                  <button 
+                    (click)="activeCategoryFilter.set(cat.key)"
+                    [class]="activeCategoryFilter() === cat.key ? 'bg-blue-600 text-white text-xs font-bold px-3 py-1.5 rounded-lg' : 'bg-slate-100 text-slate-600 hover:bg-slate-200 text-xs font-semibold px-3 py-1.5 rounded-lg'"
+                  >
+                    {{ cat.label }} ({{ data.services().filter(s => s.category === cat.key).length }})
+                  </button>
+                }
               </div>
 
               <!-- Search -->
@@ -9291,13 +9310,19 @@
                   formControlName="category" 
                   class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none font-medium"
                 >
-                  <option value="saisie">Saisie de données & transcription</option>
-                  <option value="conversion">Numérisation, OCR & Conversion</option>
-                  <option value="mise_en_forme">Mise en forme & PAO avancée</option>
-                  <option value="traitement">Traitement & Nettoyage de données</option>
-                  <option value="impression">Impression papier & reliure</option>
-                  <option value="livraison">Expédition & Livraison physique</option>
+                  @for (cat of data.serviceCategories(); track cat.key) {
+                    <option [value]="cat.key">{{ cat.label }}</option>
+                  }
+                  @if (data.serviceCategories().length === 0) {
+                    <option value="saisie">Saisie de données & transcription</option>
+                    <option value="conversion">Numérisation, OCR & Conversion</option>
+                    <option value="mise_en_forme">Mise en forme & PAO avancée</option>
+                    <option value="traitement">Traitement & Nettoyage de données</option>
+                    <option value="impression">Impression papier & reliure</option>
+                    <option value="livraison">Expédition & Livraison physique</option>
+                  }
                 </select>
+                <p class="text-[10px] text-slate-400 mt-0.5">Les catégories sont gérées dans Paramètres → Catégories métier.</p>
               </div>
 
               <div>

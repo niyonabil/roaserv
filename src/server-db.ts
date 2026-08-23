@@ -13,6 +13,7 @@ import type {
   PrintStockMovement,
   DeliveryTask,
   PrintPricingConfig,
+  ServiceCategory,
 } from './app/data';
 
 export type {
@@ -23,6 +24,7 @@ export type {
   PrintStockMovement,
   DeliveryTask,
   PrintPricingConfig,
+  ServiceCategory,
 };
 
 // --- HELPER TO CLEAN UNDEFINED VALUES FOR FIRESTORE ---
