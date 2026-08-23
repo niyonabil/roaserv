@@ -586,6 +586,167 @@ export interface SystemSettings {
     serviceCommissionRates: Record<string, number>;
     isAffiliateSystemEnabled: boolean;
   };
+  printPricing?: PrintPricingConfig;
+}
+
+// ============================================================
+// 🖨️ MODULE PRODUCTION & IMPRIMERIE — Types métier
+// ============================================================
+
+export type PrintJobStatus =
+  | 'nouveau'
+  | 'preparation'
+  | 'en_attente'
+  | 'production'
+  | 'finition'
+  | 'controle_qualite'
+  | 'pret'
+  | 'livraison'
+  | 'livre'
+  | 'termine'
+  | 'annule';
+
+export type PrintPriority = 'normal' | 'urgent' | 'tres_urgent';
+export type MachineStatus = 'active' | 'maintenance' | 'en_panne' | 'hors_service';
+export type StockMovementType = 'entree_achat' | 'consommation_production' | 'ajustement_inventaire' | 'perte_dechet' | 'retour';
+
+/** Travaux d'impression rattachés à une commande centrale existante (Order). */
+export interface PrintJob {
+  id: string;
+  reference: string; // JOB-2026-001
+  orderId: string;   // commande centrale — PAS de client dupliqué
+  orderReference: string;
+  clientName: string;
+  serviceName: string;
+  pages: number;
+  copies: number;
+  format: 'A4' | 'A3' | 'A5' | 'PHOTO_10x15' | 'GRAND_FORMAT';
+  colorMode: 'nb' | 'couleur';
+  duplex: boolean;
+  paperType: string;
+  finishingOptions: string[]; // reliure_spirale, thermoreliure, plastification, massicotage, agrafage, perforation
+  status: PrintJobStatus;
+  waitingReason?: string; // obligatoire si status = en_attente
+  priority: PrintPriority;
+  machineId?: string;
+  machineName?: string;
+  operatorId?: string;
+  operatorName?: string;
+  deadline?: string;
+  progress: number; // 0-100
+  estimatedCost: number;   // coût de revient estimé (matière + machine + finition)
+  salePrice: number;       // prix de vente calculé par le moteur de tarification
+  estimatedProfit?: number;   // bénéfice estimé = vente - coût
+  marginPercent?: number;     // marge en % du prix de vente
+  consumptions: MaterialConsumption[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PrintMachine {
+  id: string;
+  name: string;
+  brand: string;
+  model: string;
+  internalNumber: string;
+  type: 'photocopieur' | 'imprimante' | 'traceur' | 'scanner' | 'relieuse' | 'massicot' | 'plastifieuse';
+  location?: string;
+  status: MachineStatus;
+  counterNb: number;     // compteur N&B cumulé
+  counterColor: number;  // compteur couleur cumulé
+  lastMaintenanceDate?: string;
+  nextMaintenanceDate?: string;
+  costPerPageNb: number;
+  costPerPageColor: number;
+  createdAt: string;
+}
+
+export interface MachineCounterReading {
+  id: string;
+  machineId: string;
+  machineName: string;
+  previousNb: number;
+  currentNb: number;
+  previousColor: number;
+  currentColor: number;
+  deltaNb: number;
+  deltaColor: number;
+  readByUserId: string;
+  readByUserName: string;
+  readingDate: string;
+}
+
+export interface PrintMaterial {
+  id: string;
+  name: string;
+  category: 'papier' | 'toner' | 'encres' | 'finition' | 'emballage';
+  unit: 'feuilles' | 'rames' | 'unites' | 'kg' | 'rouleaux';
+  quantity: number;      // stock actuel
+  minQuantity: number;   // seuil d'alerte stock faible
+  unitCost: number;      // coût d'achat unitaire
+  spec?: string;         // ex: A4 80g, Cyan 106R02757, spirale 12mm
+  createdAt: string;
+}
+
+export interface MaterialConsumption {
+  materialId: string;
+  materialName: string;
+  quantity: number;
+  unitCost: number;
+}
+
+export interface PrintStockMovement {
+  id: string;
+  materialId: string;
+  materialName: string;
+  type: StockMovementType;
+  quantity: number;        // positif = entrée, négatif = sortie
+  stockAfter: number;
+  printJobId?: string;     // traçabilité consommation par travail
+  reason?: string;         // obligatoire pour ajustement/perte/en_attente
+  userId: string;
+  userName: string;
+  date: string;
+}
+
+export interface DeliveryTask {
+  id: string;
+  orderId: string;
+  orderReference: string;
+  mode: 'retrait_atelier' | 'coursier_local' | 'livraison_nationale';
+  address?: string;
+  city?: string;
+  phone?: string;
+  fee: number;
+  status: 'a_preparer' | 'en_livraison' | 'livre' | 'echec';
+  courierId?: string;
+  courierName?: string;
+  codAmount?: number;      // solde encaissé à la livraison (COD)
+  scheduledDate?: string;
+  deliveredDate?: string;
+  createdAt: string;
+}
+
+/** Moteur de tarification configurable (aucun prix en dur). */
+export interface PrintPricingConfig {
+  basePricePerPage: {
+    nb_a4: number;
+    nb_a3: number;
+    nb_a5: number;
+    nb_photo: number;
+    nb_grand_format: number;
+    couleur_a4: number;
+    couleur_a3: number;
+    couleur_a5: number;
+    couleur_photo: number;
+    couleur_grand_format: number;
+  };
+  duplexDiscountPercent: number;         // remise recto-verso par page
+  paperSurcharge: Record<string, number>; // grammage -> majoration DH/page
+  finishingForfaits: Record<string, number>; // finition -> forfait DH/exemplaire
+  volumeTiers: { minPages: number; discountPercent: number }[]; // barème dégressif
+  urgencyMultipliers: { normal: number; fast: number; urgent: number; very_urgent: number };
+  deliveryFees: { retrait_atelier: number; coursier_local: number; livraison_nationale: number };
 }
 
 export interface Order {
@@ -1049,6 +1210,155 @@ export const DEFAULT_SERVICES: Service[] = [
 export class Data {
   // --- SIGNALS FOR GLOBAL STATE ---
   isSetupCompleted = signal<boolean>(true);
+
+  // --- 🖨️ MODULE PRODUCTION & IMPRIMERIE — état global ---
+  printJobs = signal<PrintJob[]>([]);
+  printMachines = signal<PrintMachine[]>([]);
+  counterReadings = signal<MachineCounterReading[]>([]);
+  printMaterials = signal<PrintMaterial[]>([]);
+  stockMovements = signal<PrintStockMovement[]>([]);
+  deliveryTasks = signal<DeliveryTask[]>([]);
+  printPricing = signal<PrintPricingConfig | null>(null);
+  printDashboard = signal<any>(null);
+
+  async loadPrintJobs(silent = true) {
+    try {
+      const jobs = await this.apiCall<PrintJob[]>('/api/print/jobs', undefined, silent);
+      this.printJobs.set(jobs);
+    } catch { /* silencieux */ }
+  }
+
+  async createPrintJob(payload: Partial<PrintJob> & { orderId: string }): Promise<PrintJob> {
+    const job = await this.apiCall<PrintJob>('/api/print/jobs', { method: 'POST', body: JSON.stringify(payload) });
+    await this.loadPrintJobs(true);
+    return job;
+  }
+
+  async updatePrintJob(id: string, patch: Partial<PrintJob>): Promise<PrintJob> {
+    const job = await this.apiCall<PrintJob>(`/api/print/jobs/${id}`, { method: 'PUT', body: JSON.stringify(patch) });
+    await this.loadPrintJobs(true);
+    return job;
+  }
+
+  async consumeMaterials(jobId: string, items: { materialId: string; quantity: number }[], userId?: string): Promise<PrintJob> {
+    const job = await this.apiCall<PrintJob>(`/api/print/jobs/${jobId}/consume`, { method: 'POST', body: JSON.stringify({ items, userId }) });
+    await Promise.all([this.loadPrintJobs(true), this.loadMaterials(true), this.loadStockMovements(true)]);
+    return job;
+  }
+
+  async loadMachines(silent = true) {
+    try {
+      const machines = await this.apiCall<PrintMachine[]>('/api/print/machines', undefined, silent);
+      this.printMachines.set(machines);
+    } catch { /* silencieux */ }
+  }
+
+  async createMachine(payload: Partial<PrintMachine>): Promise<PrintMachine> {
+    const m = await this.apiCall<PrintMachine>('/api/print/machines', { method: 'POST', body: JSON.stringify(payload) });
+    await this.loadMachines(true);
+    return m;
+  }
+
+  async updateMachine(id: string, patch: Partial<PrintMachine>): Promise<PrintMachine> {
+    const m = await this.apiCall<PrintMachine>(`/api/print/machines/${id}`, { method: 'PUT', body: JSON.stringify(patch) });
+    await this.loadMachines(true);
+    return m;
+  }
+
+  async submitCounterReading(machineId: string, payload: { currentNb?: number; currentColor?: number; userId?: string }): Promise<MachineCounterReading> {
+    const r = await this.apiCall<MachineCounterReading>(`/api/print/machines/${machineId}/counter-reading`, { method: 'POST', body: JSON.stringify(payload) });
+    await Promise.all([this.loadMachines(true), this.loadCounterReadings(true)]);
+    return r;
+  }
+
+  async loadCounterReadings(silent = true) {
+    try {
+      const readings = await this.apiCall<MachineCounterReading[]>('/api/print/counter-readings', undefined, silent);
+      this.counterReadings.set(readings.slice().reverse());
+    } catch { /* silencieux */ }
+  }
+
+  async loadMaterials(silent = true) {
+    try {
+      const materials = await this.apiCall<PrintMaterial[]>('/api/print/materials', undefined, silent);
+      this.printMaterials.set(materials);
+    } catch { /* silencieux */ }
+  }
+
+  async createMaterial(payload: Partial<PrintMaterial>): Promise<PrintMaterial> {
+    const m = await this.apiCall<PrintMaterial>('/api/print/materials', { method: 'POST', body: JSON.stringify(payload) });
+    await this.loadMaterials(true);
+    return m;
+  }
+
+  async addStockMovement(materialId: string, payload: { type: PrintStockMovement['type']; quantity: number; reason?: string; userId?: string }) {
+    const result = await this.apiCall<{ movement: PrintStockMovement; material: PrintMaterial }>(`/api/print/materials/${materialId}/movement`, { method: 'POST', body: JSON.stringify(payload) });
+    await Promise.all([this.loadMaterials(true), this.loadStockMovements(true)]);
+    return result;
+  }
+
+  async loadStockMovements(silent = true) {
+    try {
+      const movements = await this.apiCall<PrintStockMovement[]>('/api/print/stock-movements', undefined, silent);
+      this.stockMovements.set(movements);
+    } catch { /* silencieux */ }
+  }
+
+  async loadDeliveries(silent = true) {
+    try {
+      const deliveries = await this.apiCall<DeliveryTask[]>('/api/print/deliveries', undefined, silent);
+      this.deliveryTasks.set(deliveries);
+    } catch { /* silencieux */ }
+  }
+
+  async createDelivery(payload: Partial<DeliveryTask> & { orderId: string }): Promise<DeliveryTask> {
+    const d = await this.apiCall<DeliveryTask>('/api/print/deliveries', { method: 'POST', body: JSON.stringify(payload) });
+    await this.loadDeliveries(true);
+    return d;
+  }
+
+  async updateDelivery(id: string, patch: Partial<DeliveryTask>): Promise<DeliveryTask> {
+    const d = await this.apiCall<DeliveryTask>(`/api/print/deliveries/${id}`, { method: 'PUT', body: JSON.stringify(patch) });
+    await this.loadDeliveries(true);
+    return d;
+  }
+
+  async loadPricing(silent = true) {
+    try {
+      const pricing = await this.apiCall<PrintPricingConfig>('/api/print/pricing', undefined, silent);
+      this.printPricing.set(pricing);
+    } catch { /* silencieux */ }
+  }
+
+  pricingEntries(obj: Record<string, number> | null | undefined): { key: string; value: number }[] {
+    if (!obj) return [];
+    return Object.entries(obj).map(([key, value]) => ({ key, value: Number(value) }));
+  }
+
+  async savePricing(pricing: PrintPricingConfig): Promise<void> {
+    await this.apiCall<void>('/api/print/pricing', { method: 'PUT', body: JSON.stringify(pricing) });
+    this.printPricing.set(pricing);
+  }
+
+  async previewPrintQuote(payload: Partial<PrintJob> & { urgencyKey?: string }): Promise<{ salePrice: number; estimatedCost: number; estimatedProfit: number; marginPercent: number; consumablesNeeded: { materialId: string; materialName: string; quantity: number; unit: string; unitCost: number; available: boolean }[]; details: Record<string, number> }> {
+    return this.apiCall('/api/print/quote-preview', { method: 'POST', body: JSON.stringify(payload) }, true);
+  }
+
+  async loadPrintDashboard(silent = true) {
+    try {
+      const stats = await this.apiCall<any>('/api/print/dashboard', undefined, silent);
+      this.printDashboard.set(stats);
+    } catch { /* silencieux */ }
+  }
+
+  async initPrintModule() {
+    await Promise.all([
+      this.loadPrintJobs(), this.loadMachines(), this.loadCounterReadings(),
+      this.loadMaterials(), this.loadStockMovements(), this.loadDeliveries(),
+      this.loadPricing(), this.loadPrintDashboard()
+    ]);
+  }
+  // --- FIN MODULE IMPRIMERIE ---
 
   async checkSetupStatus() {
     try {

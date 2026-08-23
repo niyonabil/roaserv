@@ -2,7 +2,8 @@ import { ChangeDetectionStrategy, Component, inject, signal, computed, effect } 
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormGroup, FormControl, Validators } from '@angular/forms';
 import { DomSanitizer, SafeResourceUrl, Title, Meta } from '@angular/platform-browser';
-import { Data, Service, Order, PartnerCustomer, OrderFile, Quote, AppNotification, User, UserPrivileges, getDefaultPrivileges, PayrollRecord, LeaveRequest, SalaryAdvance, AffiliateCommission, Payment, SystemSettings, AffiliateWithStats, CoverageScopeType, CoverageLocationPoint } from './data';
+import { Data, Service, Order, PartnerCustomer, OrderFile, Quote, AppNotification, User, UserPrivileges, getDefaultPrivileges, PayrollRecord, LeaveRequest, SalaryAdvance, AffiliateCommission, Payment, SystemSettings, AffiliateWithStats, CoverageScopeType, CoverageLocationPoint,
+  PrintJob, PrintMachine, MachineCounterReading, PrintMaterial, PrintStockMovement, DeliveryTask, PrintPricingConfig } from './data';
 import { getAllIndexedRoutes, generateSitemapXml, generateRobotsTxt, SitemapUrlEntry } from './sitemap-generator';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
@@ -22,6 +23,187 @@ export class App {
   private sanitizer = inject(DomSanitizer);
   private titleService = inject(Title);
   private metaService = inject(Meta);
+
+  // --- 🖨️ MODULE PRODUCTION & IMPRIMERIE ---
+  printSubTab = signal<'overview' | 'jobs' | 'kanban' | 'machines' | 'counters' | 'stock' | 'deliveries' | 'pricing'>('overview');
+  printJobForm = signal<FormGroup>(new FormGroup({
+    orderId: new FormControl('', Validators.required),
+    serviceName: new FormControl(''),
+    pages: new FormControl(1, [Validators.required, Validators.min(1)]),
+    copies: new FormControl(1, [Validators.required, Validators.min(1)]),
+    format: new FormControl('A4', Validators.required),
+    colorMode: new FormControl('nb', Validators.required),
+    duplex: new FormControl(false),
+    paperType: new FormControl('standard_80g'),
+    finishingOptions: new FormControl<string[]>([]),
+    priority: new FormControl('normal'),
+    urgencyKey: new FormControl('normal'),
+    deadline: new FormControl('')
+  }));
+  printQuotePreview = signal<{ salePrice: number; estimatedCost: number; estimatedProfit: number; marginPercent: number; consumablesNeeded: { materialId: string; materialName: string; quantity: number; unit: string; unitCost: number; available: boolean }[]; details: Record<string, number> } | null>(null);
+  counterReadingForm = signal<FormGroup>(new FormGroup({
+    machineId: new FormControl('', Validators.required),
+    currentNb: new FormControl(0),
+    currentColor: new FormControl(0)
+  }));
+  stockMovementForm = signal<FormGroup>(new FormGroup({
+    materialId: new FormControl('', Validators.required),
+    type: new FormControl('entree_achat', Validators.required),
+    quantity: new FormControl(1, [Validators.required, Validators.min(1)]),
+    reason: new FormControl('')
+  }));
+  deliveryForm = signal<FormGroup>(new FormGroup({
+    orderId: new FormControl('', Validators.required),
+    mode: new FormControl('coursier_local', Validators.required),
+    address: new FormControl(''),
+    city: new FormControl(''),
+    phone: new FormControl(''),
+    courierName: new FormControl(''),
+    scheduledDate: new FormControl('')
+  }));
+  waitingReasonForm = signal<{ jobId: string | null; reason: string }>({ jobId: null, reason: '' });
+
+  readonly PRINT_KANBAN_COLUMNS = [
+    { key: 'nouveau', label: 'Nouveau' },
+    { key: 'preparation', label: 'Préparation' },
+    { key: 'production', label: 'Production' },
+    { key: 'finition', label: 'Finition' },
+    { key: 'controle_qualite', label: 'Contrôle Qualité' },
+    { key: 'pret', label: 'Prêt' },
+    { key: 'livraison', label: 'Livraison' }
+  ] as const;
+
+  readonly PRINT_SUB_TABS = [
+    {key: 'overview', label: 'Vue d’ensemble', icon: 'dashboard'},
+    {key: 'jobs', label: 'Travaux', icon: 'assignment'},
+    {key: 'kanban', label: 'Kanban Atelier', icon: 'view_kanban'},
+    {key: 'machines', label: 'Machines', icon: 'precision_manufacturing'},
+    {key: 'counters', label: 'Compteurs', icon: 'speed'},
+    {key: 'stock', label: 'Stock & Consommables', icon: 'inventory_2'},
+    {key: 'deliveries', label: 'Livraisons', icon: 'local_shipping'},
+    {key: 'pricing', label: 'Tarification', icon: 'sell'}
+  ] as const;
+
+  readonly PRINT_STATUS_LABELS: Record<string, string> = {
+    nouveau: 'Nouveau', preparation: 'Préparation', en_attente: 'En attente',
+    production: 'Production', finition: 'Finition', controle_qualite: 'Contrôle Qualité',
+    pret: 'Prêt', livraison: 'Livraison', livre: 'Livré', termine: 'Terminé', annule: 'Annulé'
+  };
+
+  async openPrintModule(sub?: 'overview' | 'jobs' | 'kanban' | 'machines' | 'counters' | 'stock' | 'deliveries' | 'pricing') {
+    if (sub) this.printSubTab.set(sub);
+    if (this.data.printJobs().length === 0 && this.data.printMachines().length === 0) {
+      await this.data.initPrintModule();
+    }
+  }
+
+  jobsByKanbanColumn(key: string): PrintJob[] {
+    return this.data.printJobs().filter(j => j.status === key).sort((a, b) => {
+      const prio = { tres_urgent: 0, urgent: 1, normal: 2 } as Record<string, number>;
+      return (prio[a.priority] ?? 2) - (prio[b.priority] ?? 2);
+    });
+  }
+
+  movePrintJob(jobId: string, status: PrintJob['status']) {
+    if (status === 'en_attente') {
+      this.waitingReasonForm.set({ jobId, reason: '' });
+      return;
+    }
+    const progressMap: Record<string, number> = { nouveau: 0, preparation: 15, production: 45, finition: 70, controle_qualite: 85, pret: 95, livraison: 97, livre: 100, termine: 100 };
+    this.data.updatePrintJob(jobId, { status, progress: progressMap[status] ?? 0 }).catch(err => alert((err as Error).message));
+  }
+
+  submitWaitingReason() {
+    const { jobId, reason } = this.waitingReasonForm();
+    if (!jobId || !reason.trim()) { alert('La raison de mise en attente est obligatoire.'); return; }
+    this.data.updatePrintJob(jobId, { status: 'en_attente', waitingReason: reason.trim(), progress: 5 })
+      .then(() => this.waitingReasonForm.set({ jobId: null, reason: '' }))
+      .catch(err => alert((err as Error).message));
+  }
+
+  onPrintJobSpecChange() {
+    const v = this.printJobForm().getRawValue();
+    if (!v.orderId) return;
+    this.data.previewPrintQuote({
+      pages: Number(v.pages), copies: Number(v.copies), format: v.format, colorMode: v.colorMode,
+      duplex: !!v.duplex, paperType: v.paperType, finishingOptions: v.finishingOptions || [], urgencyKey: v.urgencyKey
+    }).then(preview => this.printQuotePreview.set(preview)).catch(() => {});
+  }
+
+  async submitPrintJob() {
+    const form = this.printJobForm();
+    if (form.invalid) { alert('Veuillez compléter le formulaire (commande, pages, copies, format).'); return; }
+    try {
+      await this.data.createPrintJob(form.getRawValue());
+      form.reset({ pages: 1, copies: 1, format: 'A4', colorMode: 'nb', duplex: false, paperType: 'standard_80g', finishingOptions: [], priority: 'normal', urgencyKey: 'normal' });
+      this.printQuotePreview.set(null);
+      this.data.loadPrintDashboard(true);
+    } catch (err) { alert((err as Error).message); }
+  }
+
+  toggleFinishingOption(opt: string) {
+    const ctrl = this.printJobForm().get('finishingOptions')!;
+    const current: string[] = ctrl.value || [];
+    ctrl.setValue(current.includes(opt) ? current.filter(o => o !== opt) : [...current, opt]);
+    this.onPrintJobSpecChange();
+  }
+
+  async submitCounterReading() {
+    const f = this.counterReadingForm().getRawValue();
+    if (!f.machineId) { alert('Sélectionnez une machine.'); return; }
+    try {
+      await this.data.submitCounterReading(f.machineId, { currentNb: Number(f.currentNb), currentColor: Number(f.currentColor), userId: this.data.currentUser()?.id });
+      this.counterReadingForm().patchValue({ currentNb: 0, currentColor: 0 });
+    } catch (err) { alert((err as Error).message); }
+  }
+
+  async submitStockMovement() {
+    const f = this.stockMovementForm().getRawValue();
+    if (!f.materialId || !f.quantity) { alert('Matière et quantité requises.'); return; }
+    try {
+      await this.data.addStockMovement(f.materialId, { type: f.type, quantity: Number(f.quantity), reason: f.reason, userId: this.data.currentUser()?.id });
+      this.stockMovementForm().patchValue({ quantity: 1, reason: '' });
+    } catch (err) { alert((err as Error).message); }
+  }
+
+  async submitDelivery() {
+    const f = this.deliveryForm();
+    if (f.invalid) { alert('Commande requise.'); return; }
+    try {
+      await this.data.createDelivery(f.getRawValue());
+      f.reset({ mode: 'coursier_local' });
+    } catch (err) { alert((err as Error).message); }
+  }
+
+  setDeliveryStatus(id: string, status: DeliveryTask['status'], codAmount?: number) {
+    this.data.updateDelivery(id, { status, ...(status === 'livre' && codAmount ? { codAmount } : {}) }).catch(err => alert((err as Error).message));
+  }
+
+  onPricingChange(kv: { key: string; value: unknown }, event: Event) {
+    const raw = Number((event.target as HTMLInputElement).value);
+    if (!Number.isFinite(raw) || raw < 0) return;
+    const pricing = this.data.printPricing();
+    if (!pricing) return;
+    const key = kv.key;
+    const val = raw;
+    if (key in pricing.basePricePerPage) (pricing.basePricePerPage as Record<string, number>)[key] = val;
+    else if (key in pricing.paperSurcharge) (pricing.paperSurcharge as Record<string, number>)[key] = val;
+    else if (key in pricing.finishingForfaits) (pricing.finishingForfaits as Record<string, number>)[key] = val;
+    else if (key in pricing.urgencyMultipliers) (pricing.urgencyMultipliers as Record<string, number>)[key] = Math.max(1, val);
+    else if (['retrait_atelier','coursier_local','livraison_nationale'].includes(key)) (pricing.deliveryFees as unknown as Record<string, number>)[key] = val;
+    else if (key === 'duplexDiscountPercent') pricing.duplexDiscountPercent = Math.min(90, val);
+  }
+
+  resetSelect(event: Event) { (event.target as HTMLSelectElement).value = ''; }
+
+  changeMachineStatus(machineId: string, event: Event) {
+    const status = (event.target as HTMLSelectElement).value as PrintMachine['status'];
+    (event.target as HTMLSelectElement).value = '';
+    if (!status) return;
+    this.data.updateMachine(machineId, { status }).catch((err: Error) => alert(err.message));
+  }
+
+  // --- FIN MODULE IMPRIMERIE ---
 
   // --- UI NAVIGATION & ACTIVE VIEWS ---
   activeTab = signal<string>('dashboard'); // e.g. dashboard, orders, new_order, services, clients, reports, settings, audit_logs, tools

@@ -1745,6 +1745,23 @@
                 <span class="material-icons text-sm text-indigo-600">construction</span> Espace Outils & Traitement
               </button>
             }
+
+            <!-- 🖨️ PRODUCTION & IMPRIMERIE (déplacé ici : opération de production) -->
+            @if (data.activeRole() === 'admin' || data.activeRole() === 'assistant' || data.activeRole() === 'operator' || data.activeRole() === 'qa') {
+              <button
+                (click)="showMobileMenu.set(false); activeTab.set('print_production'); openPrintModule()"
+                [class]="activeTab() === 'print_production' ? 'w-full text-left px-3.5 py-2 rounded-xl text-xs font-bold bg-orange-50 text-orange-700 flex items-center gap-2 border border-orange-200 shadow-xs' : 'w-full text-left px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 flex items-center gap-2'"
+                id="sidebar-print-production-btn"
+              >
+                <span class="material-icons text-sm text-orange-600">print</span>
+                <span>Production & Imprimerie</span>
+                @if (data.printDashboard()?.urgent > 0) {
+                  <span class="ml-auto bg-red-600 text-white text-[10px] px-2 py-0.5 rounded-full font-black animate-pulse" title="Travaux urgents">
+                    {{ data.printDashboard().urgent }}
+                  </span>
+                }
+              </button>
+            }
           </div>
 
           <!-- GROUP 2: COMMERCIAL, SERVICES & CLIENTS -->
@@ -6751,6 +6768,618 @@
       </div>
     </div>
   }
+        <!-- 🖨️ PRODUCTION & IMPRIMERIE TAB VIEW -->
+        @if (activeTab() === 'print_production') {
+          <div class="space-y-6 animate-fadeIn" id="print-production-view">
+            <!-- Header -->
+            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs">
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div class="flex items-center gap-3">
+                  <div class="w-12 h-12 rounded-2xl bg-orange-100 text-orange-700 flex items-center justify-center shadow-xs">
+                    <span class="material-icons text-2xl">print</span>
+                  </div>
+                  <div>
+                    <h2 class="text-xl font-black text-slate-900 tracking-tight">Production &amp; Imprimerie</h2>
+                    <p class="text-xs text-slate-500 font-medium">Moteur de fabrication physique de la plateforme : travaux, machines, stock et livraisons</p>
+                  </div>
+                </div>
+              </div>
+              <!-- Sub navigation -->
+              <div class="flex flex-wrap gap-2 mt-4 pt-4 border-t border-slate-100">
+                @for (tab of PRINT_SUB_TABS; track tab.key) {
+                  <button
+                    (click)="printSubTab.set(tab.key)"
+                    [class]="printSubTab() === tab.key ? 'px-3 py-1.5 rounded-lg text-xs font-bold bg-orange-600 text-white shadow-xs' : 'px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-100'"
+                  >
+                    <span class="material-icons text-sm align-middle mr-1">{{ tab.icon }}</span>{{ tab.label }}
+                  </button>
+                }
+              </div>
+            </div>
+
+            <!-- ============ OVERVIEW ============ -->
+            @if (printSubTab() === 'overview') {
+              <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
+                  <p class="text-[10px] font-bold text-slate-400 uppercase">Travaux aujourd'hui</p>
+                  <p class="text-2xl font-black text-slate-900 mt-1">{{ data.printDashboard()?.jobsToday ?? 0 }}</p>
+                </div>
+                <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
+                  <p class="text-[10px] font-bold text-slate-400 uppercase">En production</p>
+                  <p class="text-2xl font-black text-blue-700 mt-1">{{ data.printDashboard()?.inProduction ?? 0 }}</p>
+                </div>
+                <div class="bg-white p-4 rounded-2xl border border-red-200 shadow-xs">
+                  <p class="text-[10px] font-bold text-red-400 uppercase">Urgents / Retards</p>
+                  <p class="text-2xl font-black text-red-600 mt-1">{{ (data.printDashboard()?.urgent ?? 0) + (data.printDashboard()?.late ?? 0) }}</p>
+                </div>
+                <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
+                  <p class="text-[10px] font-bold text-slate-400 uppercase">Prêts à livrer</p>
+                  <p class="text-2xl font-black text-emerald-700 mt-1">{{ data.printDashboard()?.ready ?? 0 }}</p>
+                </div>
+                <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
+                  <p class="text-[10px] font-bold text-slate-400 uppercase">Machines actives</p>
+                  <p class="text-2xl font-black text-slate-900 mt-1">{{ data.printDashboard()?.activeMachines ?? 0 }}
+                    @if ((data.printDashboard()?.brokenMachines ?? 0) > 0) {
+                      <span class="text-sm font-bold text-red-500">({{ data.printDashboard().brokenMachines }} en panne)</span>
+                    }
+                  </p>
+                </div>
+                <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
+                  <p class="text-[10px] font-bold text-slate-400 uppercase">Maintenance &lt; 15j</p>
+                  <p class="text-2xl font-black text-amber-600 mt-1">{{ data.printDashboard()?.maintenanceSoon ?? 0 }}</p>
+                </div>
+                <div class="col-span-2 bg-gradient-to-br from-emerald-50 to-white p-4 rounded-2xl border border-emerald-200 shadow-xs">
+                  <p class="text-[10px] font-bold text-emerald-600 uppercase">💰 Bénéfice cumulé (travaux)</p>
+                  <p class="text-2xl font-black mt-1" [class]="(data.printDashboard()?.totalProfit ?? 0) >= 0 ? 'text-emerald-700' : 'text-red-600'">{{ data.printDashboard()?.totalProfit ?? 0 }} DH</p>
+                  @if (data.printDashboard()?.totalRevenue) {
+                    <p class="text-[10px] text-slate-500 font-semibold mt-0.5">CA {{ data.printDashboard().totalRevenue }} DH · marge moyenne {{ data.printDashboard()?.avgMargin ?? 0 }}%</p>
+                  }
+                </div>
+                <div class="col-span-2 bg-white p-4 rounded-2xl border border-amber-200 shadow-xs">
+                  <p class="text-[10px] font-bold text-amber-500 uppercase mb-2">⚠️ Stock faible</p>
+                  @if ((data.printDashboard()?.lowStock?.length ?? 0) === 0) {
+                    <p class="text-xs text-slate-500">Aucune alerte — tous les stocks sont au-dessus des seuils.</p>
+                  } @else {
+                    <ul class="space-y-1">
+                      @for (m of data.printDashboard().lowStock; track m.id) {
+                        <li class="text-xs font-semibold text-slate-700">{{ m.name }} — <span class="text-red-600">{{ m.quantity }} {{ m.unit }}</span> (seuil {{ m.minQuantity }})</li>
+                      }
+                    </ul>
+                  }
+                </div>
+              </div>
+            }
+
+            <!-- ============ TRAVAUX ============ -->
+            @if (printSubTab() === 'jobs') {
+              <div class="grid lg:grid-cols-3 gap-6">
+                <!-- Nouveau travail -->
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs lg:col-span-1">
+                  <h3 class="text-sm font-black text-slate-900 mb-4 flex items-center gap-2"><span class="material-icons text-base text-orange-600">add_task</span>Nouveau travail d'impression</h3>
+                  <form [formGroup]="printJobForm()" (ngSubmit)="submitPrintJob()" class="space-y-3">
+                    <div>
+                      <label class="text-[10px] font-bold text-slate-500 uppercase">Commande centrale *</label>
+                      <select formControlName="orderId" (change)="onPrintJobSpecChange()" class="w-full mt-1 px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-orange-500/40">
+                        <option value="">— Sélectionner une commande —</option>
+                        @for (o of data.orders(); track o.id) {
+                          <option [value]="o.id">{{ o.reference }} — {{ o.customerDetails.name }} ({{ o.serviceName }})</option>
+                        }
+                      </select>
+                      <p class="text-[10px] text-slate-400 mt-0.5">Le travail dérive toujours d'une commande existante.</p>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                      <div>
+                        <label class="text-[10px] font-bold text-slate-500 uppercase">Pages *</label>
+                        <input type="number" formControlName="pages" (input)="onPrintJobSpecChange()" min="1" class="w-full mt-1 px-3 py-2 rounded-xl border border-slate-200 text-xs" />
+                      </div>
+                      <div>
+                        <label class="text-[10px] font-bold text-slate-500 uppercase">Exemplaires *</label>
+                        <input type="number" formControlName="copies" (input)="onPrintJobSpecChange()" min="1" class="w-full mt-1 px-3 py-2 rounded-xl border border-slate-200 text-xs" />
+                      </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                      <div>
+                        <label class="text-[10px] font-bold text-slate-500 uppercase">Format</label>
+                        <select formControlName="format" (change)="onPrintJobSpecChange()" class="w-full mt-1 px-3 py-2 rounded-xl border border-slate-200 text-xs">
+                          <option value="A4">A4</option><option value="A3">A3</option><option value="A5">A5</option>
+                          <option value="PHOTO_10x15">Photo 10x15</option><option value="GRAND_FORMAT">Grand format</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label class="text-[10px] font-bold text-slate-500 uppercase">Couleur</label>
+                        <select formControlName="colorMode" (change)="onPrintJobSpecChange()" class="w-full mt-1 px-3 py-2 rounded-xl border border-slate-200 text-xs">
+                          <option value="nb">Noir &amp; Blanc</option><option value="couleur">Couleur</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                      <div>
+                        <label class="text-[10px] font-bold text-slate-500 uppercase">Papier</label>
+                        <select formControlName="paperType" (change)="onPrintJobSpecChange()" class="w-full mt-1 px-3 py-2 rounded-xl border border-slate-200 text-xs">
+                          @for (p of data.pricingEntries(data.printPricing()?.paperSurcharge); track p.key) {
+                            <option [value]="p.key">{{ p.key }} {{ p.value > 0 ? '(+' + p.value + ' DH/page)' : '' }}</option>
+                          }
+                        </select>
+                      </div>
+                      <div>
+                        <label class="text-[10px] font-bold text-slate-500 uppercase">Urgence</label>
+                        <select formControlName="urgencyKey" (change)="onPrintJobSpecChange()" class="w-full mt-1 px-3 py-2 rounded-xl border border-slate-200 text-xs">
+                          <option value="normal">Normal (x1.0)</option><option value="fast">Rapide (x1.3)</option>
+                          <option value="urgent">Urgent (x1.6)</option><option value="very_urgent">Très urgent (x2.0)</option>
+                        </select>
+                      </div>
+                    </div>
+                    <label class="flex items-center gap-2 text-xs font-semibold text-slate-600 cursor-pointer">
+                      <input type="checkbox" formControlName="duplex" (change)="onPrintJobSpecChange()" class="rounded border-slate-300" />
+                      Recto-verso automatique
+                    </label>
+                    <div>
+                      <label class="text-[10px] font-bold text-slate-500 uppercase">Façonnage &amp; Finition</label>
+                      <div class="flex flex-wrap gap-1.5 mt-1">
+                        @for (f of data.pricingEntries(data.printPricing()?.finishingForfaits); track f.key) {
+                          <button type="button" (click)="toggleFinishingOption(f.key)"
+                            [class]="(printJobForm().get('finishingOptions')?.value || []).includes(f.key) ? 'px-2.5 py-1 rounded-full text-[10px] font-bold bg-orange-600 text-white' : 'px-2.5 py-1 rounded-full text-[10px] font-semibold bg-slate-100 text-slate-600 hover:bg-slate-200'">
+                            {{ f.key.split('_').join(' ') }} ({{ f.value }} DH/ex)
+                          </button>
+                        }
+                      </div>
+                    </div>
+                    @if (printQuotePreview(); as preview) {
+                      <div class="bg-orange-50 border border-orange-200 rounded-xl p-3 space-y-1">
+                        <div class="flex justify-between text-xs"><span class="text-slate-500">Prix de vente calculé</span><span class="font-black text-orange-700">{{ preview.salePrice }} DH</span></div>
+                        <div class="flex justify-between text-[10px]"><span class="text-slate-500">Coût de revient estimé</span><span class="font-semibold text-slate-600">{{ preview.estimatedCost }} DH</span></div>
+                        <div class="flex justify-between text-[10px] items-center">
+                          <span class="text-slate-500 font-bold">Bénéfice estimé</span>
+                          <span class="font-black" [class]="preview.estimatedProfit >= 0 ? 'text-emerald-700' : 'text-red-600'">
+                            {{ preview.estimatedProfit }} DH ({{ preview.marginPercent }}%)
+                            @if (preview.estimatedProfit < 0) { ⚠️ } @else if (preview.marginPercent < 15) { ⚠️ marge faible }
+                          </span>
+                        </div>
+                        @if (preview.consumablesNeeded && preview.consumablesNeeded.length > 0) {
+                          <div class="pt-1 border-t border-orange-100 space-y-0.5">
+                            <p class="text-[9px] font-black text-slate-400 uppercase">Consommables requis (stock)</p>
+                            @for (c of preview.consumablesNeeded; track c.materialId) {
+                              <div class="flex justify-between text-[10px]">
+                                <span [class]="c.available ? 'text-slate-600' : 'text-red-600 font-bold'">{{ c.available ? '✓' : '✗' }} {{ c.materialName }}</span>
+                                <span class="text-slate-500">{{ c.quantity }} {{ c.unit }} · stock {{ c.available ? 'OK' : 'INSUFFISANT' }}</span>
+                              </div>
+                            }
+                          </div>
+                        }
+                        <div class="flex justify-between text-[10px]"><span class="text-slate-500">Pages totales</span><span class="text-slate-600">{{ preview.details['totalPages'] }} (remise volume {{ preview.details['volumeDiscountPercent'] }}%)</span></div>
+                        <div class="flex justify-between text-[10px]"><span class="text-slate-500">Prix unitaire/page</span><span class="text-slate-600">{{ preview.details['unitPrice'] }} DH</span></div>
+                      </div>
+                    }
+                    <button type="submit" class="w-full py-2.5 rounded-xl bg-orange-600 hover:bg-orange-700 text-white text-xs font-black shadow-xs">Créer le travail</button>
+                  </form>
+                </div>
+
+                <!-- Liste travaux -->
+                <div class="lg:col-span-2 bg-white p-5 rounded-2xl border border-slate-200 shadow-xs overflow-x-auto">
+                  <h3 class="text-sm font-black text-slate-900 mb-4 flex items-center gap-2"><span class="material-icons text-base text-orange-600">assignment</span>Travaux ({{ data.printJobs().length }})</h3>
+                  @if (data.printJobs().length === 0) {
+                    <p class="text-xs text-slate-400 py-8 text-center">Aucun travail d'impression pour le moment.</p>
+                  } @else {
+                    <table class="w-full text-left">
+                      <thead><tr class="text-[10px] uppercase text-slate-400 border-b border-slate-100">
+                        <th class="py-2 pr-2">Référence</th><th class="pr-2">Commande</th><th class="pr-2">Spécifications</th><th class="pr-2">Statut</th><th class="pr-2">Prix / Coût</th><th></th>
+                      </tr></thead>
+                      <tbody>
+                        @for (job of data.printJobs(); track job.id) {
+                          <tr class="border-b border-slate-50 text-xs">
+                            <td class="py-2.5 pr-2 font-black text-slate-800 whitespace-nowrap">{{ job.reference }}
+                              @if (job.priority !== 'normal') { <span class="ml-1 px-1.5 py-0.5 rounded text-[9px] font-black bg-red-100 text-red-700">{{ job.priority === 'tres_urgent' ? 'TRÈS URGENT' : 'URGENT' }}</span> }
+                            </td>
+                            <td class="pr-2 text-slate-600 whitespace-nowrap">{{ job.orderReference }}<br /><span class="text-[10px] text-slate-400">{{ job.clientName }}</span></td>
+                            <td class="pr-2 text-slate-600">{{ job.pages }}p × {{ job.copies }} ex · {{ job.colorMode === 'nb' ? 'N&amp;B' : 'Couleur' }} · {{ job.format }} @if (job.duplex) { · R/V }
+                              @if (job.finishingOptions.length > 0) { <br /><span class="text-[10px] text-slate-400">{{ job.finishingOptions.join(', ') }}</span> }
+                            </td>
+                            <td class="pr-2">
+                              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold"
+                                [class]="job.status === 'termine' || job.status === 'livre' ? 'bg-emerald-100 text-emerald-700' : job.status === 'en_attente' ? 'bg-amber-100 text-amber-700' : job.status === 'production' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-600'"
+                                [title]="job.waitingReason || ''">{{ PRINT_STATUS_LABELS[job.status] }}</span>
+                              @if (job.machineName) { <br /><span class="text-[9px] text-slate-400">{{ job.machineName }}</span> }
+                            </td>
+                            <td class="pr-2 whitespace-nowrap"><span class="font-black text-slate-800">{{ job.salePrice }} DH</span><br /><span class="text-[10px] text-slate-400">coût {{ job.estimatedCost }} DH</span><br />
+                              @if (job.estimatedProfit !== undefined) {
+                                <span class="text-[10px] font-black" [class]="job.estimatedProfit >= 0 ? 'text-emerald-600' : 'text-red-600'">bénéfice {{ job.estimatedProfit }} DH ({{ job.marginPercent }}%)</span>
+                              }
+                            </td>
+                            <td class="whitespace-nowrap">
+                              @if (!['livre','termine','annule'].includes(job.status)) {
+                                <select (change)="movePrintJob(job.id, $any($event.target).value); resetSelect($event)" class="px-2 py-1 rounded-lg border border-slate-200 text-[10px] font-semibold">
+                                  <option value="">→ Déplacer…</option>
+                                  @for (col of PRINT_KANBAN_COLUMNS; track col.key) {
+                                    @if (col.key !== job.status) { <option [value]="col.key">{{ col.label }}</option> }
+                                  }
+                                  <option value="en_attente">En attente (raison requise)</option>
+                                  <option value="termine">Terminé</option>
+                                  <option value="annule">Annulé</option>
+                                </select>
+                              } @else if (job.consumptions.length > 0) {
+                                <span class="text-[9px] text-slate-400" [title]="job.consumptions.map(c => c.materialName + ': ' + c.quantity).join('\n')">{{ job.consumptions.length }} consommations</span>
+                              }
+                            </td>
+                          </tr>
+                        }
+                      </tbody>
+                    </table>
+                  }
+                </div>
+              </div>
+              <!-- Raison de mise en attente obligatoire -->
+              @if (waitingReasonForm().jobId) {
+                <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40" (click)="$event.target === $event.currentTarget && waitingReasonForm.set({jobId:null,reason:''})">
+                  <div class="bg-white rounded-2xl p-6 w-full max-w-md mx-4 shadow-xl">
+                    <h4 class="text-sm font-black text-slate-900 mb-2">Mise en attente motivée</h4>
+                    <p class="text-xs text-slate-500 mb-3">La raison est obligatoire et sera visible dans l'historique du travail.</p>
+                    <textarea [value]="waitingReasonForm().reason" (input)="waitingReasonForm.set({ jobId: waitingReasonForm().jobId, reason: $any($event.target).value })" rows="3" placeholder="Ex : fichier client corrompu, rupture toner magenta…" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs"></textarea>
+                    <div class="flex justify-end gap-2 mt-3">
+                      <button (click)="waitingReasonForm.set({jobId:null,reason:''})" class="px-4 py-2 rounded-xl text-xs font-bold text-slate-500 hover:bg-slate-100">Annuler</button>
+                      <button (click)="submitWaitingReason()" class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-black">Mettre en attente</button>
+                    </div>
+                  </div>
+                </div>
+              }
+            }
+
+            <!-- ============ KANBAN ============ -->
+            @if (printSubTab() === 'kanban') {
+              <div class="overflow-x-auto pb-4 -mx-1 px-1">
+                <div class="flex gap-3 min-w-max">
+                  @for (col of PRINT_KANBAN_COLUMNS; track col.key) {
+                    <div class="w-64 flex-shrink-0">
+                      <div class="flex items-center justify-between mb-2 px-1">
+                        <h4 class="text-xs font-black text-slate-700 uppercase tracking-wide">{{ col.label }}</h4>
+                        <span class="text-[10px] font-bold text-slate-400 bg-slate-100 rounded-full px-2">{{ jobsByKanbanColumn(col.key).length }}</span>
+                      </div>
+                      <div class="space-y-2 min-h-24">
+                        @for (job of jobsByKanbanColumn(col.key); track job.id) {
+                          <div class="bg-white rounded-xl border shadow-xs p-3"
+                            [class]="job.priority !== 'normal' ? 'border-red-300 ring-1 ring-red-100' : 'border-slate-200'">
+                            <div class="flex items-center justify-between">
+                              <p class="text-[11px] font-black text-slate-800">{{ job.reference }}</p>
+                              @if (job.priority !== 'normal') { <span class="material-icons text-red-500 text-sm">priority_high</span> }
+                            </div>
+                            <p class="text-[10px] text-slate-500 mt-0.5">{{ job.orderReference }} · {{ job.clientName }}</p>
+                            <p class="text-[10px] text-slate-600 mt-1">{{ job.serviceName }}</p>
+                            <div class="mt-2 h-1 rounded-full bg-slate-100 overflow-hidden"><div class="h-full bg-orange-500" [style.width.%]="job.progress"></div></div>
+                            <div class="flex items-center justify-between mt-2">
+                              <span class="text-[9px] text-slate-400">{{ job.pages }}p × {{ job.copies }}</span>
+                              <span class="text-[9px] font-bold text-slate-500">{{ job.progress }}%</span>
+                            </div>
+                            @if (job.deadline) { <p class="text-[9px] text-slate-400 mt-1">⏱ {{ job.deadline.slice(0,10) }}</p> }
+                            @if (job.waitingReason && job.status === 'en_attente') { <p class="text-[9px] text-amber-600 mt-1 italic">⛔ {{ job.waitingReason }}</p> }
+                            @if (job.machineName) { <p class="text-[9px] text-indigo-500 mt-1">🖨 {{ job.machineName }}</p> }
+                            <div class="flex gap-1 mt-2 pt-2 border-t border-slate-50 flex-wrap">
+                              @for (col2 of PRINT_KANBAN_COLUMNS; track col2.key) {
+                                @if (col2.key !== job.status && Math.abs(PRINT_KANBAN_COLUMNS.findIndex(c => c.key === col2.key) - PRINT_KANBAN_COLUMNS.findIndex(c => c.key === job.status)) <= 1) {
+                                  <button (click)="movePrintJob(job.id, col2.key)" class="text-[9px] px-1.5 py-0.5 rounded bg-slate-100 hover:bg-orange-100 hover:text-orange-700 font-semibold">→ {{ col2.label }}</button>
+                                }
+                              }
+                            </div>
+                          </div>
+                        }
+                      </div>
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+
+            <!-- ============ MACHINES ============ -->
+            @if (printSubTab() === 'machines') {
+              <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                @for (m of data.printMachines(); track m.id) {
+                  <div class="bg-white p-4 rounded-2xl border shadow-xs"
+                    [class]="m.status === 'active' ? 'border-slate-200' : m.status === 'en_panne' ? 'border-red-300' : m.status === 'maintenance' ? 'border-amber-300' : 'border-slate-200 opacity-60'">
+                    <div class="flex items-start justify-between">
+                      <div>
+                        <p class="text-sm font-black text-slate-900">{{ m.name }}</p>
+                        <p class="text-[10px] text-slate-400">{{ m.internalNumber }} · {{ m.brand }} {{ m.model }}</p>
+                      </div>
+                      <span class="px-2 py-0.5 rounded-full text-[9px] font-black"
+                        [class]="m.status === 'active' ? 'bg-emerald-100 text-emerald-700' : m.status === 'en_panne' ? 'bg-red-100 text-red-700' : m.status === 'maintenance' ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-500'">
+                        {{ m.status.replace('_',' ').toUpperCase() }}
+                      </span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-x-3 gap-y-1 mt-3 text-[10px] text-slate-600">
+                      <p>Compteur N&B : <b>{{ m.counterNb.toLocaleString('fr-FR') }}</b></p>
+                      <p>Compteur couleur : <b>{{ m.counterColor.toLocaleString('fr-FR') }}</b></p>
+                      <p>Coût/page N&B : <b>{{ m.costPerPageNb }} DH</b></p>
+                      <p>Coût/page coul. : <b>{{ m.costPerPageColor }} DH</b></p>
+                      @if (m.nextMaintenanceDate) { <p class="col-span-2">Prochaine maintenance : <b>{{ m.nextMaintenanceDate }}</b></p> }
+                      @if (m.location) { <p class="col-span-2 text-slate-400">📍 {{ m.location }}</p> }
+                    </div>
+                    @if (data.activeRole() === 'admin' || data.activeRole() === 'operator') {
+                      <select (change)="changeMachineStatus(m.id, $event)" class="mt-3 w-full px-2 py-1.5 rounded-lg border border-slate-200 text-[10px] font-semibold">
+                        <option value="">→ Changer statut…</option>
+                        <option value="active">Active</option><option value="maintenance">Maintenance</option>
+                        <option value="en_panne">En panne</option><option value="hors_service">Hors service</option>
+                      </select>
+                    }
+                  </div>
+                }
+              </div>
+            }
+
+            <!-- ============ COMPTEURS ============ -->
+            @if (printSubTab() === 'counters') {
+              <div class="grid lg:grid-cols-3 gap-6">
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+                  <h3 class="text-sm font-black text-slate-900 mb-4 flex items-center gap-2"><span class="material-icons text-base text-orange-600">speed</span>Nouveau relevé</h3>
+                  <form [formGroup]="counterReadingForm()" (ngSubmit)="submitCounterReading()" class="space-y-3">
+                    <div>
+                      <label class="text-[10px] font-bold text-slate-500 uppercase">Machine *</label>
+                      <select formControlName="machineId" class="w-full mt-1 px-3 py-2 rounded-xl border border-slate-200 text-xs">
+                        <option value="">— Sélectionner —</option>
+                        @for (m of data.printMachines(); track m.id) { <option [value]="m.id">{{ m.name }} (N&B {{ m.counterNb }} / Coul {{ m.counterColor }})</option> }
+                      </select>
+                    </div>
+                    <div>
+                      <label class="text-[10px] font-bold text-slate-500 uppercase">Compteur N&B actuel</label>
+                      <input type="number" formControlName="currentNb" min="0" class="w-full mt-1 px-3 py-2 rounded-xl border border-slate-200 text-xs" />
+                    </div>
+                    <div>
+                      <label class="text-[10px] font-bold text-slate-500 uppercase">Compteur couleur actuel</label>
+                      <input type="number" formControlName="currentColor" min="0" class="w-full mt-1 px-3 py-2 rounded-xl border border-slate-200 text-xs" />
+                    </div>
+                    <button type="submit" class="w-full py-2.5 rounded-xl bg-orange-600 hover:bg-orange-700 text-white text-xs font-black">Enregistrer le relevé</button>
+                  </form>
+                </div>
+                <div class="lg:col-span-2 bg-white p-5 rounded-2xl border border-slate-200 shadow-xs overflow-x-auto">
+                  <h3 class="text-sm font-black text-slate-900 mb-4">Historique des relevés ({{ data.counterReadings().length }})</h3>
+                  @if (data.counterReadings().length === 0) {
+                    <p class="text-xs text-slate-400 py-8 text-center">Aucun relevé enregistré.</p>
+                  } @else {
+                    <table class="w-full text-left">
+                      <thead><tr class="text-[10px] uppercase text-slate-400 border-b border-slate-100">
+                        <th class="py-2 pr-2">Date</th><th class="pr-2">Machine</th><th class="pr-2">Δ N&B</th><th class="pr-2">Δ Couleur</th><th class="pr-2">Relevé par</th>
+                      </tr></thead>
+                      <tbody>
+                        @for (r of data.counterReadings(); track r.id) {
+                          <tr class="border-b border-slate-50 text-xs">
+                            <td class="py-2 pr-2 text-slate-500">{{ r.readingDate.slice(0,16).replace('T',' ') }}</td>
+                            <td class="pr-2 font-semibold text-slate-700">{{ r.machineName }}</td>
+                            <td class="pr-2 font-black text-slate-800">{{ r.previousNb }} → {{ r.currentNb }} <span class="text-orange-600">(+{{ r.deltaNb }})</span></td>
+                            <td class="pr-2 font-black text-slate-800">{{ r.previousColor }} → {{ r.currentColor }} <span class="text-orange-600">(+{{ r.deltaColor }})</span></td>
+                            <td class="pr-2 text-slate-500">{{ r.readByUserName }}</td>
+                          </tr>
+                        }
+                      </tbody>
+                    </table>
+                  }
+                </div>
+              </div>
+            }
+
+            <!-- ============ STOCK ============ -->
+            @if (printSubTab() === 'stock') {
+              <div class="grid lg:grid-cols-3 gap-6">
+                <div class="space-y-6">
+                  <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+                    <h3 class="text-sm font-black text-slate-900 mb-4 flex items-center gap-2"><span class="material-icons text-base text-orange-600">swap_horiz</span>Mouvement de stock</h3>
+                    <form [formGroup]="stockMovementForm()" (ngSubmit)="submitStockMovement()" class="space-y-3">
+                      <div>
+                        <label class="text-[10px] font-bold text-slate-500 uppercase">Matière *</label>
+                        <select formControlName="materialId" class="w-full mt-1 px-3 py-2 rounded-xl border border-slate-200 text-xs">
+                          <option value="">— Sélectionner —</option>
+                          @for (mat of data.printMaterials(); track mat.id) { <option [value]="mat.id">{{ mat.name }} ({{ mat.quantity }} {{ mat.unit }})</option> }
+                        </select>
+                      </div>
+                      <div>
+                        <label class="text-[10px] font-bold text-slate-500 uppercase">Type *</label>
+                        <select formControlName="type" class="w-full mt-1 px-3 py-2 rounded-xl border border-slate-200 text-xs">
+                          <option value="entree_achat">Entrée achat</option>
+                          <option value="consommation_production">Consommation production</option>
+                          <option value="ajustement_inventaire">Ajustement inventaire</option>
+                          <option value="perte_dechet">Perte / Déchet</option>
+                          <option value="retour">Retour</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label class="text-[10px] font-bold text-slate-500 uppercase">Quantité *</label>
+                        <input type="number" formControlName="quantity" min="1" class="w-full mt-1 px-3 py-2 rounded-xl border border-slate-200 text-xs" />
+                      </div>
+                      <div>
+                        <label class="text-[10px] font-bold text-slate-500 uppercase">Raison (ajustement/perte)</label>
+                        <input type="text" formControlName="reason" placeholder="Obligatoire pour ajustement ou perte" class="w-full mt-1 px-3 py-2 rounded-xl border border-slate-200 text-xs" />
+                      </div>
+                      <button type="submit" class="w-full py-2.5 rounded-xl bg-orange-600 hover:bg-orange-700 text-white text-xs font-black">Enregistrer le mouvement</button>
+                    </form>
+                  </div>
+                  <!-- Stock faible -->
+                  @if (data.printDashboard()) {
+                    <div class="bg-white p-5 rounded-2xl border border-amber-200 shadow-xs">
+                      <h3 class="text-sm font-black text-amber-700 mb-3">⚠️ Alertes stock</h3>
+                      @if ((data.printDashboard()?.lowStock?.length ?? 0) === 0) { <p class="text-xs text-slate-400">Aucune alerte.</p>
+                      } @else { <ul class="space-y-1">@for (m of data.printDashboard().lowStock; track m.id) { <li class="text-xs text-slate-700 font-semibold">{{ m.name }} — {{ m.quantity }}/{{ m.minQuantity }} {{ m.unit }}</li> }</ul> }
+                    </div>
+                  }
+                </div>
+                <div class="lg:col-span-2 space-y-6">
+                  <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs overflow-x-auto">
+                    <h3 class="text-sm font-black text-slate-900 mb-4 flex items-center gap-2"><span class="material-icons text-base text-orange-600">inventory_2</span>Inventaire</h3>
+                    <table class="w-full text-left">
+                      <thead><tr class="text-[10px] uppercase text-slate-400 border-b border-slate-100">
+                        <th class="py-2 pr-2">Matière</th><th class="pr-2">Catégorie</th><th class="pr-2">Stock</th><th class="pr-2">Seuil</th><th class="pr-2">Coût unitaire</th><th class="pr-2">Valeur</th>
+                      </tr></thead>
+                      <tbody>
+                        @for (mat of data.printMaterials(); track mat.id) {
+                          <tr class="border-b border-slate-50 text-xs" [class.bg-amber-50]="mat.quantity <= mat.minQuantity">
+                            <td class="py-2.5 pr-2 font-semibold text-slate-800">{{ mat.name }}<br /><span class="text-[9px] text-slate-400">{{ mat.spec }}</span></td>
+                            <td class="pr-2 text-slate-500 capitalize">{{ mat.category }}</td>
+                            <td class="pr-2 font-black" [class.text-red-600]="mat.quantity <= mat.minQuantity">{{ mat.quantity.toLocaleString('fr-FR') }} {{ mat.unit }}</td>
+                            <td class="pr-2 text-slate-400">{{ mat.minQuantity }}</td>
+                            <td class="pr-2 text-slate-600">{{ mat.unitCost }} DH</td>
+                            <td class="pr-2 font-bold text-slate-800">{{ (mat.quantity * mat.unitCost).toFixed(2) }} DH</td>
+                          </tr>
+                        }
+                      </tbody>
+                    </table>
+                  </div>
+                  <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs max-h-96 overflow-y-auto">
+                    <h3 class="text-sm font-black text-slate-900 mb-4">Historique des mouvements</h3>
+                    <div class="space-y-2">
+                      @for (mv of data.stockMovements(); track mv.id) {
+                        <div class="flex items-center justify-between text-xs border-b border-slate-50 pb-2">
+                          <div>
+                            <span class="font-semibold text-slate-700">{{ mv.materialName }}</span>
+                            <span class="text-[10px] text-slate-400 ml-2">{{ mv.date.slice(0,16).replace('T',' ') }} · {{ mv.userName }}</span>
+                            @if (mv.reason) { <p class="text-[10px] text-slate-400 italic">Raison : {{ mv.reason }}</p> }
+                            @if (mv.printJobId) { <p class="text-[10px] text-orange-500">Travail : {{ (data.printJobs().find(j => j.id === mv.printJobId)?.reference) || mv.printJobId }}</p> }
+                          </div>
+                          <span class="font-black whitespace-nowrap" [class]="mv.quantity > 0 ? 'text-emerald-600' : 'text-red-600'">{{ mv.quantity > 0 ? '+' : '' }}{{ mv.quantity }} → {{ mv.stockAfter }}</span>
+                        </div>
+                      }
+                    </div>
+                  </div>
+                </div>
+              </div>
+            }
+
+            <!-- ============ LIVRAISONS ============ -->
+            @if (printSubTab() === 'deliveries') {
+              <div class="grid lg:grid-cols-3 gap-6">
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+                  <h3 class="text-sm font-black text-slate-900 mb-4 flex items-center gap-2"><span class="material-icons text-base text-orange-600">local_shipping</span>Nouvelle livraison</h3>
+                  <form [formGroup]="deliveryForm()" (ngSubmit)="submitDelivery()" class="space-y-3">
+                    <div>
+                      <label class="text-[10px] font-bold text-slate-500 uppercase">Commande *</label>
+                      <select formControlName="orderId" class="w-full mt-1 px-3 py-2 rounded-xl border border-slate-200 text-xs">
+                        <option value="">— Sélectionner —</option>
+                        @for (o of data.orders(); track o.id) { <option [value]="o.id">{{ o.reference }} — {{ o.customerDetails.name }}</option> }
+                      </select>
+                    </div>
+                    <div>
+                      <label class="text-[10px] font-bold text-slate-500 uppercase">Mode *</label>
+                      <select formControlName="mode" class="w-full mt-1 px-3 py-2 rounded-xl border border-slate-200 text-xs">
+                        <option value="retrait_atelier">Retrait atelier (gratuit)</option>
+                        <option value="coursier_local">Coursier local express</option>
+                        <option value="livraison_nationale">Livraison nationale</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="text-[10px] font-bold text-slate-500 uppercase">Adresse</label>
+                      <input type="text" formControlName="address" class="w-full mt-1 px-3 py-2 rounded-xl border border-slate-200 text-xs" />
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                      <div><label class="text-[10px] font-bold text-slate-500 uppercase">Ville</label><input type="text" formControlName="city" class="w-full mt-1 px-3 py-2 rounded-xl border border-slate-200 text-xs" /></div>
+                      <div><label class="text-[10px] font-bold text-slate-500 uppercase">Téléphone</label><input type="tel" formControlName="phone" class="w-full mt-1 px-3 py-2 rounded-xl border border-slate-200 text-xs" /></div>
+                    </div>
+                    <div><label class="text-[10px] font-bold text-slate-500 uppercase">Livreur</label><input type="text" formControlName="courierName" class="w-full mt-1 px-3 py-2 rounded-xl border border-slate-200 text-xs" /></div>
+                    <button type="submit" class="w-full py-2.5 rounded-xl bg-orange-600 hover:bg-orange-700 text-white text-xs font-black">Créer la livraison</button>
+                  </form>
+                </div>
+                <div class="lg:col-span-2 bg-white p-5 rounded-2xl border border-slate-200 shadow-xs overflow-x-auto">
+                  <h3 class="text-sm font-black text-slate-900 mb-4">Livraisons ({{ data.deliveryTasks().length }})</h3>
+                  @if (data.deliveryTasks().length === 0) {
+                    <p class="text-xs text-slate-400 py-8 text-center">Aucune livraison planifiée.</p>
+                  } @else {
+                    <table class="w-full text-left">
+                      <thead><tr class="text-[10px] uppercase text-slate-400 border-b border-slate-100">
+                        <th class="py-2 pr-2">Commande</th><th class="pr-2">Mode</th><th class="pr-2">Destination</th><th class="pr-2">Frais</th><th class="pr-2">Statut</th><th></th>
+                      </tr></thead>
+                      <tbody>
+                        @for (d of data.deliveryTasks(); track d.id) {
+                          <tr class="border-b border-slate-50 text-xs">
+                            <td class="py-2.5 pr-2 font-bold text-slate-800">{{ d.orderReference }}</td>
+                            <td class="pr-2 text-slate-600">{{ d.mode.split('_').join(' ') }}</td>
+                            <td class="pr-2 text-slate-600">{{ d.city || '—' }} @if (d.address) {<br /><span class="text-[9px] text-slate-400">{{ d.address }}</span>}</td>
+                            <td class="pr-2 font-bold">{{ d.fee }} DH</td>
+                            <td class="pr-2">
+                              <span class="px-2 py-0.5 rounded-full text-[9px] font-bold"
+                                [class]="d.status === 'livre' ? 'bg-emerald-100 text-emerald-700' : d.status === 'echec' ? 'bg-red-100 text-red-700' : d.status === 'en_livraison' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-600'">
+                                {{ d.status.replace('_',' ') }}
+                              </span>
+                              @if (d.codAmount) { <br /><span class="text-[9px] text-amber-600">COD : {{ d.codAmount }} DH</span> }
+                            </td>
+                            <td class="whitespace-nowrap">
+                              @if (d.status !== 'livre') {
+                                <button (click)="setDeliveryStatus(d.id, 'en_livraison')" class="mr-1 text-[9px] px-2 py-1 rounded bg-blue-100 text-blue-700 font-bold hover:bg-blue-200">→ En livraison</button>
+                                <button (click)="setDeliveryStatus(d.id, 'livre')" class="mr-1 text-[9px] px-2 py-1 rounded bg-emerald-100 text-emerald-700 font-bold hover:bg-emerald-200">✓ Livré</button>
+                                <button (click)="setDeliveryStatus(d.id, 'echec')" class="text-[9px] px-2 py-1 rounded bg-red-100 text-red-700 font-bold hover:bg-red-200">✗ Échec</button>
+                              } @else { <span class="text-[9px] text-slate-400">{{ d.deliveredDate?.slice(0,10) }}</span> }
+                            </td>
+                          </tr>
+                        }
+                      </tbody>
+                    </table>
+                  }
+                </div>
+              </div>
+            }
+
+            <!-- ============ TARIFICATION ============ -->
+            @if (printSubTab() === 'pricing') {
+              <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs">
+                <h3 class="text-sm font-black text-slate-900 mb-1 flex items-center gap-2"><span class="material-icons text-base text-orange-600">sell</span>Moteur de tarification</h3>
+                <p class="text-xs text-slate-500 mb-4">Tous les prix sont configurables ici et appliqués automatiquement aux devis — aucun prix codé en dur.</p>
+                @if (data.printPricing(); as pricing) {
+                  <div class="grid md:grid-cols-2 gap-6">
+                    <div>
+                      <h4 class="text-[11px] font-black text-slate-700 uppercase mb-2">Prix de base à la page (DH)</h4>
+                      <div class="grid grid-cols-2 gap-2">
+                        @for (kv of data.pricingEntries(pricing.basePricePerPage); track kv.key) {
+                          <div class="flex items-center justify-between gap-2 bg-slate-50 rounded-lg px-2.5 py-1.5">
+                            <span class="text-[10px] font-semibold text-slate-600">{{ kv.key.replace('_', ' ') }}</span>
+                            <input type="number" step="0.05" [value]="kv.value" min="0" class="w-20 px-2 py-1 rounded-md border border-slate-200 text-[11px]"
+                              (change)="onPricingChange(kv, $event)" />
+                          </div>
+                        }
+                      </div>
+                      <h4 class="text-[11px] font-black text-slate-700 uppercase mt-4 mb-2">Majorations papier (DH/page)</h4>
+                      <div class="grid grid-cols-2 gap-2">
+                        @for (kv of data.pricingEntries(pricing.paperSurcharge); track kv.key) {
+                          <div class="flex items-center justify-between gap-2 bg-slate-50 rounded-lg px-2.5 py-1.5">
+                            <span class="text-[10px] font-semibold text-slate-600">{{ kv.key.split('_').join(' ') }}</span>
+                            <input type="number" step="0.05" [value]="kv.value" min="0" class="w-16 px-2 py-1 rounded-md border border-slate-200 text-[11px]" (change)="onPricingChange(kv, $event)" />
+                          </div>
+                        }
+                      </div>
+                    </div>
+                    <div>
+                      <h4 class="text-[11px] font-black text-slate-700 uppercase mb-2">Forfaits finition (DH/exemplaire)</h4>
+                      <div class="grid grid-cols-2 gap-2">
+                        @for (kv of data.pricingEntries(pricing.finishingForfaits); track kv.key) {
+                          <div class="flex items-center justify-between gap-2 bg-slate-50 rounded-lg px-2.5 py-1.5">
+                            <span class="text-[10px] font-semibold text-slate-600">{{ kv.key.split('_').join(' ') }}</span>
+                            <input type="number" step="0.5" [value]="kv.value" min="0" class="w-16 px-2 py-1 rounded-md border border-slate-200 text-[11px]" (change)="onPricingChange(kv, $event)" />
+                          </div>
+                        }
+                      </div>
+                      <h4 class="text-[11px] font-black text-slate-700 uppercase mt-4 mb-2">Multiplicateurs d’urgence</h4>
+                      <div class="grid grid-cols-2 gap-2">
+                        @for (kv of data.pricingEntries(pricing.urgencyMultipliers); track kv.key) {
+                          <div class="flex items-center justify-between gap-2 bg-slate-50 rounded-lg px-2.5 py-1.5">
+                            <span class="text-[10px] font-semibold text-slate-600">{{ kv.key.split('_').join(' ') }}</span>
+                            <input type="number" step="0.1" [value]="kv.value" min="1" class="w-16 px-2 py-1 rounded-md border border-slate-200 text-[11px]" (change)="onPricingChange(kv, $event)" />
+                          </div>
+                        }
+                      </div>
+                      <h4 class="text-[11px] font-black text-slate-700 uppercase mt-4 mb-2">Frais de livraison</h4>
+                      <div class="grid grid-cols-3 gap-2">
+                        @for (kv of data.pricingEntries(pricing.deliveryFees); track kv.key) {
+                          <div class="flex items-center justify-between gap-2 bg-slate-50 rounded-lg px-2.5 py-1.5">
+                            <span class="text-[10px] font-semibold text-slate-600">{{ kv.key.split('_').join(' ') }}</span>
+                            <input type="number" step="1" [value]="kv.value" min="0" class="w-14 px-2 py-1 rounded-md border border-slate-200 text-[11px]" (change)="onPricingChange(kv, $event)" />
+                          </div>
+                        }
+                      </div>
+                      <div class="flex items-center justify-between gap-2 bg-slate-50 rounded-lg px-2.5 py-1.5 mt-4">
+                        <span class="text-[10px] font-semibold text-slate-600">Remise recto-verso (%)</span>
+                        <input type="number" step="1" [value]="pricing.duplexDiscountPercent" min="0" max="90" class="w-16 px-2 py-1 rounded-md border border-slate-200 text-[11px]" (change)="onPricingChange({key: 'duplexDiscountPercent', value: pricing.duplexDiscountPercent}, $event)" />
+                      </div>
+                      <button (click)="data.savePricing(pricing)" class="mt-4 w-full py-2.5 rounded-xl bg-orange-600 hover:bg-orange-700 text-white text-xs font-black">Enregistrer la tarification</button>
+                    </div>
+                  </div>
+                } @else {
+                  <p class="text-xs text-slate-400">Chargement de la configuration…</p>
+                }
+              </div>
+            }
+          </div>
+        }
         <!-- HR & PAYROLL TAB VIEW -->
         @if (activeTab() === 'hr_payroll') {
           <div class="space-y-6 animate-fadeIn" id="hr-payroll-view">

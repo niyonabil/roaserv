@@ -72,7 +72,16 @@
                   "maximumError": "8kB"
                 }
               ],
-              "outputHashing": "all"
+              "outputHashing": "all",
+              "security": {
+                "allowedHosts": [
+                  "localhost",
+                  "127.0.0.1",
+                  "*.localhost",
+                  "digidocs.ma",
+                  "*.digidocs.ma"
+                ]
+              }
             },
             "development": {
               "optimization": false,

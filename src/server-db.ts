@@ -4,6 +4,26 @@ import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { initializeFirestore, doc, getDoc, getDocs, setDoc, collection, deleteDoc } from 'firebase/firestore';
 import defaultFirebaseAppletConfig from '../firebase-applet-config.json';
+// 🖨️ Module Imprimerie — types partagés avec le front (source unique: src/app/data.ts)
+import type {
+  PrintJob,
+  PrintMachine,
+  MachineCounterReading,
+  PrintMaterial,
+  PrintStockMovement,
+  DeliveryTask,
+  PrintPricingConfig,
+} from './app/data';
+
+export type {
+  PrintJob,
+  PrintMachine,
+  MachineCounterReading,
+  PrintMaterial,
+  PrintStockMovement,
+  DeliveryTask,
+  PrintPricingConfig,
+};
 
 // --- HELPER TO CLEAN UNDEFINED VALUES FOR FIRESTORE ---
 export function cleanFirestoreData<T>(data: T): T {
@@ -602,6 +622,12 @@ export interface AppDatabase {
   leaveRequests: LeaveRequest[];
   salaryAdvances: SalaryAdvance[];
   affiliateCommissions: AffiliateCommission[];
+  printJobs: PrintJob[];
+  printMachines: PrintMachine[];
+  machineCounterReadings: MachineCounterReading[];
+  printMaterials: PrintMaterial[];
+  printStockMovements: PrintStockMovement[];
+  deliveryTasks: DeliveryTask[];
   settings: SystemSettings;
 }
 
@@ -712,8 +738,15 @@ const localDbPath = join(process.cwd(), 'db.json');
 function loadLocalJsonDb(): AppDatabase {
   try {
     if (existsSync(localDbPath)) {
-      const data = readFileSync(localDbPath, 'utf-8');
-      return JSON.parse(data);
+      const data = JSON.parse(readFileSync(localDbPath, 'utf-8'));
+      // 🖨️ Normalisation : garantir les collections du module Imprimerie
+      data.printJobs = data.printJobs || [];
+      data.printMachines = data.printMachines || [];
+      data.machineCounterReadings = data.machineCounterReadings || [];
+      data.printMaterials = data.printMaterials || [];
+      data.printStockMovements = data.printStockMovements || [];
+      data.deliveryTasks = data.deliveryTasks || [];
+      return data as AppDatabase;
     }
   } catch (e) {
     console.error('Error loading local db.json:', e);
@@ -759,6 +792,12 @@ export function loadDatabase(): Promise<AppDatabase> {
         leaveRequestsSnap,
         salaryAdvancesSnap,
         affiliateCommissionsSnap,
+        printJobsSnap,
+        printMachinesSnap,
+        machineCounterReadingsSnap,
+        printMaterialsSnap,
+        printStockMovementsSnap,
+        deliveryTasksSnap,
         settingsSnap
       ] = await Promise.all([
         getDocs(collection(db, 'users')),
@@ -774,6 +813,12 @@ export function loadDatabase(): Promise<AppDatabase> {
         getDocs(collection(db, 'leaveRequests')),
         getDocs(collection(db, 'salaryAdvances')),
         getDocs(collection(db, 'affiliateCommissions')),
+        getDocs(collection(db, 'printJobs')),
+        getDocs(collection(db, 'printMachines')),
+        getDocs(collection(db, 'machineCounterReadings')),
+        getDocs(collection(db, 'printMaterials')),
+        getDocs(collection(db, 'printStockMovements')),
+        getDocs(collection(db, 'deliveryTasks')),
         getDoc(doc(db, 'settings', 'global'))
       ]);
 
@@ -815,6 +860,24 @@ export function loadDatabase(): Promise<AppDatabase> {
 
       const affiliateCommissions: AffiliateCommission[] = [];
       affiliateCommissionsSnap.forEach(d => affiliateCommissions.push(d.data() as AffiliateCommission));
+
+      const printJobs: PrintJob[] = [];
+      printJobsSnap.forEach(d => printJobs.push(d.data() as PrintJob));
+
+      const printMachines: PrintMachine[] = [];
+      printMachinesSnap.forEach(d => printMachines.push(d.data() as PrintMachine));
+
+      const machineCounterReadings: MachineCounterReading[] = [];
+      machineCounterReadingsSnap.forEach(d => machineCounterReadings.push(d.data() as MachineCounterReading));
+
+      const printMaterials: PrintMaterial[] = [];
+      printMaterialsSnap.forEach(d => printMaterials.push(d.data() as PrintMaterial));
+
+      const printStockMovements: PrintStockMovement[] = [];
+      printStockMovementsSnap.forEach(d => printStockMovements.push(d.data() as PrintStockMovement));
+
+      const deliveryTasks: DeliveryTask[] = [];
+      deliveryTasksSnap.forEach(d => deliveryTasks.push(d.data() as DeliveryTask));
 
       let settings: SystemSettings;
       if (settingsSnap.exists()) {
@@ -908,6 +971,12 @@ export function loadDatabase(): Promise<AppDatabase> {
         leaveRequests,
         salaryAdvances,
         affiliateCommissions,
+        printJobs,
+        printMachines,
+        machineCounterReadings,
+        printMaterials,
+        printStockMovements,
+        deliveryTasks,
         settings
       };
       cachedDatabaseState = resultState;
@@ -983,6 +1052,24 @@ export async function saveDatabase(databaseState: AppDatabase): Promise<void> {
       databaseState.affiliateCommissions.forEach(ac => {
         promises.push(setDoc(doc(db, 'affiliateCommissions', ac.id), cleanFirestoreData(ac)));
       });
+    }
+    if (databaseState.printJobs) {
+      databaseState.printJobs.forEach(pj => promises.push(setDoc(doc(db, 'printJobs', pj.id), cleanFirestoreData(pj))));
+    }
+    if (databaseState.printMachines) {
+      databaseState.printMachines.forEach(pm => promises.push(setDoc(doc(db, 'printMachines', pm.id), cleanFirestoreData(pm))));
+    }
+    if (databaseState.machineCounterReadings) {
+      databaseState.machineCounterReadings.forEach(mc => promises.push(setDoc(doc(db, 'machineCounterReadings', mc.id), cleanFirestoreData(mc))));
+    }
+    if (databaseState.printMaterials) {
+      databaseState.printMaterials.forEach(mat => promises.push(setDoc(doc(db, 'printMaterials', mat.id), cleanFirestoreData(mat))));
+    }
+    if (databaseState.printStockMovements) {
+      databaseState.printStockMovements.forEach(sm => promises.push(setDoc(doc(db, 'printStockMovements', sm.id), cleanFirestoreData(sm))));
+    }
+    if (databaseState.deliveryTasks) {
+      databaseState.deliveryTasks.forEach(dt => promises.push(setDoc(doc(db, 'deliveryTasks', dt.id), cleanFirestoreData(dt))));
     }
 
     promises.push(setDoc(doc(db, 'settings', 'global'), cleanFirestoreData(databaseState.settings)));
@@ -1130,6 +1217,12 @@ export async function purgeDatabase(): Promise<void> {
       leaveRequests: [],
       salaryAdvances: [],
       affiliateCommissions: [],
+      printJobs: [],
+      printMachines: [],
+      machineCounterReadings: [],
+      printMaterials: [],
+      printStockMovements: [],
+      deliveryTasks: [],
       settings: {
         companyName: "DigiDocs Services SARL",
         address: "14 Boulevard d'Anfa, Étage 3, Casablanca, Maroc",
@@ -1354,6 +1447,60 @@ function getSeededDatabase(): AppDatabase {
     }
   ];
 
+  // --- 🖨️ Module Imprimerie : seed machines, matériaux, tarification ---
+  const now = new Date().toISOString();
+  const printMachines: PrintMachine[] = [
+    { id: 'pm-1', name: 'Canon IR Advance 4545', brand: 'Canon', model: 'iR-ADV 4545 III', internalNumber: 'M-001', type: 'photocopieur', location: 'Atelier - Poste 1', status: 'active', counterNb: 125430, counterColor: 8420, costPerPageNb: 0.12, costPerPageColor: 0.65, lastMaintenanceDate: '2026-07-15', nextMaintenanceDate: '2026-10-15', createdAt: now },
+    { id: 'pm-2', name: 'Xerox VersaLink C405', brand: 'Xerox', model: 'VersaLink C405', internalNumber: 'M-002', type: 'photocopieur', location: 'Atelier - Poste 2', status: 'active', counterNb: 98120, counterColor: 45300, costPerPageNb: 0.14, costPerPageColor: 0.70, lastMaintenanceDate: '2026-06-01', nextMaintenanceDate: '2026-09-01', createdAt: now },
+    { id: 'pm-3', name: 'Traceur HP DesignJet T650', brand: 'HP', model: 'DesignJet T650 36in', internalNumber: 'M-003', type: 'traceur', location: 'Atelier - Grand Format', status: 'maintenance', counterNb: 0, counterColor: 12400, costPerPageNb: 0, costPerPageColor: 9.50, nextMaintenanceDate: '2026-09-05', createdAt: now },
+    { id: 'pm-4', name: 'Scanner Epson DS-30000', brand: 'Epson', model: 'DS-30000 A3', internalNumber: 'M-004', type: 'scanner', location: 'Atelier - Numérisation', status: 'active', counterNb: 210500, counterColor: 0, costPerPageNb: 0.02, costPerPageColor: 0, createdAt: now },
+    { id: 'pm-5', name: 'Relieuse Fastbind Booxter Duo', brand: 'Fastbind', model: 'Booxter Duo', internalNumber: 'M-005', type: 'relieuse', location: 'Atelier - Finition', status: 'en_panne', counterNb: 0, counterColor: 0, costPerPageNb: 0, costPerPageColor: 0, createdAt: now }
+  ];
+
+  const printMaterials: PrintMaterial[] = [
+    { id: 'mat-1', name: 'Papier A4 80g Blanc', category: 'papier', unit: 'feuilles', quantity: 8500, minQuantity: 2000, unitCost: 0.042, spec: '80g/m² standard', createdAt: now },
+    { id: 'mat-2', name: 'Papier A4 Couché 135g', category: 'papier', unit: 'feuilles', quantity: 1200, minQuantity: 500, unitCost: 0.09, spec: 'Couché brillant 135g', createdAt: now },
+    { id: 'mat-3', name: 'Papier Bristol A4 250g (couvertures)', category: 'papier', unit: 'feuilles', quantity: 350, minQuantity: 150, unitCost: 0.35, spec: 'Bristol 250g', createdAt: now },
+    { id: 'mat-4', name: 'Papier A3 80g Blanc', category: 'papier', unit: 'feuilles', quantity: 900, minQuantity: 400, unitCost: 0.084, spec: '80g/m² A3', createdAt: now },
+    { id: 'mat-5', name: 'Toner Noir Canon NPG-59', category: 'toner', unit: 'unites', quantity: 4, minQuantity: 2, unitCost: 480, spec: 'Canon iR-ADV', createdAt: now },
+    { id: 'mat-6', name: 'Toner Cyan Xerox 106R02757', category: 'toner', unit: 'unites', quantity: 2, minQuantity: 1, unitCost: 520, spec: 'VersaLink C405', createdAt: now },
+    { id: 'mat-7', name: 'Toner Magenta Xerox 106R02756', category: 'toner', unit: 'unites', quantity: 1, minQuantity: 1, unitCost: 520, spec: 'VersaLink C405 — STOCK FAIBLE', createdAt: now },
+    { id: 'mat-8', name: 'Spirale plastique 12mm', category: 'finition', unit: 'unites', quantity: 240, minQuantity: 100, unitCost: 1.80, spec: 'Noir, A4', createdAt: now },
+    { id: 'mat-9', name: 'Film plastification A4', category: 'finition', unit: 'unites', quantity: 180, minQuantity: 80, unitCost: 1.20, spec: '125 microns mat', createdAt: now }
+  ];
+
+  const defaultPrintPricing: PrintPricingConfig = {
+    basePricePerPage: {
+      nb_a4: 0.50, nb_a3: 1.00, nb_a5: 0.40, nb_photo: 2.50, nb_grand_format: 25.00,
+      couleur_a4: 2.00, couleur_a3: 4.00, couleur_a5: 1.60, couleur_photo: 5.00, couleur_grand_format: 60.00
+    },
+    duplexDiscountPercent: 20,
+    paperSurcharge: {
+      'standard_80g': 0,
+      'couche_135g': 0.30,
+      'bristol_250g': 0.90,
+      'photo_200g': 1.20,
+      'couleur_speciale': 0.50
+    },
+    finishingForfaits: {
+      'reliure_spirale': 15,
+      'thermoreliure': 25,
+      'plastification': 5,
+      'massicotage': 3,
+      'agrafage': 1,
+      'perforation': 1,
+      'pliage': 0.50
+    },
+    volumeTiers: [
+      { minPages: 500, discountPercent: 20 },
+      { minPages: 100, discountPercent: 10 }
+    ],
+    urgencyMultipliers: { normal: 1.0, fast: 1.3, urgent: 1.6, very_urgent: 2.0 },
+    deliveryFees: { retrait_atelier: 0, coursier_local: 20, livraison_nationale: 45 }
+  };
+
+  (defaultSettings as SystemSettings & { printPricing?: PrintPricingConfig }).printPricing = defaultPrintPricing;
+
   const users: User[] = [
     {
       id: "usr-admin-1",
@@ -1394,6 +1541,12 @@ function getSeededDatabase(): AppDatabase {
     leaveRequests: [],
     salaryAdvances: [],
     affiliateCommissions: [],
+    printJobs: [],
+    printMachines,
+    machineCounterReadings: [],
+    printMaterials,
+    printStockMovements: [],
+    deliveryTasks: [],
     settings: defaultSettings
   };
 }

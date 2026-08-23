@@ -37,6 +37,14 @@ import {
   LeaveRequest,
   SalaryAdvance,
   AffiliateCommission,
+  SystemSettings,
+  PrintJob,
+  PrintMachine,
+  MachineCounterReading,
+  PrintMaterial,
+  PrintStockMovement,
+  DeliveryTask,
+  PrintPricingConfig,
 } from './server-db';
 
 const possiblePaths = [
@@ -67,7 +75,7 @@ app.use((req, res, next) => {
   res.setHeader('X-Frame-Options', 'SAMEORIGIN');
   res.setHeader('X-XSS-Protection', '1; mode=block');
   res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
-  res.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://firestore.googleapis.com;");
+  res.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://unpkg.com https://fonts.googleapis.com; style-src-elem 'self' 'unsafe-inline' https://unpkg.com https://fonts.googleapis.com; img-src 'self' data: https:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https://firestore.googleapis.com;");
   next();
 });
 
@@ -3264,6 +3272,549 @@ app.delete('/api/settings/resources/:id', async (req, res) => {
   }
 });
 
+// ============================================================
+// 🖨️ MODULE PRODUCTION & IMPRIMERIE — API REST
+// ============================================================
+
+// Migration idempotente : seed machines/matériaux + tarification par défaut si absents
+async function ensurePrintModuleSeeded(dbData: AppDatabase): Promise<void> {
+  let changed = false;
+  if (!dbData.printMachines || dbData.printMachines.length === 0) {
+    const now = new Date().toISOString();
+    dbData.printMachines = [
+      { id: 'pm-1', name: 'Canon IR Advance 4545', brand: 'Canon', model: 'iR-ADV 4545 III', internalNumber: 'M-001', type: 'photocopieur', location: 'Atelier - Poste 1', status: 'active', counterNb: 125430, counterColor: 8420, costPerPageNb: 0.12, costPerPageColor: 0.65, lastMaintenanceDate: '2026-07-15', nextMaintenanceDate: '2026-10-15', createdAt: now },
+      { id: 'pm-2', name: 'Xerox VersaLink C405', brand: 'Xerox', model: 'VersaLink C405', internalNumber: 'M-002', type: 'photocopieur', location: 'Atelier - Poste 2', status: 'active', counterNb: 98120, counterColor: 45300, costPerPageNb: 0.14, costPerPageColor: 0.70, lastMaintenanceDate: '2026-06-01', nextMaintenanceDate: '2026-09-01', createdAt: now },
+      { id: 'pm-3', name: 'Traceur HP DesignJet T650', brand: 'HP', model: 'DesignJet T650 36in', internalNumber: 'M-003', type: 'traceur', location: 'Atelier - Grand Format', status: 'maintenance', counterNb: 0, counterColor: 12400, costPerPageNb: 0, costPerPageColor: 9.50, nextMaintenanceDate: '2026-09-05', createdAt: now },
+      { id: 'pm-4', name: 'Scanner Epson DS-30000', brand: 'Epson', model: 'DS-30000 A3', internalNumber: 'M-004', type: 'scanner', location: 'Atelier - Numérisation', status: 'active', counterNb: 210500, counterColor: 0, costPerPageNb: 0.02, costPerPageColor: 0, createdAt: now },
+      { id: 'pm-5', name: 'Relieuse Fastbind Booxter Duo', brand: 'Fastbind', model: 'Booxter Duo', internalNumber: 'M-005', type: 'relieuse', location: 'Atelier - Finition', status: 'en_panne', counterNb: 0, counterColor: 0, costPerPageNb: 0, costPerPageColor: 0, createdAt: now }
+    ];
+    changed = true;
+    console.log('[PrintModule] Machines seeded.');
+  }
+  if (!dbData.printMaterials || dbData.printMaterials.length === 0) {
+    const now = new Date().toISOString();
+    dbData.printMaterials = [
+      { id: 'mat-1', name: 'Papier A4 80g Blanc', category: 'papier', unit: 'feuilles', quantity: 8500, minQuantity: 2000, unitCost: 0.042, spec: '80g/m² standard', createdAt: now },
+      { id: 'mat-2', name: 'Papier A4 Couché 135g', category: 'papier', unit: 'feuilles', quantity: 1200, minQuantity: 500, unitCost: 0.09, spec: 'Couché brillant 135g', createdAt: now },
+      { id: 'mat-3', name: 'Papier Bristol A4 250g (couvertures)', category: 'papier', unit: 'feuilles', quantity: 350, minQuantity: 150, unitCost: 0.35, spec: 'Bristol 250g', createdAt: now },
+      { id: 'mat-4', name: 'Papier A3 80g Blanc', category: 'papier', unit: 'feuilles', quantity: 900, minQuantity: 400, unitCost: 0.084, spec: '80g/m² A3', createdAt: now },
+      { id: 'mat-5', name: 'Toner Noir Canon NPG-59', category: 'toner', unit: 'unites', quantity: 4, minQuantity: 2, unitCost: 480, spec: 'Canon iR-ADV', createdAt: now },
+      { id: 'mat-6', name: 'Toner Cyan Xerox 106R02757', category: 'toner', unit: 'unites', quantity: 2, minQuantity: 1, unitCost: 520, spec: 'VersaLink C405', createdAt: now },
+      { id: 'mat-7', name: 'Toner Magenta Xerox 106R02756', category: 'toner', unit: 'unites', quantity: 1, minQuantity: 1, unitCost: 520, spec: 'VersaLink C405 — STOCK FAIBLE', createdAt: now },
+      { id: 'mat-8', name: 'Spirale plastique 12mm', category: 'finition', unit: 'unites', quantity: 240, minQuantity: 100, unitCost: 1.80, spec: 'Noir, A4', createdAt: now },
+      { id: 'mat-9', name: 'Film plastification A4', category: 'finition', unit: 'unites', quantity: 180, minQuantity: 80, unitCost: 1.20, spec: '125 microns mat', createdAt: now }
+    ];
+    changed = true;
+    console.log('[PrintModule] Materials seeded.');
+  }
+  const settingsAny = dbData.settings as SystemSettings & { printPricing?: PrintPricingConfig };
+  if (!settingsAny.printPricing) {
+    settingsAny.printPricing = {
+      basePricePerPage: {
+        nb_a4: 0.50, nb_a3: 1.00, nb_a5: 0.40, nb_photo: 2.50, nb_grand_format: 25.00,
+        couleur_a4: 2.00, couleur_a3: 4.00, couleur_a5: 1.60, couleur_photo: 5.00, couleur_grand_format: 60.00
+      },
+      duplexDiscountPercent: 20,
+      paperSurcharge: { 'standard_80g': 0, 'couche_135g': 0.30, 'bristol_250g': 0.90, 'photo_200g': 1.20, 'couleur_speciale': 0.50 },
+      finishingForfaits: { 'reliure_spirale': 15, 'thermoreliure': 25, 'plastification': 5, 'massicotage': 3, 'agrafage': 1, 'perforation': 1, 'pliage': 0.50 },
+      volumeTiers: [ { minPages: 500, discountPercent: 20 }, { minPages: 100, discountPercent: 10 } ],
+      urgencyMultipliers: { normal: 1.0, fast: 1.3, urgent: 1.6, very_urgent: 2.0 },
+      deliveryFees: { retrait_atelier: 0, coursier_local: 20, livraison_nationale: 45 }
+    };
+    changed = true;
+    console.log('[PrintModule] Pricing config seeded.');
+  }
+  if (changed) await saveDatabase(dbData);
+}
+
+// --- Moteur de tarification (aucun prix en dur côté client) ---
+function getPricingConfig(settings: AppDatabase['settings']): PrintPricingConfig {
+  return (settings as SystemSettings & { printPricing?: PrintPricingConfig }).printPricing || (null as unknown as PrintPricingConfig);
+}
+
+function computePrintJobPrice(job: Partial<PrintJob>, pricing: PrintPricingConfig, materials: PrintMaterial[] = []): { salePrice: number; estimatedCost: number; estimatedProfit: number; marginPercent: number; consumablesNeeded: { materialId: string; materialName: string; quantity: number; unit: string; unitCost: number; available: boolean }[]; details: Record<string, number> } {
+  const pages = Math.max(0, Number(job.pages) || 0);
+  const copies = Math.max(1, Number(job.copies) || 1);
+  const color = job.colorMode === 'couleur';
+  const fmt = String(job.format || 'A4').toLowerCase().replace('photo_10x15', 'photo');
+  const baseKey = `${color ? 'couleur' : 'nb'}_${fmt}` as keyof typeof pricing.basePricePerPage;
+  let unitPrice = Number(pricing.basePricePerPage[baseKey] ?? pricing.basePricePerPage[color ? 'couleur_a4' : 'nb_a4']);
+
+  // Remise recto-verso
+  if (job.duplex) unitPrice *= 1 - pricing.duplexDiscountPercent / 100;
+
+  // Majoration papier
+  const surcharge = pricing.paperSurcharge[String(job.paperType)] || 0;
+  unitPrice += surcharge;
+
+  const totalPages = pages * copies;
+
+  // Barème dégressif par volume
+  let volumeDiscountPercent = 0;
+  for (const tier of [...pricing.volumeTiers].sort((a, b) => b.minPages - a.minPages)) {
+    if (totalPages >= tier.minPages) { volumeDiscountPercent = tier.discountPercent; break; }
+  }
+
+  let printPrice = totalPages * unitPrice * (1 - volumeDiscountPercent / 100);
+
+  // Forfaits finition à l'exemplaire
+  let finishingPrice = 0;
+  (job.finishingOptions || []).forEach(f => { finishingPrice += pricing.finishingForfaits[f] || 0; });
+  finishingPrice *= copies;
+
+  // Multiplicateur d'urgence
+  const urgencyMult = pricing.urgencyMultipliers[String((job as Record<string, unknown>)['urgencyKey'] || 'normal') as keyof typeof pricing.urgencyMultipliers] || 1;
+  const totalBeforeUrgency = printPrice + finishingPrice;
+  const salePrice = Math.round(totalBeforeUrgency * urgencyMult * 100) / 100;
+
+  // Coût de revient estimé : papier + machine + finition (consommables réels déduits à la production)
+  const paperCostPerPage = job.paperType === 'standard_80g' ? 0.042 : 0.09; // approx. coût matière moyen par feuille
+  const sheetFactor = job.duplex ? 0.55 : 1; // duplex économise ~45% de feuilles
+  const totalPagesSheets = Math.ceil(totalPages * sheetFactor);
+  const materialCost = totalPages * paperCostPerPage * sheetFactor;
+  const machineCostPerPage = color ? 0.65 : 0.12;
+  const machineCost = totalPages * machineCostPerPage;
+  const finishingCost = copies * (job.finishingOptions || []).length * 0.8;
+  let estimatedCost = Math.round((materialCost + machineCost + finishingCost) * 100) / 100;
+
+  // Consommables réels du stock requis pour ce travail (papier + toner/encre couleur si dispo)
+  // Règle : 1 feuille par page (recto) ou ~0.55 feuille/page (duplex), arrondi au supérieur.
+  const consumablesNeeded: { materialId: string; materialName: string; quantity: number; unit: string; unitCost: number; available: boolean }[] = [];
+  const paperMat = materials
+    .filter(m => m.category === 'papier' && (m.spec || '').toLowerCase().includes(String(job.paperType || 'standard_80g').replace('standard_', '').replace('_', 'g')))
+    .sort((a, b) => a.unitCost - b.unitCost)[0]
+    || materials.find(m => m.category === 'papier');
+  if (paperMat) {
+    const qty = paperMat.unit === 'rames' ? totalPagesSheets / 500 : totalPagesSheets;
+    consumablesNeeded.push({ materialId: paperMat.id, materialName: paperMat.name, quantity: Math.round(qty * 100) / 100, unit: paperMat.unit, unitCost: paperMat.unitCost, available: paperMat.quantity >= qty });
+  }
+  const inkMat = materials.filter(m => m.category === 'toner' || m.category === 'encres')
+    .find(m => (m.name.toLowerCase().includes(color ? 'coul' : 'nb')) || (m.name.toLowerCase().includes(color ? 'color' : 'noir')));
+  if (inkMat) {
+    // rendement moyen : 1 cartouche / 1500 pages
+    const qty = Math.round(totalPages / 1500 * 10000) / 10000;
+    consumablesNeeded.push({ materialId: inkMat.id, materialName: inkMat.name, quantity: qty, unit: inkMat.unit, unitCost: inkMat.unitCost, available: inkMat.quantity >= qty });
+  }
+  const consumablesCost = Math.round(consumablesNeeded.reduce((s, c) => s + c.quantity * c.unitCost, 0) * 100) / 100;
+
+  const estimatedProfit = Math.round((salePrice - estimatedCost) * 100) / 100;
+  const marginPercent = salePrice > 0 ? Math.round(estimatedProfit / salePrice * 1000) / 10 : 0;
+
+  return {
+    salePrice,
+    estimatedCost,
+    estimatedProfit,
+    marginPercent,
+    consumablesNeeded,
+    details: { totalPages, unitPrice: Math.round(unitPrice * 100) / 100, volumeDiscountPercent, printPrice: Math.round(printPrice * 100) / 100, finishingPrice, urgencyMultiplier: urgencyMult, consumablesCost }
+  };
+}
+
+// --- Travaux d'impression ---
+app.get('/api/print/jobs', async (req, res) => {
+  try {
+    const dbData = await loadDatabase();
+    res.json(dbData.printJobs);
+  } catch (err) { res.status(500).json({ error: (err as Error).message }); }
+});
+
+app.post('/api/print/jobs', async (req, res): Promise<void> => {
+  try {
+    const dbData = await loadDatabase();
+    const order = dbData.orders.find(o => o.id === req.body.orderId);
+    if (!order) { res.status(400).json({ error: 'Commande centrale introuvable — un travail doit dériver d\'une commande existante.' }); return; }
+
+    const year = new Date().getFullYear();
+    const seq = dbData.printJobs.length + 1;
+    const reference = `JOB-${year}-${String(seq).padStart(3, '0')}`;
+
+    const pricing = getPricingConfig(dbData.settings);
+    if (!pricing) { res.status(500).json({ error: 'Configuration de tarification absente.' }); return; }
+
+    const { salePrice, estimatedCost, estimatedProfit, marginPercent } = computePrintJobPrice(req.body, pricing, dbData.printMaterials);
+
+    // Vérification disponibilité consommables avant création
+    const stockCheck = computePrintJobPrice(req.body, pricing, dbData.printMaterials).consumablesNeeded.filter(c => !c.available);
+    const missingStock = stockCheck.map(c => `${c.materialName} (besoin ${c.quantity} ${c.unit})`).join(', ');
+
+    const job: PrintJob = {
+      id: `pjob-${Date.now()}`,
+      reference,
+      orderId: order.id,
+      orderReference: order.reference,
+      clientName: order.customerDetails?.name || '',
+      serviceName: req.body.serviceName || order.serviceName,
+      pages: Number(req.body.pages) || 0,
+      copies: Number(req.body.copies) || 1,
+      format: req.body.format || 'A4',
+      colorMode: req.body.colorMode || 'nb',
+      duplex: !!req.body.duplex,
+      paperType: req.body.paperType || 'standard_80g',
+      finishingOptions: Array.isArray(req.body.finishingOptions) ? req.body.finishingOptions : [],
+      status: 'nouveau',
+      priority: req.body.priority || 'normal',
+      progress: 0,
+      estimatedCost,
+      salePrice,
+      consumptions: [],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      ...(req.body.deadline ? { deadline: req.body.deadline } : {}),
+      ...(req.body.waitingReason ? { waitingReason: req.body.waitingReason } : {}),
+      ...({ estimatedProfit, marginPercent } as Partial<PrintJob>)
+    };
+    dbData.printJobs.push(job);
+    await saveDatabase(dbData);
+    await logAction('system', 'Système', 'Création travail impression', `${reference} pour ${order.reference}${missingStock ? ` — ⚠️ stock insuffisant : ${missingStock}` : ` — marge estimée ${marginPercent}%`}`);
+    res.json({ ...job, ...(missingStock ? { stockWarning: missingStock } : {}) });
+  } catch (err) { res.status(500).json({ error: (err as Error).message }); }
+});
+
+app.put('/api/print/jobs/:id', async (req, res): Promise<void> => {
+  try {
+    const dbData = await loadDatabase();
+    const idx = dbData.printJobs.findIndex(j => j.id === req.params.id);
+    if (idx < 0) { res.status(404).json({ error: 'Travail introuvable.' }); return; }
+    const job = dbData.printJobs[idx];
+
+    const nextStatus = req.body.status;
+    if (nextStatus === 'en_attente' && !req.body.waitingReason && !job.waitingReason) {
+      { res.status(400).json({ error: 'La mise en attente exige une raison obligatoire.' }); return; }
+    }
+
+    Object.assign(job, {
+      ...req.body,
+      id: job.id,
+      reference: job.reference,
+      orderId: job.orderId,
+      createdAt: job.createdAt,
+      waitingReason: nextStatus === 'en_attente' ? (req.body.waitingReason || job.waitingReason) : undefined,
+      updatedAt: new Date().toISOString()
+    });
+    await saveDatabase(dbData);
+    res.json(job);
+  } catch (err) { res.status(500).json({ error: (err as Error).message }); }
+});
+
+// Consommation de matières par travail + mouvement de stock traçable
+app.post('/api/print/jobs/:id/consume', async (req, res): Promise<void> => {
+  try {
+    const dbData = await loadDatabase();
+    const job = dbData.printJobs.find(j => j.id === req.params.id);
+    if (!job) { res.status(404).json({ error: 'Travail introuvable.' }); return; }
+    const items: { materialId: string; quantity: number }[] = req.body.items || [];
+    const user = dbData.users.find(u => u.id === req.body.userId);
+
+    for (const item of items) {
+      const mat = dbData.printMaterials.find(m => m.id === item.materialId);
+      if (!mat) { res.status(400).json({ error: `Matière ${item.materialId} introuvable.` }); return; }
+      if (mat.quantity < item.quantity) { res.status(400).json({ error: `Stock insuffisant : ${mat.name} (${mat.quantity} ${mat.unit} disponibles).` }); return; }
+    }
+
+    for (const item of items) {
+      const mat = dbData.printMaterials.find(m => m.id === item.materialId)!;
+      mat.quantity -= item.quantity;
+      const movement: PrintStockMovement = {
+        id: `mv-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+        materialId: mat.id,
+        materialName: mat.name,
+        type: 'consommation_production',
+        quantity: -item.quantity,
+        stockAfter: mat.quantity,
+        printJobId: job.id,
+        userId: user?.id || 'system',
+        userName: user?.name || 'Système',
+        date: new Date().toISOString()
+      };
+      dbData.printStockMovements.push(movement);
+      job.consumptions.push({ materialId: mat.id, materialName: mat.name, quantity: item.quantity, unitCost: mat.unitCost });
+      job.estimatedCost = Math.round((job.estimatedCost + item.quantity * mat.unitCost) * 100) / 100;
+    }
+
+    job.updatedAt = new Date().toISOString();
+    await saveDatabase(dbData);
+    res.json(job);
+  } catch (err) { res.status(500).json({ error: (err as Error).message }); }
+});
+
+// --- Machines ---
+app.get('/api/print/machines', async (req, res) => {
+  try {
+    const dbData = await loadDatabase();
+    res.json(dbData.printMachines);
+  } catch (err) { res.status(500).json({ error: (err as Error).message }); }
+});
+
+app.post('/api/print/machines', async (req, res) => {
+  try {
+    const dbData = await loadDatabase();
+    const machine: PrintMachine = {
+      id: `pm-${Date.now()}`,
+      name: req.body.name,
+      brand: req.body.brand || '',
+      model: req.body.model || '',
+      internalNumber: req.body.internalNumber || `M-${String(dbData.printMachines.length + 1).padStart(3, '0')}`,
+      type: req.body.type || 'photocopieur',
+      location: req.body.location || '',
+      status: req.body.status || 'active',
+      counterNb: Number(req.body.counterNb) || 0,
+      counterColor: Number(req.body.counterColor) || 0,
+      costPerPageNb: Number(req.body.costPerPageNb) || 0,
+      costPerPageColor: Number(req.body.costPerPageColor) || 0,
+      lastMaintenanceDate: req.body.lastMaintenanceDate,
+      nextMaintenanceDate: req.body.nextMaintenanceDate,
+      createdAt: new Date().toISOString()
+    };
+    dbData.printMachines.push(machine);
+    await saveDatabase(dbData);
+    res.json(machine);
+  } catch (err) { res.status(500).json({ error: (err as Error).message }); }
+});
+
+app.put('/api/print/machines/:id', async (req, res): Promise<void> => {
+  try {
+    const dbData = await loadDatabase();
+    const machine = dbData.printMachines.find(m => m.id === req.params.id);
+    if (!machine) { res.status(404).json({ error: 'Machine introuvable.' }); return; }
+    Object.assign(machine, req.body, { id: machine.id, createdAt: machine.createdAt });
+    await saveDatabase(dbData);
+    res.json(machine);
+  } catch (err) { res.status(500).json({ error: (err as Error).message }); }
+});
+
+// --- Relevé de compteurs (calcul des deltas N&B / couleur) ---
+app.get('/api/print/counter-readings', async (req, res) => {
+  try {
+    const dbData = await loadDatabase();
+    res.json(dbData.machineCounterReadings);
+  } catch (err) { res.status(500).json({ error: (err as Error).message }); }
+});
+
+app.post('/api/print/machines/:id/counter-reading', async (req, res): Promise<void> => {
+  try {
+    const dbData = await loadDatabase();
+    const machine = dbData.printMachines.find(m => m.id === req.params.id);
+    if (!machine) { res.status(404).json({ error: 'Machine introuvable.' }); return; }
+
+    const currentNb = Number(req.body.currentNb);
+    const currentColor = Number(req.body.currentColor);
+    if (!Number.isFinite(currentNb) && !Number.isFinite(currentColor)) {
+      { res.status(400).json({ error: 'Au moins un compteur (N&B ou couleur) est requis.' }); return; }
+    }
+    if ((currentNb !== undefined && currentNb < machine.counterNb) || (currentColor !== undefined && currentColor < machine.counterColor)) {
+      { res.status(400).json({ error: 'Le compteur actuel ne peut pas être inférieur au relevé précédent.' }); return; }
+    }
+
+    const reader = dbData.users.find(u => u.id === req.body.userId);
+    const reading: MachineCounterReading = {
+      id: `mcr-${Date.now()}`,
+      machineId: machine.id,
+      machineName: machine.name,
+      previousNb: machine.counterNb,
+      currentNb: currentNb !== undefined ? currentNb : machine.counterNb,
+      previousColor: machine.counterColor,
+      currentColor: currentColor !== undefined ? currentColor : machine.counterColor,
+      deltaNb: (currentNb !== undefined ? currentNb : machine.counterNb) - machine.counterNb,
+      deltaColor: (currentColor !== undefined ? currentColor : machine.counterColor) - machine.counterColor,
+      readByUserId: reader?.id || 'system',
+      readByUserName: reader?.name || 'Système',
+      readingDate: new Date().toISOString()
+    };
+
+    machine.counterNb = reading.currentNb;
+    machine.counterColor = reading.currentColor;
+    dbData.machineCounterReadings.push(reading);
+    await saveDatabase(dbData);
+    res.json(reading);
+  } catch (err) { res.status(500).json({ error: (err as Error).message }); }
+});
+
+// --- Matières & stock ---
+app.get('/api/print/materials', async (req, res) => {
+  try {
+    const dbData = await loadDatabase();
+    res.json(dbData.printMaterials);
+  } catch (err) { res.status(500).json({ error: (err as Error).message }); }
+});
+
+app.post('/api/print/materials', async (req, res) => {
+  try {
+    const dbData = await loadDatabase();
+    const mat: PrintMaterial = {
+      id: `mat-${Date.now()}`,
+      name: req.body.name,
+      category: req.body.category || 'papier',
+      unit: req.body.unit || 'unites',
+      quantity: Number(req.body.quantity) || 0,
+      minQuantity: Number(req.body.minQuantity) || 0,
+      unitCost: Number(req.body.unitCost) || 0,
+      spec: req.body.spec || '',
+      createdAt: new Date().toISOString()
+    };
+    dbData.printMaterials.push(mat);
+    if (mat.quantity > 0) {
+      dbData.printStockMovements.push({
+        id: `mv-${Date.now()}`,
+        materialId: mat.id, materialName: mat.name, type: 'entree_achat',
+        quantity: mat.quantity, stockAfter: mat.quantity, userId: 'system', userName: 'Création', date: new Date().toISOString()
+      });
+    }
+    await saveDatabase(dbData);
+    res.json(mat);
+  } catch (err) { res.status(500).json({ error: (err as Error).message }); }
+});
+
+// Mouvement de stock : toute variation passe obligatoirement par un mouvement historisé
+app.post('/api/print/materials/:id/movement', async (req, res): Promise<void> => {
+  try {
+    const dbData = await loadDatabase();
+    const mat = dbData.printMaterials.find(m => m.id === req.params.id);
+    if (!mat) { res.status(404).json({ error: 'Matière introuvable.' }); return; }
+
+    const type: PrintStockMovement['type'] = req.body.type;
+    const qty = Number(req.body.quantity);
+    if (!type || !Number.isFinite(qty)) { res.status(400).json({ error: 'Type et quantité requis.' }); return; }
+    if ((type === 'ajustement_inventaire' || type === 'perte_dechet') && !req.body.reason) {
+      { res.status(400).json({ error: 'Une raison est obligatoire pour un ajustement ou une perte.' }); return; }
+    }
+
+    const signedQty = type === 'entree_achat' || type === 'retour' ? Math.abs(qty) : -Math.abs(qty);
+    if (mat.quantity + signedQty < 0) { res.status(400).json({ error: `Stock insuffisant (${mat.quantity} ${mat.unit}).` }); return; }
+
+    mat.quantity += signedQty;
+    const user = dbData.users.find(u => u.id === req.body.userId);
+    const movement: PrintStockMovement = {
+      id: `mv-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      materialId: mat.id, materialName: mat.name, type,
+      quantity: signedQty, stockAfter: mat.quantity,
+      reason: req.body.reason || undefined,
+      userId: user?.id || 'system', userName: user?.name || 'Système',
+      date: new Date().toISOString()
+    };
+    dbData.printStockMovements.push(movement);
+    await saveDatabase(dbData);
+    res.json({ movement, material: mat });
+  } catch (err) { res.status(500).json({ error: (err as Error).message }); }
+});
+
+app.get('/api/print/stock-movements', async (req, res) => {
+  try {
+    const dbData = await loadDatabase();
+    res.json(dbData.printStockMovements.slice().reverse());
+  } catch (err) { res.status(500).json({ error: (err as Error).message }); }
+});
+
+// --- Livraisons ---
+app.get('/api/print/deliveries', async (req, res) => {
+  try {
+    const dbData = await loadDatabase();
+    res.json(dbData.deliveryTasks);
+  } catch (err) { res.status(500).json({ error: (err as Error).message }); }
+});
+
+app.post('/api/print/deliveries', async (req, res): Promise<void> => {
+  try {
+    const dbData = await loadDatabase();
+    const order = dbData.orders.find(o => o.id === req.body.orderId);
+    if (!order) { res.status(400).json({ error: 'Commande centrale introuvable.' }); return; }
+    const pricing = getPricingConfig(dbData.settings);
+    const fee = req.body.fee !== undefined ? Number(req.body.fee) : ((pricing?.deliveryFees as Record<string, number> | undefined)?.[String(req.body.mode)] ?? 0);
+    const delivery: DeliveryTask = {
+      id: `dlv-${Date.now()}`,
+      orderId: order.id,
+      orderReference: order.reference,
+      mode: req.body.mode || 'retrait_atelier',
+      address: req.body.address || order.customerDetails?.address,
+      city: req.body.city || order.customerDetails?.city,
+      phone: req.body.phone || order.customerDetails?.phone,
+      fee,
+      status: 'a_preparer',
+      courierId: req.body.courierId,
+      courierName: req.body.courierName,
+      scheduledDate: req.body.scheduledDate,
+      codAmount: req.body.codAmount,
+      createdAt: new Date().toISOString()
+    };
+    dbData.deliveryTasks.push(delivery);
+    await saveDatabase(dbData);
+    res.json(delivery);
+  } catch (err) { res.status(500).json({ error: (err as Error).message }); }
+});
+
+app.put('/api/print/deliveries/:id', async (req, res): Promise<void> => {
+  try {
+    const dbData = await loadDatabase();
+    const dlv = dbData.deliveryTasks.find(d => d.id === req.params.id);
+    if (!dlv) { res.status(404).json({ error: 'Livraison introuvable.' }); return; }
+    Object.assign(dlv, req.body, { id: dlv.id, orderId: dlv.orderId, createdAt: dlv.createdAt });
+    if (req.body.status === 'livre' && !dlv.deliveredDate) dlv.deliveredDate = new Date().toISOString();
+    await saveDatabase(dbData);
+    res.json(dlv);
+  } catch (err) { res.status(500).json({ error: (err as Error).message }); }
+});
+
+// --- Tarification configurable ---
+app.get('/api/print/pricing', async (req, res) => {
+  try {
+    const dbData = await loadDatabase();
+    res.json(getPricingConfig(dbData.settings));
+  } catch (err) { res.status(500).json({ error: (err as Error).message }); }
+});
+
+app.put('/api/print/pricing', async (req, res) => {
+  try {
+    const dbData = await loadDatabase();
+    (dbData.settings as SystemSettings & { printPricing?: PrintPricingConfig }).printPricing = req.body;
+    await saveDatabase(dbData);
+    res.json((dbData.settings as SystemSettings & { printPricing?: PrintPricingConfig }).printPricing);
+  } catch (err) { res.status(500).json({ error: (err as Error).message }); }
+});
+
+// Simulation de devis impression (sans persistance)
+app.post('/api/print/quote-preview', async (req, res): Promise<void> => {
+  try {
+    const dbData = await loadDatabase();
+    const pricing = getPricingConfig(dbData.settings);
+    if (!pricing) { res.status(500).json({ error: 'Configuration de tarification absente.' }); return; }
+    res.json(computePrintJobPrice(req.body, pricing, dbData.printMaterials));
+  } catch (err) { res.status(500).json({ error: (err as Error).message }); }
+});
+
+// --- Dashboard module impression ---
+app.get('/api/print/dashboard', async (req, res) => {
+  try {
+    const dbData = await loadDatabase();
+    await ensurePrintModuleSeeded(dbData);
+    const jobs = dbData.printJobs;
+    const todayStr = new Date().toISOString().slice(0, 10);
+    const byStatus = (s: string) => jobs.filter(j => j.status === s).length;
+    const urgent = jobs.filter(j => j.priority !== 'normal' && !['termine', 'livre', 'annule'].includes(j.status)).length;
+    const late = jobs.filter(j => j.deadline && j.deadline.slice(0, 10) < todayStr && !['termine', 'livre', 'annule'].includes(j.status)).length;
+    const revenueToday = dbData.payments.filter(p => p.date && p.date.slice(0, 10) === todayStr).reduce((s, p) => s + p.amount, 0);
+    // Rentabilité : bénéfice cumulé des travaux non annulés + marge moyenne
+    const billable = jobs.filter(j => j.status !== 'annule');
+    const totalProfit = Math.round(billable.reduce((s, j) => s + (j.estimatedProfit ?? (j.salePrice - j.estimatedCost)), 0) * 100) / 100;
+    const totalSales = Math.round(billable.reduce((s, j) => s + j.salePrice, 0) * 100) / 100;
+    const avgMargin = totalSales > 0 ? Math.round(totalProfit / totalSales * 1000) / 10 : 0;
+    res.json({
+      jobsToday: jobs.filter(j => j.createdAt.slice(0, 10) === todayStr).length,
+      inProduction: byStatus('production'),
+      inPreparation: byStatus('preparation'),
+      inFinishing: byStatus('finition'),
+      ready: byStatus('pret'),
+      urgent, late,
+      activeMachines: dbData.printMachines.filter(m => m.status === 'active').length,
+      brokenMachines: dbData.printMachines.filter(m => m.status === 'en_panne').length,
+      maintenanceSoon: dbData.printMachines.filter(m => m.nextMaintenanceDate && m.nextMaintenanceDate.slice(0, 10) <= new Date(Date.now() + 15 * 864e5).toISOString().slice(0, 10)).length,
+      lowStock: dbData.printMaterials.filter(m => m.quantity <= m.minQuantity),
+      paymentsToday: revenueToday,
+      totalRevenue: totalSales,
+      totalProfit, avgMargin
+    });
+  } catch (err) { res.status(500).json({ error: (err as Error).message }); }
+});
+// --- FIN MODULE IMPRIMERIE ---
+
 // Reset Database Endpoint
 app.post('/api/reset', async (req, res) => {
   try {
@@ -3366,6 +3917,12 @@ app.post('/api/setup/submit', async (req, res) => {
         leaveRequests: [],
         salaryAdvances: [],
         affiliateCommissions: [],
+        printJobs: [],
+        printMachines: [],
+        machineCounterReadings: [],
+        printMaterials: [],
+        printStockMovements: [],
+        deliveryTasks: [],
         settings: {
           companyName: 'DigiDocs Services SARL',
           address: "14 Boulevard d'Anfa, Étage 3, Casablanca, Maroc",
