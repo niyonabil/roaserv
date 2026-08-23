@@ -62,6 +62,45 @@ export class App {
     scheduledDate: new FormControl('')
   }));
   waitingReasonForm = signal<{ jobId: string | null; reason: string }>({ jobId: null, reason: '' });
+  materialForm = signal<FormGroup>(new FormGroup({
+    name: new FormControl('', Validators.required),
+    category: new FormControl('papier', Validators.required),
+    unit: new FormControl('feuilles', Validators.required),
+    quantity: new FormControl(0, [Validators.required, Validators.min(0)]),
+    minQuantity: new FormControl(0, [Validators.required, Validators.min(0)]),
+    unitCost: new FormControl(0, [Validators.required, Validators.min(0)]),
+    spec: new FormControl('')
+  }));
+  machineForm = signal<FormGroup>(new FormGroup({
+    name: new FormControl('', Validators.required),
+    internalNumber: new FormControl(''),
+    brand: new FormControl(''),
+    model: new FormControl(''),
+    location: new FormControl(''),
+    counterNb: new FormControl(0, [Validators.min(0)]),
+    counterColor: new FormControl(0, [Validators.min(0)]),
+    costPerPageNb: new FormControl(0, [Validators.min(0)]),
+    costPerPageColor: new FormControl(0, [Validators.min(0)])
+  }));
+
+  async submitMaterial() {
+    const f = this.materialForm();
+    if (f.invalid || !String(f.getRawValue().name).trim()) { alert('Le nom de la matière est requis.'); return; }
+    try {
+      await this.data.createMaterial(f.getRawValue());
+      f.reset({ name: '', category: 'papier', unit: 'feuilles', quantity: 0, minQuantity: 0, unitCost: 0, spec: '' });
+    } catch (err) { alert((err as Error).message); }
+  }
+
+  async submitMachine() {
+    const f = this.machineForm();
+    if (f.invalid || !String(f.getRawValue().name).trim()) { alert('Le nom de la machine est requis.'); return; }
+    try {
+      await this.data.createMachine(f.getRawValue());
+      f.reset({ name: '', internalNumber: '', brand: '', model: '', location: '', counterNb: 0, counterColor: 0, costPerPageNb: 0, costPerPageColor: 0 });
+    } catch (err) { alert((err as Error).message); }
+  }
+
 
   readonly PRINT_KANBAN_COLUMNS = [
     { key: 'nouveau', label: 'Nouveau' },

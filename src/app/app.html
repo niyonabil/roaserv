@@ -7088,6 +7088,49 @@
 
             <!-- ============ MACHINES ============ -->
             @if (printSubTab() === 'machines') {
+              <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs mb-6">
+                <h3 class="text-sm font-black text-slate-900 mb-4 flex items-center gap-2"><span class="material-icons text-base text-orange-600">add_box</span>Ajouter une machine</h3>
+                <form [formGroup]="machineForm()" (ngSubmit)="submitMachine()" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  <div>
+                    <label class="text-[10px] font-bold text-slate-500 uppercase">Nom *</label>
+                    <input type="text" formControlName="name" placeholder="Ex: Xerox VersaLink C405" class="w-full mt-1 px-3 py-2 rounded-xl border border-slate-200 text-xs" />
+                  </div>
+                  <div>
+                    <label class="text-[10px] font-bold text-slate-500 uppercase">N° interne</label>
+                    <input type="text" formControlName="internalNumber" placeholder="Ex: MC-001" class="w-full mt-1 px-3 py-2 rounded-xl border border-slate-200 text-xs" />
+                  </div>
+                  <div>
+                    <label class="text-[10px] font-bold text-slate-500 uppercase">Marque / Modèle</label>
+                    <div class="flex gap-2">
+                      <input type="text" formControlName="brand" placeholder="Marque" class="w-1/2 mt-1 px-3 py-2 rounded-xl border border-slate-200 text-xs" />
+                      <input type="text" formControlName="model" placeholder="Modèle" class="w-1/2 mt-1 px-3 py-2 rounded-xl border border-slate-200 text-xs" />
+                    </div>
+                  </div>
+                  <div>
+                    <label class="text-[10px] font-bold text-slate-500 uppercase">Emplacement</label>
+                    <input type="text" formControlName="location" placeholder="Ex: Atelier" class="w-full mt-1 px-3 py-2 rounded-xl border border-slate-200 text-xs" />
+                  </div>
+                  <div>
+                    <label class="text-[10px] font-bold text-slate-500 uppercase">Compteur N&amp;B initial</label>
+                    <input type="number" formControlName="counterNb" min="0" class="w-full mt-1 px-3 py-2 rounded-xl border border-slate-200 text-xs" />
+                  </div>
+                  <div>
+                    <label class="text-[10px] font-bold text-slate-500 uppercase">Compteur couleur initial</label>
+                    <input type="number" formControlName="counterColor" min="0" class="w-full mt-1 px-3 py-2 rounded-xl border border-slate-200 text-xs" />
+                  </div>
+                  <div>
+                    <label class="text-[10px] font-bold text-slate-500 uppercase">Coût/page N&amp;B (DH)</label>
+                    <input type="number" formControlName="costPerPageNb" min="0" step="0.01" class="w-full mt-1 px-3 py-2 rounded-xl border border-slate-200 text-xs" />
+                  </div>
+                  <div>
+                    <label class="text-[10px] font-bold text-slate-500 uppercase">Coût/page couleur (DH)</label>
+                    <input type="number" formControlName="costPerPageColor" min="0" step="0.01" class="w-full mt-1 px-3 py-2 rounded-xl border border-slate-200 text-xs" />
+                  </div>
+                  <div class="flex items-end">
+                    <button type="submit" class="w-full py-2.5 rounded-xl bg-orange-600 hover:bg-orange-700 text-white text-xs font-black">Ajouter la machine</button>
+                  </div>
+                </form>
+              </div>
               <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 @for (m of data.printMachines(); track m.id) {
                   <div class="bg-white p-4 rounded-2xl border shadow-xs"
@@ -7176,6 +7219,58 @@
             @if (printSubTab() === 'stock') {
               <div class="grid lg:grid-cols-3 gap-6">
                 <div class="space-y-6">
+                  <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+                    <h3 class="text-sm font-black text-slate-900 mb-4 flex items-center gap-2"><span class="material-icons text-base text-orange-600">add_box</span>Ajouter un produit / consommable</h3>
+                    <form [formGroup]="materialForm()" (ngSubmit)="submitMaterial()" class="space-y-3">
+                      <div>
+                        <label class="text-[10px] font-bold text-slate-500 uppercase">Nom *</label>
+                        <input type="text" formControlName="name" placeholder="Ex: Papier A4 80g" class="w-full mt-1 px-3 py-2 rounded-xl border border-slate-200 text-xs" />
+                      </div>
+                      <div class="grid grid-cols-2 gap-2">
+                        <div>
+                          <label class="text-[10px] font-bold text-slate-500 uppercase">Catégorie</label>
+                          <select formControlName="category" class="w-full mt-1 px-3 py-2 rounded-xl border border-slate-200 text-xs">
+                            <option value="papier">Papier</option>
+                            <option value="toner">Toner / Encre</option>
+                            <option value="reliure">Reliure</option>
+                            <option value="plastification">Plastification</option>
+                            <option value="consommable">Autre consommable</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label class="text-[10px] font-bold text-slate-500 uppercase">Unité</label>
+                          <select formControlName="unit" class="w-full mt-1 px-3 py-2 rounded-xl border border-slate-200 text-xs">
+                            <option value="feuilles">Feuilles</option>
+                            <option value="unites">Unités</option>
+                            <option value="kg">Kg</option>
+                            <option value="litres">Litres</option>
+                            <option value="rouleaux">Rouleaux</option>
+                          </select>
+                        </div>
+                      </div>
+                      <div class="grid grid-cols-2 gap-2">
+                        <div>
+                          <label class="text-[10px] font-bold text-slate-500 uppercase">Quantité initiale</label>
+                          <input type="number" formControlName="quantity" min="0" class="w-full mt-1 px-3 py-2 rounded-xl border border-slate-200 text-xs" />
+                        </div>
+                        <div>
+                          <label class="text-[10px] font-bold text-slate-500 uppercase">Seuil d'alerte</label>
+                          <input type="number" formControlName="minQuantity" min="0" class="w-full mt-1 px-3 py-2 rounded-xl border border-slate-200 text-xs" />
+                        </div>
+                      </div>
+                      <div class="grid grid-cols-2 gap-2">
+                        <div>
+                          <label class="text-[10px] font-bold text-slate-500 uppercase">Coût unitaire (DH)</label>
+                          <input type="number" formControlName="unitCost" min="0" step="0.01" class="w-full mt-1 px-3 py-2 rounded-xl border border-slate-200 text-xs" />
+                        </div>
+                        <div>
+                          <label class="text-[10px] font-bold text-slate-500 uppercase">Spécifications</label>
+                          <input type="text" formControlName="spec" placeholder="Ex: 80g/m²" class="w-full mt-1 px-3 py-2 rounded-xl border border-slate-200 text-xs" />
+                        </div>
+                      </div>
+                      <button type="submit" class="w-full py-2.5 rounded-xl bg-orange-600 hover:bg-orange-700 text-white text-xs font-black">Ajouter au stock</button>
+                    </form>
+                  </div>
                   <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
                     <h3 class="text-sm font-black text-slate-900 mb-4 flex items-center gap-2"><span class="material-icons text-base text-orange-600">swap_horiz</span>Mouvement de stock</h3>
                     <form [formGroup]="stockMovementForm()" (ngSubmit)="submitStockMovement()" class="space-y-3">

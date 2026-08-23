@@ -1,10 +1,15 @@
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
+import { createRequire } from 'node:module';
 import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { initializeFirestore, doc, getDoc, getDocs, setDoc, collection, deleteDoc } from 'firebase/firestore';
-import defaultFirebaseAppletConfig from '../firebase-applet-config.json';
+// Import JSON compatible serverless (Vercel bundle CJS : les attributs d'import JSON ne passent pas)
+const require = createRequire(import.meta.url);
 // 🖨️ Module Imprimerie — types partagés avec le front (source unique: src/app/data.ts)
+let defaultFirebaseAppletConfig: any = {};
+try { defaultFirebaseAppletConfig = require('../firebase-applet-config.json'); }
+catch { try { defaultFirebaseAppletConfig = JSON.parse(readFileSync(join(process.cwd(), 'firebase-applet-config.json'), 'utf-8')); } catch { /* pas de config par défaut */ } }
 import type {
   PrintJob,
   PrintMachine,
