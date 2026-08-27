@@ -13,6 +13,17 @@ app.use(express.json({ limit: '5mb' }));
 // apiV1 at /api/v1 to match — same prefix as the production src/server.ts.
 app.use('/api/v1', apiV1);
 
+// Global error handler — convert ApiError to the unified JSON envelope.
+// (Mirrors bootstrap.ts; required here because this app is standalone.)
+// Self-contained: ApiError has { status, code, message, details }.
+app.use((err: any, _req: unknown, res: any, _next: unknown) => {
+  if (err && typeof err.status === 'number' && typeof err.code === 'string') {
+    return res.status(err.status).json({ success: false, error: err.message, code: err.code, details: err.details });
+  }
+  console.error('[api] unhandled', err);
+  if (!res.headersSent) res.status(500).json({ success: false, error: 'Internal server error', code: 'INTERNAL' });
+});
+
 export default function handler(req, res) {
   return new Promise((resolve, reject) => {
     let done = false;
