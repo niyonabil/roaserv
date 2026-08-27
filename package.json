@@ -5,17 +5,24 @@
   "type": "module",
   "scripts": {
     "build": "ng build",
+    "build:api": "esbuild src/server/api/index.ts --bundle --platform=node --format=cjs --outfile=dist/api-bundle.cjs --external:pg --external:bcryptjs --external:jsonwebtoken --external:drizzle-orm --log-level=error",
+    "vercel-build": "npm run build && npm run build:api",
     "dev": "PORT=3000 ng serve --port=3000 --host=0.0.0.0 --allowed-hosts=true ${DISABLE_HMR:+--live-reload=false}"
   },
   "devDependencies": {
     "@angular/cli": "^22.1.5",
     "@tailwindcss/postcss": "^4.3.3",
+    "@types/bcryptjs": "^2.4.6",
     "@types/d3": "^7.4.3",
     "@types/express": "^5.0.6",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/leaflet": "^1.9.22",
     "@types/node": "^26.2.0",
+    "@types/pg": "^8.23.1",
     "@types/qrcode": "^1.5.6",
-    "cross-env": "^10.1.0"
+    "cross-env": "^10.1.0",
+    "drizzle-kit": "^0.31.10",
+    "vercel": "^59.7.0"
   },
   "dependencies": {
     "@angular/build": "^22.1.5",
@@ -29,11 +36,15 @@
     "@angular/router": "^22.1.3",
     "@angular/ssr": "^22.1.5",
     "@google/genai": "^2.18.0",
+    "bcryptjs": "^3.0.3",
     "d3": "^7.9.0",
+    "drizzle-orm": "^0.45.2",
     "firebase": "^12.18.0",
+    "jsonwebtoken": "^9.0.3",
     "jspdf": "^4.2.1",
     "jspdf-autotable": "^5.0.8",
     "leaflet": "^1.9.4",
+    "pg": "^8.23.0",
     "qrcode": "^1.5.4",
     "rxjs": "^7.8.2",
     "zone.js": "^0.16.2"

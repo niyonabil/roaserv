@@ -83,6 +83,11 @@ console.log(`[SSR] browserDistFolder: ${browserDistFolder}`);
 const app = express();
 app.use(express.json({ limit: '50mb' }));
 
+// NEW architecture (Phase 2): Supabase/Drizzle/JWT/RBAC/tenant-scoped module,
+// mounted under /api/v1 to avoid clobbering legacy /api endpoints the 18 screens use.
+import { apiV1 } from './server/api';
+app.use('/api/v1', apiV1);
+
 // Security Headers
 app.use((req, res, next) => {
   res.setHeader('X-Content-Type-Options', 'nosniff');

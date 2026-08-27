@@ -162,18 +162,22 @@
        ========================================== -->
   @if (showAuthModal()) {
   <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-slate-100 overflow-hidden" [formGroup]="authForm">
-      <!-- Modal Header -->
-      <div class="bg-slate-900 px-6 py-5 text-white flex items-center justify-between">
+    <div class="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-slate-100 overflow-hidden" [formGroup]="authForm" role="dialog" aria-modal="true" [attr.aria-label]="showAuthModal() === 'login' ? 'Connexion à la plateforme' : 'Création de compte'">
+      <!-- Modal Header (brand business-trust palette) -->
+      <div class="bg-gradient-to-r from-[#1D4ED8] to-[#2563EB] px-6 py-5 text-white flex items-center justify-between">
         <div>
+          <div class="flex items-center gap-2 mb-1">
+            <span class="material-icons text-xl">print</span>
+            <span class="font-black tracking-tight text-base">ROA Services</span>
+          </div>
           <h3 class="text-lg font-bold tracking-tight">
             {{ showAuthModal() === 'login' ? 'Connexion Plateforme' : 'Créer un Compte' }}
           </h3>
-          <p class="text-xs text-slate-400 mt-1">
-            {{ showAuthModal() === 'login' ? 'Connectez-vous avec votre nom d\'utilisateur et mot de passe.' : 'Rejoignez DigiDocs pour gérer vos documents.' }}
+          <p class="text-xs text-blue-100 mt-1">
+            {{ showAuthModal() === 'login' ? 'Connectez-vous avec votre nom d\'utilisateur et mot de passe.' : 'Rejoignez ROA Services pour gérer vos services.' }}
           </p>
         </div>
-        <button (click)="showAuthModal.set(null)" class="text-slate-400 hover:text-white transition-colors">
+        <button type="button" (click)="showAuthModal.set(null)" class="text-blue-100 hover:text-white transition-colors focus:outline-hidden focus:ring-2 focus:ring-white/60 rounded-lg" aria-label="Fermer la fenêtre">
           <span class="material-icons">close</span>
         </button>
       </div>
@@ -182,7 +186,7 @@
       <div class="p-6 space-y-4">
         <!-- Error notification within modal -->
         @if (data.errorMessage()) {
-          <div class="bg-red-50 text-red-700 text-xs p-3 rounded-lg flex items-start gap-2 border border-red-200">
+          <div id="auth-error" class="bg-red-50 text-red-700 text-xs p-3 rounded-lg flex items-start gap-2 border border-red-200" role="alert">
             <span class="material-icons text-sm mt-0.5">error_outline</span>
             <span>{{ data.errorMessage() }}</span>
           </div>
@@ -191,45 +195,61 @@
         @if (showAuthModal() === 'login') {
           <!-- Username / Identifier Field -->
           <div>
-            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Nom d'utilisateur (ou E-mail) *</label>
+            <label for="auth-identifier" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Nom d'utilisateur (ou E-mail) *</label>
             <div class="relative">
               <span class="material-icons absolute left-3 top-2.5 text-slate-400 text-sm">person</span>
               <input 
+                id="auth-identifier"
                 type="text" 
                 formControlName="identifier" 
                 placeholder="Entrez votre nom d'utilisateur" 
                 autocomplete="username"
-                class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-3 py-2.5 text-sm font-medium text-slate-900 focus:outline-hidden focus:border-blue-500 focus:bg-white" 
+                [attr.aria-invalid]="authForm.get('identifier')?.invalid && authForm.get('identifier')?.touched"
+                aria-describedby="auth-error"
+                class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-3 py-2.5 text-sm font-medium text-slate-900 focus:outline-hidden focus:ring-2 focus:ring-[#2563EB]/40 focus:border-[#2563EB] focus:bg-white" 
               />
             </div>
           </div>
 
           <!-- Password Field -->
           <div>
-            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Mot de passe *</label>
+            <div class="flex items-center justify-between mb-1.5">
+              <label for="auth-password" class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Mot de passe *</label>
+              <button type="button" (click)="showAuthModal.set('login'); data.errorMessage.set(null)" class="text-[11px] text-[#2563EB] hover:underline font-bold focus:outline-hidden">Mot de passe oublié ?</button>
+            </div>
             <div class="relative">
               <span class="material-icons absolute left-3 top-2.5 text-slate-400 text-sm">lock</span>
               <input 
+                id="auth-password"
                 [type]="showPassword() ? 'text' : 'password'" 
                 formControlName="password" 
                 placeholder="Entrez votre mot de passe" 
                 autocomplete="current-password"
-                class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-10 py-2.5 text-sm font-medium text-slate-900 focus:outline-hidden focus:border-blue-500 focus:bg-white" 
+                [attr.aria-invalid]="authForm.get('password')?.invalid && authForm.get('password')?.touched"
+                [attr.aria-describedby]="data.errorMessage() ? 'auth-error' : null"
+                class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-10 py-2.5 text-sm font-medium text-slate-900 focus:outline-hidden focus:ring-2 focus:ring-[#2563EB]/40 focus:border-[#2563EB] focus:bg-white" 
               />
               <button 
                 type="button" 
                 (click)="togglePasswordVisibility()" 
-                class="absolute right-3 top-3 text-slate-400 hover:text-slate-600 focus:outline-hidden cursor-pointer"
-                title="Afficher/Masquer le mot de passe"
+                class="absolute right-3 top-3 text-slate-400 hover:text-slate-600 focus:outline-hidden focus:ring-2 focus:ring-[#2563EB]/40 rounded-lg cursor-pointer"
+                [attr.aria-label]="showPassword() ? 'Masquer le mot de passe' : 'Afficher le mot de passe'"
+                [attr.aria-pressed]="showPassword()"
               >
                 <span class="material-icons text-sm">{{ showPassword() ? 'visibility_off' : 'visibility' }}</span>
               </button>
             </div>
           </div>
 
+          <!-- Remember me -->
+          <label class="flex items-center gap-2 text-xs text-slate-600 cursor-pointer select-none">
+            <input type="checkbox" formControlName="rememberMe" class="w-4 h-4 rounded border-slate-300 text-[#2563EB] focus:ring-[#2563EB]/40" />
+            <span>Rester connecté sur cet appareil</span>
+          </label>
+
           <div class="p-3 bg-slate-50 rounded-xl border border-slate-200/80 text-[11px] text-slate-500 flex items-center gap-2">
             <span class="material-icons text-slate-400 text-sm">info</span>
-            <span>Le profil (Administrateur, Partenaire, Opérateur, etc.) est automatiquement déterminé par votre compte.</span>
+            <span>Le profil (Administrateur, Partenaire, Opérateur, etc.) est automatiquement déterminé par votre compte. Trop d'échecs de connexion verrouillera temporairement le compte.</span>
           </div>
         }
 
@@ -384,29 +404,41 @@
       <div class="bg-slate-50 px-6 py-4 flex flex-col gap-3 border-t border-slate-100">
         @if (showAuthModal() === 'login') {
           <button 
+            type="button"
             (click)="handleLogin()" 
-            class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-4 rounded-xl text-sm transition-all shadow-md active:scale-95 flex items-center justify-center gap-1"
+            [disabled]="data.isLoading()"
+            class="w-full bg-[#2563EB] hover:bg-[#1D4ED8] disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-bold py-2.5 px-4 rounded-xl text-sm transition-all shadow-md active:scale-95 flex items-center justify-center gap-1 focus:outline-hidden focus:ring-2 focus:ring-[#2563EB]/50"
           >
-            Se Connecter
-            <span class="material-icons text-sm">login</span>
+            @if (data.isLoading()) {
+              <span class="material-icons text-sm animate-spin">sync</span> Connexion…
+            } @else {
+              Se Connecter
+              <span class="material-icons text-sm">login</span>
+            }
           </button>
           <p class="text-xs text-slate-500 text-center">
             Nouveau sur la plateforme ? 
-            <button (click)="showAuthModal.set('register'); data.errorMessage.set(null)" class="text-blue-600 hover:underline font-bold">
+            <button type="button" (click)="showAuthModal.set('register'); data.errorMessage.set(null)" class="text-[#2563EB] hover:underline font-bold focus:outline-hidden">
               Créer un compte
             </button>
           </p>
         } @else {
           <button 
+            type="button"
             (click)="handleRegister()" 
-            class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-4 rounded-xl text-sm transition-all shadow-md active:scale-95 flex items-center justify-center gap-1"
+            [disabled]="data.isLoading()"
+            class="w-full bg-[#2563EB] hover:bg-[#1D4ED8] disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-bold py-2.5 px-4 rounded-xl text-sm transition-all shadow-md active:scale-95 flex items-center justify-center gap-1 focus:outline-hidden focus:ring-2 focus:ring-[#2563EB]/50"
           >
-            S'inscrire
-            <span class="material-icons text-sm">person_add</span>
+            @if (data.isLoading()) {
+              <span class="material-icons text-sm animate-spin">sync</span> Inscription…
+            } @else {
+              S'inscrire
+              <span class="material-icons text-sm">person_add</span>
+            }
           </button>
           <p class="text-xs text-slate-500 text-center">
             Déjà inscrit ? 
-            <button (click)="showAuthModal.set('login'); data.errorMessage.set(null)" class="text-blue-600 hover:underline font-bold">
+            <button type="button" (click)="showAuthModal.set('login'); data.errorMessage.set(null)" class="text-[#2563EB] hover:underline font-bold focus:outline-hidden">
               Se connecter
             </button>
           </p>

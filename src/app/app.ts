@@ -1157,6 +1157,7 @@ export class App {
       username: new FormControl(''),
       email: new FormControl('', [Validators.email]),
       password: new FormControl('', [Validators.required, Validators.minLength(4)]),
+      rememberMe: new FormControl(false),
       name: new FormControl(''),
       role: new FormControl('client', Validators.required),
       phone: new FormControl(''),
