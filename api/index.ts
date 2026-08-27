@@ -9,7 +9,9 @@ import { apiV1 } from '../dist/api-bundle.cjs';
 
 const app = express();
 app.use(express.json({ limit: '5mb' }));
-app.use('/', apiV1);
+// Vercel passes the original path (/api/v1/...) to this function, so mount
+// apiV1 at /api/v1 to match — same prefix as the production src/server.ts.
+app.use('/api/v1', apiV1);
 
 export default function handler(req, res) {
   return new Promise((resolve, reject) => {
@@ -29,4 +31,4 @@ export default function handler(req, res) {
   });
 }
 
-export const config = { maxDuration: 30 };
+export const config = { maxDuration: 60 };
