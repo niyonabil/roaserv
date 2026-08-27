@@ -51,3 +51,11 @@ Thumbs.db
 config-tool/node_modules/
 config-tool/dist/
 config-tool/.cache/
+
+# scratch
+.apierr.log
+.apilog
+server.err
+server.out
+*.mjs
+build_err.txt
