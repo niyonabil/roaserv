@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ROA Services — Configuration</title>
+  <style>
+    :root { --brand: #2563EB; --bg: #F8FAFC; --card: #fff; --muted: #64748B; --border: #E2E8F0; --danger: #DC2626; --ok: #059669; }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: system-ui, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: #0F172A; }
+    .wrap { max-width: 560px; margin: 40px auto; padding: 0 16px; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 28px; box-shadow: 0 8px 30px rgba(15,23,42,.06); }
+    .brand { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
+    .dot { width: 12px; height: 12px; border-radius: 50%; background: var(--brand); }
+    h1 { font-size: 20px; margin: 0; }
+    p.sub { color: var(--muted); font-size: 13px; margin: 4px 0 22px; }
+    label { display: block; font-size: 13px; font-weight: 600; margin: 16px 0 6px; }
+    input { width: 100%; padding: 11px 12px; border: 1px solid var(--border); border-radius: 10px; font-size: 14px; }
+    input:focus { outline: 2px solid var(--brand); border-color: var(--brand); }
+    .row { display: flex; gap: 10px; }
+    .row > div { flex: 1; }
+    button { margin-top: 24px; width: 100%; padding: 13px; border: 0; border-radius: 10px; background: var(--brand); color: #fff; font-size: 15px; font-weight: 700; cursor: pointer; }
+    button:hover { background: #1D4ED8; }
+    #status { margin-top: 16px; font-size: 13px; padding: 10px 12px; border-radius: 10px; display: none; }
+    #status.ok { display: block; background: #ECFDF5; color: var(--ok); border: 1px solid #A7F3D0; }
+    #status.err { display: block; background: #FEF2F2; color: var(--danger); border: 1px solid #FECACA; }
+    .hint { font-size: 12px; color: var(--muted); margin-top: 6px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <div class="brand"><span class="dot"></span><h1>ROA Services — Configuration</h1></div>
+      <p class="sub">Définissez l'URL de votre backend/Supabase et l'URL de base du frontend, puis enregistrez.</p>
+
+      <label>Supabase / Backend — Database URL (PostgreSQL)</label>
+      <input id="dbUrl" placeholder="postgresql://postgres.xxxx:xxxx@aws-0-eu-central-1.pooler.supabase.com:6543/postgres" />
+
+      <label>Supabase Anon / Public Key (optionnel)</label>
+      <input id="anonKey" placeholder="eyJhbGciOiJIUzI1Ni..." />
+
+      <label>Backend API Base URL</label>
+      <input id="apiUrl" placeholder="https://votre-projet.vercel.app/api/v1" />
+      <div class="hint">Utilisé par le frontend pour appeler l'API (auth, clients, ...).</div>
+
+      <label>Frontend Base URL</label>
+      <input id="frontUrl" placeholder="https://votre-projet.vercel.app" />
+      <div class="hint">URL publique de l'application (pour les liens/rappels).</div>
+
+      <button id="saveBtn">Enregistrer la configuration</button>
+      <div id="status"></div>
+    </div>
+  </div>
+
+  <script>
+    const { ipcRenderer } = require('electron');
+    const status = document.getElementById('status');
+    function setStatus(msg, ok) { status.textContent = msg; status.className = ok ? 'ok' : 'err'; }
+    // Load existing config on open
+    ipcRenderer.invoke('load-config').then((cfg) => {
+      if (cfg) {
+        document.getElementById('dbUrl').value = cfg.dbUrl || '';
+        document.getElementById('anonKey').value = cfg.anonKey || '';
+        document.getElementById('apiUrl').value = cfg.apiUrl || '';
+        document.getElementById('frontUrl').value = cfg.frontUrl || '';
+      }
+    });
+    document.getElementById('saveBtn').addEventListener('click', async () => {
+      const cfg = {
+        dbUrl: document.getElementById('dbUrl').value.trim(),
+        anonKey: document.getElementById('anonKey').value.trim(),
+        apiUrl: document.getElementById('apiUrl').value.trim(),
+        frontUrl: document.getElementById('frontUrl').value.trim(),
+      };
+      if (!cfg.dbUrl && !cfg.apiUrl) { setStatus('Renseignez au moins une URL (Database ou API).', false); return; }
+      const res = await ipcRenderer.invoke('save-config', cfg);
+      if (res.ok) setStatus('Configuration enregistrée : ' + res.path, true);
+      else setStatus('Erreur : ' + res.error, false);
+    });
+  </script>
+</body>
+</html>

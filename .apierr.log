@@ -1,0 +1,56 @@
+
+2026-08-27T01:31:30.840Z EXPRESS_ERR Error: Token d’accès manquant
+    at unauthorized (D:\roaservcies\roaserv\dist\api-test.cjs:39204:10)
+    at authenticate (D:\roaservcies\roaserv\dist\api-test.cjs:39242:17)
+    at Layer.handleRequest (D:\roaservcies\roaserv\dist\api-test.cjs:20646:21)
+    at next (D:\roaservcies\roaserv\dist\api-test.cjs:20783:17)
+    at Route.dispatch (D:\roaservcies\roaserv\dist\api-test.cjs:20757:7)
+    at handle (D:\roaservcies\roaserv\dist\api-test.cjs:21050:16)
+    at Layer.handleRequest (D:\roaservcies\roaserv\dist\api-test.cjs:20646:21)
+    at D:\roaservcies\roaserv\dist\api-test.cjs:20974:19
+    at processParams (D:\roaservcies\roaserv\dist\api-test.cjs:21121:16)
+    at next (D:\roaservcies\roaserv\dist\api-test.cjs:20970:9)
+2026-08-27T01:31:36.573Z EXPRESS_ERR Error: Permission requise: clients.create
+    at forbidden (D:\roaservcies\roaserv\dist\api-test.cjs:39207:10)
+    at D:\roaservcies\roaserv\dist\api-test.cjs:39264:19
+    at Layer.handleRequest (D:\roaservcies\roaserv\dist\api-test.cjs:20646:21)
+    at next (D:\roaservcies\roaserv\dist\api-test.cjs:20783:17)
+    at requireTenant (D:\roaservcies\roaserv\dist\api-test.cjs:39258:3)
+    at Layer.handleRequest (D:\roaservcies\roaserv\dist\api-test.cjs:20646:21)
+    at next (D:\roaservcies\roaserv\dist\api-test.cjs:20783:17)
+    at authenticate (D:\roaservcies\roaserv\dist\api-test.cjs:39249:5)
+    at Layer.handleRequest (D:\roaservcies\roaserv\dist\api-test.cjs:20646:21)
+    at next (D:\roaservcies\roaserv\dist\api-test.cjs:20783:17)
+2026-08-27T01:31:36.574Z EXPRESS_ERR Error: Permission requise: clients.update
+    at forbidden (D:\roaservcies\roaserv\dist\api-test.cjs:39207:10)
+    at D:\roaservcies\roaserv\dist\api-test.cjs:39264:19
+    at Layer.handleRequest (D:\roaservcies\roaserv\dist\api-test.cjs:20646:21)
+    at next (D:\roaservcies\roaserv\dist\api-test.cjs:20783:17)
+    at requireTenant (D:\roaservcies\roaserv\dist\api-test.cjs:39258:3)
+    at Layer.handleRequest (D:\roaservcies\roaserv\dist\api-test.cjs:20646:21)
+    at next (D:\roaservcies\roaserv\dist\api-test.cjs:20783:17)
+    at authenticate (D:\roaservcies\roaserv\dist\api-test.cjs:39249:5)
+    at Layer.handleRequest (D:\roaservcies\roaserv\dist\api-test.cjs:20646:21)
+    at next (D:\roaservcies\roaserv\dist\api-test.cjs:20783:17)
+2026-08-27T01:31:36.575Z EXPRESS_ERR Error: Permission requise: clients.delete
+    at forbidden (D:\roaservcies\roaserv\dist\api-test.cjs:39207:10)
+    at D:\roaservcies\roaserv\dist\api-test.cjs:39264:19
+    at Layer.handleRequest (D:\roaservcies\roaserv\dist\api-test.cjs:20646:21)
+    at next (D:\roaservcies\roaserv\dist\api-test.cjs:20783:17)
+    at requireTenant (D:\roaservcies\roaserv\dist\api-test.cjs:39258:3)
+    at Layer.handleRequest (D:\roaservcies\roaserv\dist\api-test.cjs:20646:21)
+    at next (D:\roaservcies\roaserv\dist\api-test.cjs:20783:17)
+    at authenticate (D:\roaservcies\roaserv\dist\api-test.cjs:39249:5)
+    at Layer.handleRequest (D:\roaservcies\roaserv\dist\api-test.cjs:20646:21)
+    at next (D:\roaservcies\roaserv\dist\api-test.cjs:20783:17)
+2026-08-27T01:31:37.600Z EXPRESS_ERR Error: Token d’accès manquant
+    at unauthorized (D:\roaservcies\roaserv\dist\api-test.cjs:39204:10)
+    at authenticate (D:\roaservcies\roaserv\dist\api-test.cjs:39242:17)
+    at Layer.handleRequest (D:\roaservcies\roaserv\dist\api-test.cjs:20646:21)
+    at next (D:\roaservcies\roaserv\dist\api-test.cjs:20783:17)
+    at Route.dispatch (D:\roaservcies\roaserv\dist\api-test.cjs:20757:7)
+    at handle (D:\roaservcies\roaserv\dist\api-test.cjs:21050:16)
+    at Layer.handleRequest (D:\roaservcies\roaserv\dist\api-test.cjs:20646:21)
+    at D:\roaservcies\roaserv\dist\api-test.cjs:20974:19
+    at processParams (D:\roaservcies\roaserv\dist\api-test.cjs:21121:16)
+    at next (D:\roaservcies\roaserv\dist\api-test.cjs:20970:9)

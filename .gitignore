@@ -46,3 +46,8 @@ __screenshots__/
 .DS_Store
 Thumbs.db
 .vercel
+
+# Config tool (Electron)
+config-tool/node_modules/
+config-tool/dist/
+config-tool/.cache/
