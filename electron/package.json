@@ -1,0 +1,32 @@
+{
+  "name": "roaserv-desktop",
+  "version": "1.0.0",
+  "description": "ROA Services — desktop launcher (backend + frontend dans le meme processus)",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder"
+  },
+  "build": {
+    "appId": "com.roaserv.desktop",
+    "productName": "ROA Services",
+    "files": [
+      "main.js",
+      "preload.js",
+      "../dist/**",
+      "../roaserv.config.json"
+    ],
+    "directories": {
+      "output": "../release"
+    },
+    "win": {
+      "target": "nsis",
+      "icon": "../config-tool/assets/icon.ico"
+    }
+  },
+  "dependencies": {
+    "electron": "^37.0.0",
+    "electron-builder": "^26.0.0"
+  }
+}

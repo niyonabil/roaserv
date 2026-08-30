@@ -57,5 +57,10 @@ config-tool/.cache/
 .apilog
 server.err
 server.out
+
+# Desktop launcher (Electron) + local secrets
+roaserv.config.json
+electron/node_modules/
+release/
 *.mjs
 build_err.txt

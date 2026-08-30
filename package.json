@@ -7,7 +7,10 @@
     "build": "ng build",
     "build:api": "esbuild src/server/api/index.ts --bundle --platform=node --format=cjs --outfile=dist/api-bundle.cjs --external:pg --external:bcryptjs --external:jsonwebtoken --external:drizzle-orm --log-level=error",
     "vercel-build": "npm run build && npm run build:api",
-    "dev": "PORT=3000 ng serve --port=3000 --host=0.0.0.0 --allowed-hosts=true ${DISABLE_HMR:+--live-reload=false}"
+    "dev": "PORT=3000 ng serve --port=3000 --host=0.0.0.0 --allowed-hosts=true ${DISABLE_HMR:+--live-reload=false}",
+    "dev:fe": "ng serve --port=5173 --host=0.0.0.0 --allowed-hosts=true",
+    "electron:build": "npm run build:api && npm run build",
+    "electron:start": "npm run electron:build && cd electron && npm install && npx electron ."
   },
   "devDependencies": {
     "@angular/cli": "^22.1.5",

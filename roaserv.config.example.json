@@ -1,0 +1,6 @@
+{
+  "databaseUrl": "postgresql://postgres.<project>:<password>@aws-0-eu-central-1.pooler.supabase.com:6543/postgres",
+  "jwtSecret": "change_me_to_a_long_random_string_at_least_32_chars",
+  "jwtRefreshSecret": "change_me_to_another_long_random_string",
+  "port": 4180
+}
