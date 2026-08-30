@@ -394,26 +394,40 @@ export const purchaseReceipt = pgTable('purchase_receipt', {
 export const quotation = pgTable('quotation', {
   id: uuid('id').defaultRandom().primaryKey(),
   tenantId: uuid('tenant_id').notNull().references(() => tenant.id, { onDelete: 'cascade' }),
-  projectId: uuid('project_id').notNull().references(() => project.id, { onDelete: 'cascade' }),
+  projectId: uuid('project_id').references(() => project.id, { onDelete: 'cascade' }), // optional: a quote may be standalone
+  clientId: uuid('client_id').references(() => client.id, { onDelete: 'restrict' }),
+  number: varchar('number', { length: 40 }),
   status: varchar('status', { length: 30 }).notNull().default('draft'),
   depositPct: numeric('deposit_pct', { precision: 5, scale: 2 }).notNull().default('50'),
   totalHt: numeric('total_ht', { precision: 14, scale: 2 }).notNull().default('0'),
   vat: numeric('vat', { precision: 14, scale: 2 }).notNull().default('0'),
   totalTtc: numeric('total_ttc', { precision: 14, scale: 2 }).notNull().default('0'),
+  issueDate: date('issue_date'),
+  validUntil: date('valid_until'),
+  notes: text('notes'),
+  createdBy: uuid('created_by').references(() => user.id, { onDelete: 'set null' }),
+  updatedBy: uuid('updated_by').references(() => user.id, { onDelete: 'set null' }),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
-});
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => ({ idxTenant: index('idx_quotation_tenant').on(t.tenantId), uniqTenantNum: uniqueIndex('uniq_tenant_quote_number').on(t.tenantId, t.number) }));
 
 export const invoice = pgTable('invoice', {
   id: uuid('id').defaultRandom().primaryKey(),
   tenantId: uuid('tenant_id').notNull().references(() => tenant.id, { onDelete: 'cascade' }),
-  projectId: uuid('project_id').notNull().references(() => project.id, { onDelete: 'cascade' }),
+  projectId: uuid('project_id').references(() => project.id, { onDelete: 'cascade' }), // optional
   number: varchar('number', { length: 40 }).notNull(),
+  clientId: uuid('client_id').references(() => client.id, { onDelete: 'restrict' }),
   status: invoiceStatusEnum('status').notNull().default('draft'),
   ht: numeric('ht', { precision: 14, scale: 2 }).notNull().default('0'),
   vat: numeric('vat', { precision: 14, scale: 2 }).notNull().default('0'),
   ttc: numeric('ttc', { precision: 14, scale: 2 }).notNull().default('0'),
   dueDate: date('due_date'),
+  issueDate: date('issue_date'),
+  notes: text('notes'),
+  createdBy: uuid('created_by').references(() => user.id, { onDelete: 'set null' }),
+  updatedBy: uuid('updated_by').references(() => user.id, { onDelete: 'set null' }),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 }, (t) => ({ uniqNum: uniqueIndex('uniq_invoice_num').on(t.tenantId, t.number) }));
 
 export const invoiceLine = pgTable('invoice_line', {
@@ -421,6 +435,8 @@ export const invoiceLine = pgTable('invoice_line', {
   tenantId: uuid('tenant_id').notNull().references(() => tenant.id, { onDelete: 'cascade' }),
   invoiceId: uuid('invoice_id').notNull().references(() => invoice.id, { onDelete: 'cascade' }),
   label: varchar('label', { length: 200 }).notNull(),
+  quantity: integer('quantity').notNull().default(1),
+  unitPrice: numeric('unit_price', { precision: 14, scale: 2 }).notNull().default('0'),
   ht: numeric('ht', { precision: 14, scale: 2 }).notNull().default('0'),
   vatRate: numeric('vat_rate', { precision: 5, scale: 2 }).notNull().default('20'),
   ttc: numeric('ttc', { precision: 14, scale: 2 }).notNull().default('0'),
@@ -434,6 +450,10 @@ export const payment = pgTable('payment', {
   amount: numeric('amount', { precision: 14, scale: 2 }).notNull(),
   method: paymentMethodEnum('method').notNull().default('cash'),
   type: paymentTypeEnum('type').notNull().default('partial'),
+  reference: varchar('reference', { length: 60 }),
+  paidAt: timestamp('paid_at', { withTimezone: true }).notNull().defaultNow(),
+  notes: text('notes'),
+  createdBy: uuid('created_by').references(() => user.id, { onDelete: 'set null' }),
   reversalOf: uuid('reversal_of').references((): any => payment.id, { onDelete: 'set null' }),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 }, (t) => ({ idxClient: index('idx_payment_client').on(t.tenantId, t.clientId) }));
@@ -444,6 +464,8 @@ export const refund = pgTable('refund', {
   paymentId: uuid('payment_id').notNull().references(() => payment.id, { onDelete: 'restrict' }),
   amount: numeric('amount', { precision: 14, scale: 2 }).notNull(),
   reason: text('reason'),
+  reference: varchar('reference', { length: 60 }),
+  createdBy: uuid('created_by').references(() => user.id, { onDelete: 'set null' }),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 });
 
@@ -454,6 +476,9 @@ export const creditNote = pgTable('credit_note', {
   invoiceId: uuid('invoice_id').references(() => invoice.id, { onDelete: 'set null' }),
   amount: numeric('amount', { precision: 14, scale: 2 }).notNull(),
   reason: text('reason'),
+  notes: text('notes'),
+  number: varchar('number', { length: 40 }),
+  createdBy: uuid('created_by').references(() => user.id, { onDelete: 'set null' }),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 });
 

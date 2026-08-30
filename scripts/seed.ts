@@ -13,6 +13,11 @@ const PERMISSIONS = [
   'pay', 'refund', 'manage_stock', 'manage_machines', 'manage_users', 'manage_prices',
   'manage_commissions', 'view_financials',
   'clients.read', 'clients.create', 'clients.update', 'clients.delete',
+  'billing.read', 'billing.create', 'billing.update', 'billing.delete',
+  'stock.read', 'stock.create', 'stock.update', 'stock.delete',
+  'machines.read', 'machines.manage',
+  'delivery.read', 'delivery.create', 'delivery.update', 'delivery.delete',
+  'affiliates.read', 'affiliates.manage',
 ];
 
 async function main() {
@@ -51,6 +56,12 @@ async function main() {
         [randomUUID(), tenantId, 'admin'],
       );
       adminRoleId = r.rows[0].id;
+    } else {
+      adminRoleId = roles[0].id;
+    }
+    // Always (re)grant the full permission catalog to the admin role so that
+    // newly added permissions (e.g. billing.*) are picked up idempotently.
+    {
       const permRows = await client.query(`SELECT id, code FROM permission`);
       for (const p of permRows.rows) {
         await client.query(
@@ -58,8 +69,6 @@ async function main() {
           [adminRoleId, p.id],
         );
       }
-    } else {
-      adminRoleId = roles[0].id;
     }
 
     // 4. admin user

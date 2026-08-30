@@ -5,7 +5,7 @@
  */
 import type { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import { db } from '../../db';
+import { db, tenantStorage, setTenant } from '../../db';
 import { user, role, userRole, rolePermission, permission } from '../../db/schema';
 import { eq } from 'drizzle-orm';
 import { ApiError, unauthorized, forbidden } from './response';
@@ -67,9 +67,41 @@ export function authenticate(req: Request, res: Response, next: NextFunction) {
     const payload = jwt.verify(token, ACCESS_SECRET) as AuthPayload;
     if (!payload.sub || !payload.tenantId) throw new Error('invalid payload');
     req.auth = payload;
-    next();
+    // Establish a tenant-scoped transaction so Row-Level Security
+    // (app.tenant_id) is enforced at the DB layer for the whole request,
+    // in addition to the application-layer tenant filtering in repositories.
+    beginTenantScope(req, res, next, payload.tenantId);
   } catch {
     next(unauthorized('Token invalide ou expiré'));
+  }
+}
+
+/**
+ * Open a transaction, set `app.tenant_id`, and run the remaining middleware/handler
+ * chain inside it (via AsyncLocalStorage). The transaction commits when the
+ * response finishes. Falls back to the normal flow if the transaction cannot be
+ * started, so a DB/RLS misconfiguration can never take the API down.
+ */
+function beginTenantScope(req: Request, res: Response, next: NextFunction, tenantId: string) {
+  let settled = false;
+  const finished = new Promise<void>((resolve) => {
+    res.once('finish', () => { if (!settled) { settled = true; resolve(); } });
+    res.once('close', () => { if (!settled) { settled = true; resolve(); } });
+  });
+  try {
+    db.transaction(async (tx: any) => {
+      await setTenant(tx, tenantId);
+      await tenantStorage.run({ tenantId, tx }, async () => {
+        next();
+      });
+      await finished; // keep the transaction open until the response is sent
+    }).catch((err: any) => {
+      if (!res.headersSent) next(err);
+      else console.error('[tenant-scope] transaction error', err);
+    });
+  } catch (err) {
+    // Defensive: never block the request if the scope cannot be established.
+    if (!res.headersSent) next();
   }
 }
 
