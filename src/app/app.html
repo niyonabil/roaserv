@@ -3477,6 +3477,96 @@
         <!-- E. B2B PARTNER CLIENTS LIST & HIERARCHICAL WORKSPACE -->
         @if (activeTab() === 'clients') {
           <div class="space-y-6 animate-fadeIn" id="workspace-clients-root">
+
+            <!-- NOUVEAU PANNEAU: Clients depuis le backend /api/v1 (JWT/RBAC/tenant) -->
+            <div class="bg-white rounded-2xl border border-indigo-200 shadow-sm overflow-hidden" id="api-clients-panel">
+              <div class="flex items-center justify-between gap-3 px-4 py-3 bg-indigo-50/60 border-b border-indigo-100">
+                <div class="flex items-center gap-2">
+                  <span class="material-icons text-indigo-600 text-sm">cloud_done</span>
+                  <h3 class="text-sm font-black text-indigo-900 tracking-tight">Clients (Backend ROA /api/v1)</h3>
+                  @if (apiClientsLoggedIn) {
+                    <span class="bg-emerald-100 text-emerald-700 text-[9px] font-black uppercase px-1.5 py-0.5 rounded">Connecté</span>
+                  } @else {
+                    <span class="bg-slate-200 text-slate-600 text-[9px] font-black uppercase px-1.5 py-0.5 rounded">JWT requis</span>
+                  }
+                </div>
+                <div class="flex items-center gap-2">
+                  @if (apiClientsLoggedIn) {
+                    <button type="button" (click)="loadApiClients()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs px-3 py-1.5 rounded-lg flex items-center gap-1">
+                      <span class="material-icons text-sm">refresh</span> Rafraîchir
+                    </button>
+                    <button type="button" (click)="logoutFromApi()" class="bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-xs px-3 py-1.5 rounded-lg">
+                      Déconnexion
+                    </button>
+                  }
+                </div>
+              </div>
+
+              @if (!apiClientsLoggedIn) {
+                <form class="p-4 grid grid-cols-1 sm:grid-cols-12 gap-3 items-end" (submit)="$event.preventDefault(); loginToApi(apiLoginIdentifier(), apiLoginPassword())">
+                  <div class="sm:col-span-4">
+                    <label class="block text-[10px] font-bold text-slate-500 uppercase mb-0.5">Identifiant (email/username)</label>
+                    <input #apiId type="text" (input)="apiLoginIdentifier.set(apiId.value)" placeholder="admin@roa.ma" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs" />
+                  </div>
+                  <div class="sm:col-span-4">
+                    <label class="block text-[10px] font-bold text-slate-500 uppercase mb-0.5">Mot de passe</label>
+                    <input #apiPw type="password" (input)="apiLoginPassword.set(apiPw.value)" placeholder="••••••••" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs" />
+                  </div>
+                  <div class="sm:col-span-4">
+                    <button type="submit" [disabled]="apiClientsLoading()" class="w-full bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 text-white font-bold text-xs px-3 py-2 rounded-lg flex items-center justify-center gap-1">
+                      <span class="material-icons text-sm">login</span> Se connecter (JWT)
+                    </button>
+                  </div>
+                </form>
+              } @else {
+                <div class="p-4 space-y-3">
+                  <div class="flex items-center gap-2">
+                    <input type="text" [value]="apiClientsSearch()" (input)="apiClientsSearch.set($event.target.value)" (keyup.enter)="onApiClientsSearch()" placeholder="Rechercher (nom, sku, catégorie)…" class="flex-1 bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs" />
+                    <button type="button" (click)="onApiClientsSearch()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs px-3 py-1.5 rounded-lg">Chercher</button>
+                  </div>
+                  @if (apiClientsError()) {
+                    <div class="text-xs font-bold text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">{{ apiClientsError() }}</div>
+                  }
+                  @if (apiClientsLoading()) {
+                    <div class="text-xs text-slate-500 italic py-3 text-center">Chargement des clients…</div>
+                  } @else if (apiClients().length === 0) {
+                    <div class="text-center py-6 text-slate-400">
+                      <span class="material-icons text-3xl">people_outline</span>
+                      <p class="text-xs mt-1">Aucun client dans ce tenant.</p>
+                    </div>
+                  } @else {
+                    <div class="divide-y divide-slate-100 max-h-[420px] overflow-y-auto">
+                      @for (c of apiClients(); track c.id) {
+                        <div class="p-3 flex items-center justify-between gap-3 hover:bg-slate-50/40">
+                          <div class="min-w-0">
+                            <div class="flex items-center gap-2">
+                              <span class="font-bold text-slate-800 text-xs truncate">{{ c.name }}</span>
+                              <span class="bg-indigo-100 text-indigo-700 text-[8px] px-1.5 py-0.5 rounded font-black uppercase">{{ c.clientType }}</span>
+                              @if (c.status) {
+                                <span class="bg-slate-100 text-slate-600 text-[8px] px-1.5 py-0.5 rounded font-black uppercase">{{ c.status }}</span>
+                              }
+                            </div>
+                            <p class="text-[10px] text-slate-500 truncate">{{ c.email || '-' }} • {{ c.city || '-' }} • {{ c.phone || '-' }}</p>
+                            @if (c.customerCode) {
+                              <p class="text-[10px] text-slate-400 font-mono">#{{ c.customerCode }}</p>
+                            }
+                          </div>
+                          <div class="text-right shrink-0">
+                            <p class="text-xs font-black text-slate-800">{{ c.outstandingBalance | number:'1.2-2' }} DH</p>
+                            <p class="text-[9px] text-slate-400 uppercase">solde</p>
+                          </div>
+                        </div>
+                      }
+                    </div>
+                    <div class="flex items-center justify-between text-[10px] text-slate-500 pt-1">
+                      <span>Total: {{ apiClientsTotal() }} client(s)</span>
+                      <span>Page {{ apiClientsPage() }}</span>
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+
             <div class="flex items-center justify-between border-b border-slate-200 pb-3">
               <div>
                 <h2 class="text-2xl font-black text-slate-900 tracking-tight">

@@ -61,9 +61,6 @@ export async function createMaterial(tenantId: string, userId: string, input: an
     reorderLevel: input.reorderLevel != null ? String(input.reorderLevel) : null,
     unitCost: input.unitCost != null ? String(input.unitCost) : '0',
     preferredSupplierId: input.preferredSupplierId || null,
-    notes: input.notes ?? null,
-    createdBy: userId,
-    updatedBy: userId,
   }).returning();
   await writeAudit(tenantId, userId, 'MATERIAL_CREATED', 'material', created.id, null, created);
   return created;
@@ -75,8 +72,8 @@ export async function updateMaterial(tenantId: string, userId: string, id: strin
     const clash = await db.select({ id: material.id }).from(material).where(and(eq(material.tenantId, tenantId), eq(material.sku, input.sku))).limit(1);
     if (clash.length) throw conflict('Un matériau avec ce SKU existe déjà dans ce tenant');
   }
-  const patch: any = { updatedBy: userId };
-  for (const k of ['sku', 'name', 'category', 'unit', 'min', 'max', 'reorderLevel', 'unitCost', 'notes', 'preferredSupplierId']) {
+  const patch: any = {};
+  for (const k of ['sku', 'name', 'category', 'unit', 'min', 'max', 'reorderLevel', 'unitCost', 'preferredSupplierId']) {
     if (input[k] !== undefined) {
       const v = input[k] === '' ? null : input[k];
       patch[k] = (k === 'min' || k === 'max' || k === 'reorderLevel' || k === 'unitCost' || k === 'qtyOnHand') ? String(v) : v;
@@ -164,8 +161,6 @@ export async function createMovement(tenantId: string, userId: string, input: an
     const [upd] = await tx.update(material).set({
       qtyOnHand: String(newOnHand),
       qtyReserved: String(newReserved),
-      updatedAt: new Date(),
-      updatedBy: userId,
     }).where(and(eq(material.tenantId, tenantId), eq(material.id, input.materialId))).returning();
     const inserted = await tx.insert(stockMovement).values({
       tenantId,

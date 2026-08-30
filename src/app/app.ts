@@ -10,6 +10,7 @@ import 'jspdf-autotable';
 
 import { DashboardChart } from './dashboard-chart';
 import { CoverageMap } from './coverage-map';
+import { listClients, login, clearAuth, getStoredToken, type ClientApi } from './core/api/clients.api';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -1640,6 +1641,79 @@ export class App {
     } catch (err) {
       console.error('Error adding customer:', err);
     }
+  }
+
+  // --- NOUVELLE API CLIENTS (backend /api/v1, JWT/RBAC/tenant) ---
+  // Ce panneau consomme la nouvelle architecture sans casser l'écran legacy.
+  // Le JWT est stocké par core/api/clients.api.ts après login /api/v1/auth/login.
+  apiClients = signal<ClientApi[]>([]);
+  apiClientsTotal = signal<number>(0);
+  apiClientsLoading = signal<boolean>(false);
+  apiClientsError = signal<string | null>(null);
+  apiClientsSearch = signal<string>('');
+  apiClientsPage = signal<number>(1);
+  apiLoginIdentifier = signal<string>('');
+  apiLoginPassword = signal<string>('');
+
+  readonly API_CLIENTS_PAGE_SIZE = 20;
+
+  get apiClientsToken(): string | null {
+    return getStoredToken();
+  }
+
+  get apiClientsLoggedIn(): boolean {
+    return !!getStoredToken();
+  }
+
+  async loadApiClients() {
+    if (!this.apiClientsLoggedIn) {
+      this.apiClientsError.set('Non connecté au backend (JWT manquant). Connectez-vous via /api/v1/auth/login.');
+      return;
+    }
+    this.apiClientsLoading.set(true);
+    this.apiClientsError.set(null);
+    try {
+      const page = await listClients({
+        page: this.apiClientsPage(),
+        pageSize: this.API_CLIENTS_PAGE_SIZE,
+        search: this.apiClientsSearch().trim() || undefined,
+        sort: 'name',
+        order: 'asc',
+      });
+      this.apiClients.set(page.data ?? []);
+      this.apiClientsTotal.set(page.total ?? page.data?.length ?? 0);
+    } catch (err) {
+      this.apiClientsError.set((err as Error).message || 'Erreur de chargement des clients.');
+      this.apiClients.set([]);
+    } finally {
+      this.apiClientsLoading.set(false);
+    }
+  }
+
+  onApiClientsSearch() {
+    this.apiClientsPage.set(1);
+    this.loadApiClients();
+  }
+
+  async loginToApi(identifier: string, password: string) {
+    this.apiClientsError.set(null);
+    this.apiClientsLoading.set(true);
+    try {
+      const result = await login(identifier, password);
+      this.data.successMessage.set(`Connecté au backend (tenant ${result.user.tenantId}).`);
+      await this.loadApiClients();
+    } catch (err) {
+      this.apiClientsError.set((err as Error).message || 'Échec de connexion au backend.');
+    } finally {
+      this.apiClientsLoading.set(false);
+    }
+  }
+
+  logoutFromApi() {
+    clearAuth();
+    this.apiClients.set([]);
+    this.apiClientsTotal.set(0);
+    this.data.successMessage.set('Déconnexion du backend effectuée.');
   }
 
   selectPartnerCustomer(c: PartnerCustomer) {

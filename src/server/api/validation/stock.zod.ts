@@ -23,7 +23,6 @@ export const CreateMaterialSchema = z.object({
   reorderLevel: numeric,
   unitCost: numeric,
   preferredSupplierId: z.string().uuid('UUID fournisseur invalide').optional().or(z.literal('')),
-  notes: optionalStr(4000),
 }).strict().strip();
 
 export const UpdateMaterialSchema = z.object({
@@ -37,7 +36,6 @@ export const UpdateMaterialSchema = z.object({
   reorderLevel: numeric,
   unitCost: numeric,
   preferredSupplierId: z.string().uuid('UUID fournisseur invalide').optional().or(z.literal('')),
-  notes: optionalStr(4000),
 }).strict().strip();
 
 export const CreateStockMovementSchema = z.object({
