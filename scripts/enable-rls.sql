@@ -34,7 +34,12 @@ DECLARE
     'delivery','delivery_attempt','affiliate','affiliate_referral','commission','commission_payout',
     'notification','audit_log','supplier','price_list','price_list_item','tax_rule',
     'employee','payroll_run','payroll_line','leave_request','expense','timesheet',
-    'category','tag','document','webhook','integration','settings','activity_log'
+    'category','tag','document','webhook','integration','settings','activity_log',
+    -- Tables with tenant_id added to keep RLS coverage in sync with src/db/schema.ts
+    'refresh_token','auth_event','client_contact','service_catalog','machine_cost','pricing_config',
+    'job_status_history','production_job','machine_counter','maintenance','stock_reservation',
+    'purchase_order','purchase_order_line','purchase_receipt','quotation','credit_note',
+    'file_asset','file_version','notification_rule','config'
   ];
 BEGIN
   FOREACH t IN ARRAY tbls LOOP
