@@ -30,7 +30,7 @@ async function setupFixtures() {
   await POOL.query("DELETE FROM commission WHERE affiliate_id IN (SELECT id FROM affiliate WHERE code LIKE 'E2E-AFF%')");
   await POOL.query("DELETE FROM affiliate_referral WHERE affiliate_id IN (SELECT id FROM affiliate WHERE code LIKE 'E2E-AFF%')");
   await POOL.query("DELETE FROM affiliate WHERE code LIKE 'E2E-AFF%'");
-  await POOL.query("DELETE FROM client WHERE customer_code IN ('E2E-DLVCL')");
+  await POOL.query("DELETE FROM client WHERE customer_code IN ('E2E-DLVCL','E2E-DLVCLB','E2E-AFFCL')");
   await POOL.query("DELETE FROM app_user WHERE username IN ('e2e_dr','e2e_dm')");
   await POOL.query("DELETE FROM tenant WHERE slug LIKE 'e2e_da_%'");
 
