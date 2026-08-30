@@ -64,6 +64,7 @@ electron/node_modules/
 electron/roaserv.config.json
 electron/api-bundle.cjs
 electron/browser/
+electron/dist/
 release/
 *.mjs
 build_err.txt
