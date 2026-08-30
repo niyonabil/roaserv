@@ -18,7 +18,8 @@ const fs = require('fs');
 const { app, BrowserWindow, ipcMain } = require('electron');
 const express = require('express');
 
-const ROOT = path.resolve(__dirname, '..');
+const ROOT = __dirname; // dans l'EXE: app.asar (contient main.js, api-bundle.cjs, browser/, roaserv.config.json)
+const APP_ROOT = path.resolve(__dirname, '..', '..'); // pour debug éventuel (resources/app.asar -> resources -> electron parent)
 
 // ---- Configuration ----------------------------------------------------------
 function loadConfig() {
@@ -59,17 +60,17 @@ process.env.JWT_REFRESH_EXPIRES_IN = cfg.JWT_REFRESH_EXPIRES_IN;
 const expressApp = express();
 expressApp.use(express.json({ limit: '5mb' }));
 
-// Backend: monte apiV1 (généré par `npm run build:api` -> dist/api-bundle.cjs)
-const bundlePath = path.join(ROOT, 'dist', 'api-bundle.cjs');
+// Backend: monte apiV1 (copié dans l'ASAR à la racine par copy-assets.cjs)
+const bundlePath = path.join(ROOT, 'api-bundle.cjs');
 if (!fs.existsSync(bundlePath)) {
-  console.error('[electron] dist/api-bundle.cjs introuvable. Lance `npm run build:api` d\'abord.');
+  console.error('[electron] api-bundle.cjs introuvable. Lance `npm run build:api` puis `npm run dist`.');
   process.exit(1);
 }
 const { apiV1 } = require(bundlePath);
 expressApp.use('/api/v1', apiV1);
 
-// Frontend statique (build Angular: dist/browser)
-const browserDir = path.join(ROOT, 'dist', 'browser');
+// Frontend statique (build Angular: dist/browser, copié dans l'ASAR à la racine)
+const browserDir = path.join(ROOT, 'browser');
 if (fs.existsSync(browserDir)) {
   expressApp.use(express.static(browserDir));
   // SPA fallback : toute route non-API renvoie index.html (Express 5: pas de '*' wildcard)

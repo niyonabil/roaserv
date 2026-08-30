@@ -1,0 +1,12 @@
+User-agent: *
+Allow: /
+Allow: /?parrain=*
+Allow: /?ref=*
+Allow: /?service=*
+Disallow: /api/
+Disallow: /admin
+Disallow: /checkout/session
+Disallow: /internal/
+
+# Sitemap location
+Sitemap: https://digidocs.ma/sitemap.xml

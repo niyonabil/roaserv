@@ -5,8 +5,9 @@
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "pack": "electron-builder --dir",
-    "dist": "electron-builder"
+    "copy-assets": "node copy-assets.cjs",
+    "pack": "npm run copy-assets && electron-builder --dir",
+    "dist": "npm run copy-assets && electron-builder --win nsis"
   },
   "build": {
     "appId": "com.roaserv.desktop",
@@ -14,8 +15,10 @@
     "files": [
       "main.js",
       "preload.js",
-      "../dist/**",
-      "../roaserv.config.json"
+      "api-bundle.cjs",
+      "browser/**/*",
+      "roaserv.config.json",
+      "node_modules/**/*"
     ],
     "directories": {
       "output": "../release"
@@ -26,6 +29,9 @@
     }
   },
   "dependencies": {
+    "express": "^5.1.0"
+  },
+  "devDependencies": {
     "electron": "^37.0.0",
     "electron-builder": "^26.0.0"
   }
