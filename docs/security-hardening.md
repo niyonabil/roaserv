@@ -46,10 +46,27 @@ during the Phase-2 security gate + business modules build.
   frontend).
 - Uncaught errors → 500 `INTERNAL` with details hidden in production.
 
+### 5. Rate limiting / brute-force protection on `/api/auth/login` — DONE
+- `src/server/api/rate-limit.ts`: in-memory fixed-window limiter, stdlib-only
+  (no external dependency).
+- Key = `clientIP + attempted username` (from `X-Forwarded-For` first hop, else
+  `req.ip`). Window = 15 min, max **5** attempts → HTTP **429** with
+  `Retry-After` header + `{ success:false, code:'RATE_LIMITED' }` envelope.
+- Mounted in `src/server/api/index.ts` **before** the auth router:
+  `apiV1.use('/auth/login', loginRateLimiter)`.
+- **Defense in depth**: stacks with the existing account-level lockout in
+  `auth.service.ts` (`failedLoginAttempts` / `LOCK_MINUTES = 15` after 5 fails).
+- **Caveat (left as recommendation, not blocking)**: the in-memory Map is
+  per-process and NOT shared across Vercel/serverless instances. In a multi-node
+  or serverless deployment, back this with a shared store (e.g. Redis) keyed
+  the same way, or enforce an edge rate limit at the proxy.
+
 ## What REMAINS (recommended, not blocking MVP)
 1. **Apply + monitor RLS** in production after staging validation.
-2. **Rate limiting / brute-force protection** on `/api/auth/login` (lockout
-   exists in code; add a reverse-proxy / edge rate limit on Vercel).
+2. **Distributed rate limiting** — the per-process limiter above must be
+   replaced by a shared store (Redis) or edge limit when running multi-instance
+   / serverless (Vercel). The code-level limiter is DONE; the infra-level one is
+   still recommended.
 3. **HTTPS / HSTS** — handled by Vercel; ensure `Secure`/`HttpOnly`/`SameSite`
    on auth cookies if cookie auth is added.
 4. **Secrets rotation** — `JWT_SECRET`/`JWT_REFRESH_SECRET` are env vars; rotate

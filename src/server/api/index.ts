@@ -11,8 +11,14 @@ import { machinesRouter } from './machines.router';
 import { billingRouter } from './billing.router';
 import { deliveryRouter } from './delivery.router';
 import { affiliatesRouter } from './affiliates.router';
+import { loginRateLimiter } from './rate-limit';
 
 export const apiV1 = Router();
+
+// Brute-force mitigation: rate-limit login attempts (IP+username, 5/15min -> 429).
+// Mounted BEFORE the auth router so it guards POST /api/auth/login.
+apiV1.use('/auth/login', loginRateLimiter);
+
 apiV1.use('/auth', authRouter);
 apiV1.use('/', rolesRouter); // /roles, /permissions, /users/:id/roles, /me
 apiV1.use('/', clientsRouter); // /clients CRUD (tenant-scoped + RBAC)
