@@ -28,6 +28,16 @@ export function createApp() {
   app.use('/api/v1', billingRouter);
   app.use('/api/v1', deliveryRouter);
   app.use('/api/v1', affiliatesRouter);
+  // Legacy alias: frontend data.ts calls /api/auth/login, /api/clients, etc.
+  app.use('/api/auth/login', loginRateLimiter);
+  app.use('/api/auth', authRouter);
+  app.use('/api', rolesRouter);
+  app.use('/api', clientsRouter);
+  app.use('/api', stockRouter);
+  app.use('/api', machinesRouter);
+  app.use('/api', billingRouter);
+  app.use('/api', deliveryRouter);
+  app.use('/api', affiliatesRouter);
   // Global error handler: convert ApiError -> consistent JSON; never leak HTML.
   app.use((err: any, _req: any, res: any, _next: any) => {
     try { require('fs').appendFileSync('d:/roaservcies/roaserv/.apierr.log', '\n' + new Date().toISOString() + ' EXPRESS_ERR ' + (err && err.stack ? err.stack : String(err))); } catch {}
