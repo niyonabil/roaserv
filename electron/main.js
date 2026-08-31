@@ -63,11 +63,13 @@ expressApp.use(express.json({ limit: '5mb' }));
 // Backend: monte apiV1 (copié dans l'ASAR à la racine par copy-assets.cjs)
 const bundlePath = path.join(ROOT, 'api-bundle.cjs');
 if (!fs.existsSync(bundlePath)) {
-  console.error('[electron] api-bundle.cjs introuvable. Lance `npm run build:api` puis `npm run dist`.');
+  console.error('[electron] api-bundle.cjs introuvable.');
   process.exit(1);
 }
 const { apiV1 } = require(bundlePath);
+// API v1 (nouveau préfixe) + legacy /api (compat frontend data.ts)
 expressApp.use('/api/v1', apiV1);
+expressApp.use('/api', apiV1);
 
 // Frontend statique (build Angular: dist/browser, copié dans l'ASAR à la racine)
 const browserDir = path.join(ROOT, 'browser');
@@ -79,8 +81,7 @@ if (fs.existsSync(browserDir)) {
     res.sendFile(path.join(browserDir, 'index.html'));
   });
 } else {
-  console.warn('[electron] dist/browser introuvable. Sers le dev server ng serve sur :3000 si lancé.');
-  expressApp.get('/', (_req, res) => res.redirect('http://localhost:3000/'));
+  console.warn('[electron] browser/ introuvable.');
 }
 
 let mainWindow = null;
