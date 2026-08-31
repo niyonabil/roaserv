@@ -15,6 +15,6 @@ echo.
 echo  Identifiants: admin / Roa0629605450
 echo ============================================
 echo.
-node scripts\roa-server.cjs
+node dist\roa-server.cjs
 endlocal
 pause

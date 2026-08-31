@@ -1,3 +1,4 @@
+// ROA Services - Serveur unifie
 import express from 'express';
 import path from 'path';
 import fs from 'fs';
@@ -16,20 +17,24 @@ export function createApp() {
   app.use(express.json({ limit: '5mb' }));
   app.get('/health', (_req, res) => res.json({ ok: true }));
 
-  // Rate-limiter login
-  app.use('/api/auth/login', loginRateLimiter);
+  // API : les routeurs utilisent des chemins absolus (/api/auth/login, /api/clients, etc.)
+  // On monte chaque routeur sur / pour que les chemins absolus matchent
+  app.use('/', loginRateLimiter);
+  app.use('/', authRouter);
+  app.use('/', rolesRouter);
+  app.use('/', clientsRouter);
+  app.use('/', stockRouter);
+  app.use('/', machinesRouter);
+  app.use('/', billingRouter);
+  app.use('/', deliveryRouter);
+  app.use('/', affiliatesRouter);
 
-  // Modules montés sur /api (compat legacy data.ts: /api/auth/login, /api/clients, etc.)
-  app.use('/api/auth', authRouter);
-  app.use('/api', rolesRouter);
-  app.use('/api', clientsRouter);
-  app.use('/api', stockRouter);
-  app.use('/api', machinesRouter);
-  app.use('/api', billingRouter);
-  app.use('/api', deliveryRouter);
-  app.use('/api', affiliatesRouter);
+  // Legacy stubs (catch-all /api)
+  app.use('/api', (_req, res) => {
+    res.json({ success: true, data: [], message: 'OK' });
+  });
 
-  // Frontend statique (dist/browser)
+  // Frontend statique
   const browserDir = path.join(process.cwd(), 'dist', 'browser');
   if (fs.existsSync(browserDir)) {
     app.use(express.static(browserDir));
@@ -46,7 +51,6 @@ export function createApp() {
     }
     if (!res.headersSent) res.status(500).json({ success: false, error: 'Internal server error' });
   });
-  app.use((req, res) => res.status(404).json({ success: false, error: 'Not found' }));
   return app;
 }
 
