@@ -66,10 +66,11 @@ if (!fs.existsSync(bundlePath)) {
   console.error('[electron] api-bundle.cjs introuvable.');
   process.exit(1);
 }
-const { apiV1 } = require(bundlePath);
-// API v1 (nouveau préfixe) + legacy /api (compat frontend data.ts)
-expressApp.use('/api/v1', apiV1);
-expressApp.use('/api', apiV1);
+const { apiV1, createApiV1 } = require(bundlePath);
+// Utilise createApiV1 si dispo (instance fraîche, évite conflits montage multiple)
+const apiV1Instance = createApiV1 ? createApiV1() : apiV1;
+expressApp.use('/api/v1', apiV1Instance);
+expressApp.use('/api', apiV1Instance);
 
 // Frontend statique (build Angular: dist/browser, copié dans l'ASAR à la racine)
 const browserDir = path.join(ROOT, 'browser');
