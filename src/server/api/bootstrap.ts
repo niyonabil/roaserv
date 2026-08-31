@@ -4,13 +4,30 @@
  * NOT the production server.ts (that migration happens module-by-module later).
  */
 import express from 'express';
-import { apiV1 } from './index';
+import { loginRateLimiter } from './rate-limit';
+import { authRouter } from './auth.router';
+import { rolesRouter } from './roles.router';
+import { clientsRouter } from './clients.router';
+import { stockRouter } from './stock.router';
+import { machinesRouter } from './machines.router';
+import { billingRouter } from './billing.router';
+import { deliveryRouter } from './delivery.router';
+import { affiliatesRouter } from './affiliates.router';
 
 export function createApp() {
   const app = express();
   app.use(express.json());
   app.get('/health', (_req, res) => res.json({ ok: true }));
-  app.use('/api', apiV1);
+  // Mount all modules under /api/v1 (direct mount, avoids Router bundling issues)
+  app.use('/api/v1/auth/login', loginRateLimiter);
+  app.use('/api/v1/auth', authRouter);
+  app.use('/api/v1', rolesRouter);
+  app.use('/api/v1', clientsRouter);
+  app.use('/api/v1', stockRouter);
+  app.use('/api/v1', machinesRouter);
+  app.use('/api/v1', billingRouter);
+  app.use('/api/v1', deliveryRouter);
+  app.use('/api/v1', affiliatesRouter);
   // Global error handler: convert ApiError -> consistent JSON; never leak HTML.
   app.use((err: any, _req: any, res: any, _next: any) => {
     try { require('fs').appendFileSync('d:/roaservcies/roaserv/.apierr.log', '\n' + new Date().toISOString() + ' EXPRESS_ERR ' + (err && err.stack ? err.stack : String(err))); } catch {}
