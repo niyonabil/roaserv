@@ -8,7 +8,7 @@ const path = require('node:path');
 
 const env = {
   ...process.env,
-  DATABASE_URL: process.env.DATABASE_URL || 'postgresql://postgres.asurkmjggbyxcylrdvae:Roa0629605450@aws-0-eu-central-1.pooler.supabase.com:6543/postgres',
+  DATABASE_URL: process.env.DATABASE_URL || 'postgresql://postgres.asurkmjggbyxcylrdvae:password@aws-0-eu-central-1.pooler.supabase.com:6543/postgres',
   JWT_SECRET: process.env.JWT_SECRET || 'roa_services_super_secret_change_me_8f3a2c91',
   JWT_REFRESH_SECRET: process.env.JWT_REFRESH_SECRET || 'roa_services_refresh_secret_b7e1d4a6',
   JWT_EXPIRES_IN: '900',
