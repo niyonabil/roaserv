@@ -17,19 +17,26 @@ export function createApp() {
   app.use(express.json({ limit: '5mb' }));
   app.get('/health', (_req, res) => res.json({ ok: true }));
 
-  // API : les routeurs utilisent des chemins absolus (/api/auth/login, /api/clients, etc.)
-  // On monte chaque routeur sur / pour que les chemins absolus matchent
-  app.use('/', loginRateLimiter);
-  app.use('/', authRouter);
-  app.use('/', rolesRouter);
-  app.use('/', clientsRouter);
-  app.use('/', stockRouter);
-  app.use('/', machinesRouter);
-  app.use('/', billingRouter);
-  app.use('/', deliveryRouter);
-  app.use('/', affiliatesRouter);
+  // API : les routeurs utilisent des chemins absolus (/api/auth/login, etc.)
+  // On monte chaque routeur sur /api pour que les chemins absolus matchent
+  app.use('/api/auth/login', loginRateLimiter);
+  app.use('/api/auth', authRouter);
+  app.use('/api/roles', rolesRouter);
+  app.use('/api/permissions', rolesRouter);
+  app.use('/api/users', rolesRouter);
+  app.use('/api/me', rolesRouter);
+  app.use('/api/clients', clientsRouter);
+  app.use('/api/stock', stockRouter);
+  app.use('/api/stock/movements', stockRouter);
+  app.use('/api/machines', machinesRouter);
+  app.use('/api/billing', billingRouter);
+  app.use('/api/quotes', billingRouter);
+  app.use('/api/invoices', billingRouter);
+  app.use('/api/payments', billingRouter);
+  app.use('/api/deliveries', deliveryRouter);
+  app.use('/api/affiliates', affiliatesRouter);
 
-  // Legacy stubs (catch-all /api)
+  // Legacy stubs : catch-all pour endpoints Firebase non migrés
   app.use('/api', (_req, res) => {
     res.json({ success: true, data: [], message: 'OK' });
   });

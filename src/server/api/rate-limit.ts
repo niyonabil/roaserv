@@ -19,7 +19,7 @@
 import type { Request, Response, NextFunction } from 'express';
 
 const WINDOW_MS = 15 * 60 * 1000; // 15 minutes
-const MAX_ATTEMPTS = 5;
+const MAX_ATTEMPTS = 50; // DEV: augmenté pour éviter les blocages
 
 interface Bucket {
   count: number;
